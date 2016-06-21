@@ -9,8 +9,9 @@ var mapping = require('./mapping');
 var cursor = require('./cursor');
 var menu = require('./menu');
 var Block = require('./blocks/block');
-var interactions = require('./interactions/*', { mode: 'hash' });
+var interactions = require('./interactions');
 var modifiedEvents = [ 'input', 'focus', 'blur', 'focusin', 'focusout' ];
+require('./selectionchange-polyfill');
 
 
 /**
@@ -35,6 +36,8 @@ function Editor(element, options) {
 
 Class.extend(Editor, {
   static: {
+    menu: menu,
+
     /**
      * The currently active editor, or null if there is none. The active editor is the one which has focus.
      * @type {Editor}
@@ -43,6 +46,8 @@ Class.extend(Editor, {
       return EditorSelection.activeEditor;
     }
   },
+
+  menu: menu,
 
 
   /**
@@ -150,7 +155,7 @@ Class.extend(Editor, {
     selectedBlocks.forEach(function(block, index) {
       if (block instanceof BlockType) return;
       block = block.clone(BlockType);
-      this.exec('update-block', { index: blockStart + index, block: block });
+      this.exec('updateBlock', { index: blockStart + index, block: block });
     }, this);
     this.commit();
   },
@@ -221,7 +226,7 @@ Class.extend(Editor, {
         this.schema.normalizeMarkups(block);
       }
 
-      this.exec('update-block', { index: blockStart + index, block: block });
+      this.exec('updateBlock', { index: blockStart + index, block: block });
     }, this);
     this.commit();
   },

@@ -2,7 +2,7 @@ module.exports = History;
 var Class = require('chip-utils/class');
 var Command = require('./command');
 var slice = Array.prototype.slice;
-var commands = require('./commands/*', { mode: 'hash' });
+var commands = require('./commands');
 
 /**
  * Holds the history of a project for a user. This can be serialzied and stored in the database because each action is

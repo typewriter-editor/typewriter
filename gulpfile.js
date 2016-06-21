@@ -37,7 +37,6 @@ var paths = {
 var browserifyOptions = {
   basedir: 'src',
   entries: paths.scripts,
-  transform: ['stringify', 'require-globify'],
   debug: true,
   // Required properties for watchify
   cache: {},

@@ -1,5 +1,5 @@
 {
-  "name": "dabblewriter",
+  "name": "typewriter-editor",
   "version": "0.0.1",
   "scripts": {
     "start": "gulp watch",
@@ -11,8 +11,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dabblewriter/dabblewriter.git"
+    "url": "https://github.com/jacwright/typewriter.git"
   },
+  "main": "src/editor/editor.js",
   "engines": {
     "node": ">=4"
   },
@@ -42,12 +43,9 @@
     "karma-phantomjs-launcher": "^1.0.0",
     "karma-source-map-support": "^1.1.0",
     "less-plugin-autoprefix": "^1.5.1",
-    "live-server": "^1.0.0",
     "merge-stream": "^1.0.0",
     "mocha": "^2.4.5",
     "phantomjs-prebuilt": "^2.1.4",
-    "require-globify": "^1.4.0",
-    "stringify": "^5.1.0",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.7.0"

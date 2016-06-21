@@ -1,4 +1,4 @@
-var platform = require('../../util/platform');
+var platform = require('../platform');
 
 // Map the interactions to their keyboard shortcut
 var shortcuts = {

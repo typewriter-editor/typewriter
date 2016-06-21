@@ -136,7 +136,7 @@ function onInput(event) {
 
   // Update the first block with the change
   if (!changedBlocks[0].equals(editor.blocks[firstChangedBlockIndex])) {
-    editor.exec('update-block', { index: firstChangedBlockIndex, block: changedBlocks[0] });
+    editor.exec('updateBlock', { index: firstChangedBlockIndex, block: changedBlocks[0] });
   }
 
   // Delete selected blocks except the first
@@ -145,7 +145,7 @@ function onInput(event) {
       .slice(firstChangedBlockIndex + 1, beforeRange.endBlockIndex + 1)
       .reverse()
       .forEach(function(block, index) {
-        editor.exec('delete-block', { index: beforeRange.endBlockIndex - index });
+        editor.exec('deleteBlock', { index: beforeRange.endBlockIndex - index });
       });
   }
 
@@ -153,18 +153,18 @@ function onInput(event) {
   if (beforeRange.collapsed &&
     beforeRange.startBlockIndex === afterRange.startBlockIndex &&
     editor.element.children.length < editor.blocks.length) {
-    editor.exec('delete-block', { index: beforeRange.startBlockIndex + 1 });
+    editor.exec('deleteBlock', { index: beforeRange.startBlockIndex + 1 });
   }
 
   // Add any blocks that were added e.g. on a newline
   changedBlocks.slice(1).forEach(function(block, index) {
-    editor.exec('insert-block', { index: firstChangedBlockIndex + index + 1, block: block });
+    editor.exec('insertBlock', { index: firstChangedBlockIndex + index + 1, block: block });
   });
 
   // This command could be any one of the above or a composite command if multiple commands were executed
   var command = editor.commit();
 
-  // If it is an update-block command, consider merging it with the previous update-block command
+  // If it is an updateBlock command, consider merging it with the previous updateBlock command
   if (command instanceof UpdateBlockCommand) {
     // Only merge if they are of the same type (both delete or both input)
     if (currentInputMode && currentInputMode === inputMode) {
