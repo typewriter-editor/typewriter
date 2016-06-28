@@ -31,7 +31,7 @@ menu.hide = function() {
 };
 
 
-document.addEventListener('editorselectionchange', updateSelection);
+document.addEventListener('editorselectionchanged', updateSelection);
 document.addEventListener('mousedown', function() {
   mouseDown = true;
 });

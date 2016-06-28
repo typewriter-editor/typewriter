@@ -1,6 +1,8 @@
 /**
- * Dispatches selectionchange events for browsers which do not support the event, as well as for browsers who do that
- * don't dispatch the event when DOM modifications change the selection.
+ * Dispatches selectionchanged (note the "d" at the end) events for browsers which do not support the "selectionchange"
+ * event, as well as for browsers who do that don't dispatch the event when DOM modifications change the selection.
+ * Since the order of events matters I am not naming this the same as "selectionchange" because it would then behave
+ * differently on different browsers.
  */
 var anchorNode = null, anchorOffset = 0, focusNode = null, focusOffset = 0;
 
@@ -11,7 +13,9 @@ function checkSelection() {
       focusNode !== selection.focusNode ||
       focusOffset !== selection.focusOffset) {
 
-    var selectionEvent = new Event('selectionchange');
+    // The selection has changed during the last frame, name it with an "ed" to differentiate from "selectionchange" in
+    // browsers that fire it
+    var selectionEvent = new Event('selectionchanged');
     selectionEvent.selection = selection;
     document.dispatchEvent(selectionEvent);
     anchorNode = selection.anchorNode;
@@ -22,14 +26,5 @@ function checkSelection() {
 
   requestAnimationFrame(checkSelection);
 }
-
-document.addEventListener('selectionchange', function() {
-  // When dispatched by the browser the animationFrame will no-op
-  var selection = window.getSelection();
-  anchorNode = selection.anchorNode;
-  anchorOffset = selection.anchorOffset;
-  focusNode = selection.focusNode;
-  focusOffset = selection.focusOffset;
-});
 
 checkSelection();

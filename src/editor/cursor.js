@@ -6,8 +6,7 @@ cursor.id = 'cursor';
 cursor.className = 'blink';
 
 
-document.addEventListener('selectionchange', updateSelection);
-document.addEventListener('input', updateSelection);
+document.addEventListener('selectionchanged', updateSelection);
 document.addEventListener('focusout', function() {
   if (document.activeElement !== editableElement) cleanupLastCursor();
 });

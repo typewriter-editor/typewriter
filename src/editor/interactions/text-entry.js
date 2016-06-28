@@ -7,13 +7,13 @@ var ignoreSelectionChanges = false;
 exports.enable = function(editor) {
   editor.on('shortcut', onShortcut);
   editor.on('input', onInput);
-  editor.on('selectionchange', onSelectionChange);
+  editor.on('selectionchanged', onSelectionChange);
 };
 
 exports.disable = function(editor) {
   editor.off('shortcut', onShortcut);
   editor.off('input', onInput);
-  editor.off('selectionchange', onSelectionChange);
+  editor.off('selectionchanged', onSelectionChange);
 };
 
 
@@ -106,7 +106,7 @@ The following actions need to be captured correctly by this method:
 
 function onInput(event) {
   ignoreSelectionChanges = true;
-  setTimeout(function() {
+  requestAnimationFrame(function() {
     ignoreSelectionChanges = false;
   });
 

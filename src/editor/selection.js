@@ -210,11 +210,7 @@ Class.extend(EditorSelection, {
 
 
 // Update the selections whenever selection changes
-document.addEventListener('selectionchange', updateSelectionRange);
-
-// When changing the DOM elements on the screen the selectionchange event will not fire, even though the selection has
-// changed. We make sure to update it
-document.addEventListener('focusout', updateSelectionRange);
+document.addEventListener('selectionchanged', updateSelectionRange);
 
 function updateSelectionRange(forceLastRangeUpdate) {
   if (skip) {
@@ -231,15 +227,15 @@ function updateSelectionRange(forceLastRangeUpdate) {
     lastRange = previousRange;
     // Dispatch one selection change event per editor that was affected
     if (lastRange.editor) {
-      dispatchSelectionEvent(lastRange.editor, 'selectionchange');
+      dispatchSelectionEvent(lastRange.editor, 'selectionchanged');
     }
     if (currentRange.editor && currentRange.editor !== lastRange.editor) {
-      dispatchSelectionEvent(currentRange.editor, 'selectionchange');
+      dispatchSelectionEvent(currentRange.editor, 'selectionchanged');
     }
 
     // Dispatch an editor selection change event once, with the target being either the current editor or the last
     // editor if there are no current editor's selected. This one bubbles
-    dispatchSelectionEvent(currentRange.editor || lastRange.editor, 'editorselectionchange', { bubbles: true });
+    dispatchSelectionEvent(currentRange.editor || lastRange.editor, 'editorselectionchanged', { bubbles: true });
   }
 }
 
