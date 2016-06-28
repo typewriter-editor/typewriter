@@ -27,39 +27,6 @@
   to { opacity: 1; }
 }
 
-
-#cursor {
-  position: absolute;
-  user-select: none;
-  pointer-events: none;
-  width: 2px;
-}
-#cursor:-webkit-window-inactive {
-  display: none;
-}
-
-#cursor.blink {
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0% {
-    opacity: 1.0;
-  }
-  35% {
-    opacity: 1.0;
-  }
-  50% {
-    opacity: 0.0;
-  }
-  85% {
-    opacity: 0.0;
-  }
-  100% {
-    opacity: 1.0;
-  }
-}
-
 #editor-menu {
   position: absolute;
   background-image: linear-gradient(to bottom, rgba(49, 49, 47, .99), #262625);

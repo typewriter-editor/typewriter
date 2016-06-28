@@ -6,7 +6,6 @@ var EditorSelection = require('./selection');
 var EditorRange = require('./range');
 var defaultSchema = require('./schema/default');
 var mapping = require('./mapping');
-var cursor = require('./cursor');
 var menu = require('./menu');
 var Block = require('./blocks/block');
 var interactions = require('./interactions');
