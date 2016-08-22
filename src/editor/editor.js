@@ -9,7 +9,7 @@ var mapping = require('./mapping');
 var menu = require('./menu');
 var Block = require('./blocks/block');
 var interactions = require('./interactions');
-var modifiedEvents = [ 'input', 'focus', 'blur', 'focusin', 'focusout' ];
+var modifiedEvents = [ 'input', 'focus', 'blur', 'focusin', 'focusout', 'paste' ];
 require('./selectionchange-polyfill');
 
 

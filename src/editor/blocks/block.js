@@ -15,8 +15,10 @@ function Block(text, markups) {
 
 Class.extend(Block, {
   static: {
+    selector: '',
+
     matches: function(element) {
-      throw new Error('Unimplemented abstract method in ' + this.name);
+      return true;
     },
 
     fromDOM: function(element) {

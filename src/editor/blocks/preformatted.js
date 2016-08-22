@@ -8,9 +8,7 @@ function Preformatted(text, markups) {
 
 Block.extend(Preformatted, {
   static: {
-    matches: function(element) {
-      return element.nodeName === 'PRE';
-    }
+    selector: 'pre'
   },
 
   toDOM: function() {

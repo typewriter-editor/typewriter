@@ -8,9 +8,7 @@ function Blockquote(text, markups) {
 
 Block.extend(Blockquote, {
   static: {
-    matches: function(element) {
-      return element.nodeName === 'BLOCKQUOTE';
-    }
+    selector: 'blockquote'
   },
 
   toDOM: function() {

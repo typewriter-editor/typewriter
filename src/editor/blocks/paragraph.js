@@ -8,9 +8,7 @@ function Paragraph(text, markups) {
 
 Block.extend(Paragraph, {
   static: {
-    matches: function(element) {
-      return element.nodeName === 'P';
-    }
+    selector: 'p'
   },
 
   toDOM: function() {

@@ -1,32 +1,3 @@
-.editable .empty, .editable-field.empty {
-  position: relative;
-}
-.editable .empty::before, .editable-field.empty::before {
-  content: attr(placeholder);
-  font-style: italic;
-  opacity: .5;
-  color: inherit;
-  user-select: none;
-  pointer-events: none;
-  animation: fade-in-half .3s ease-out;
-}
-.editable.unstyled-placeholder .empty::before, .editable-field.unstyled-placeholder.empty::before {
-  font-style: inherit;
-  opacity: 1;
-  animation: fade-in-whole .3s ease-out;
-}
-.editable:focus .empty::before, .editable-field:focus.empty::before {
-  display: none;
-}
-@keyframes fade-in-half {
-  from { opacity: 0; }
-  to { opacity: .5; }
-}
-@keyframes fade-in-whole {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 #editor-menu {
   position: absolute;
   background-image: linear-gradient(to bottom, rgba(49, 49, 47, .99), #262625);

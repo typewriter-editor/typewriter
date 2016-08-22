@@ -8,9 +8,7 @@ function Header3(text, markups) {
 
 Block.extend(Header3, {
   static: {
-    matches: function(element) {
-      return element.nodeName === 'H3';
-    }
+    selector: 'h3'
   },
 
   toDOM: function() {

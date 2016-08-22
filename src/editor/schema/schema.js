@@ -128,7 +128,7 @@ Class.extend(Schema, {
 function fromDOM(items, element) {
   for (var i = items.length; i > 0; i--) {
     var ItemClass = items[i - 1];
-    if (ItemClass.matches(element)) {
+    if (element.matches(ItemClass.selector)) {
       return ItemClass.fromDOM(element);
     }
   }

@@ -1,14 +1,14 @@
-module.exports = UnorderedListItem;
+module.exports = OrderedListItem;
 var Block = require('../blocks/block');
 
 
-function UnorderedListItem(text, markups) {
+function OrderedListItem(text, markups) {
   Block.call(this, text, markups);
 }
 
-Block.extend(UnorderedListItem, {
+Block.extend(OrderedListItem, {
   static: {
-    selector: 'ul > li'
+    selector: 'ol > li'
   },
 
   toDOM: function() {

@@ -169,6 +169,28 @@ Class.extend(EditorSelection, {
   },
 
   /**
+   * Whether or not the selection is at the very beginning of the editor (and collapsed)
+   * @return {Boolean}
+   */
+  get atBeginning() {
+    if (this.editor !== currentRange.editor) return false;
+    return currentRange.collapsed && currentRange.anchorBlockIndex === 0 && currentRange.anchorIndex === 0;
+  },
+
+  /**
+   * Whether or not the selection is at the very end of the editor (and collapsed)
+   * @return {Boolean}
+   */
+  get atEnd() {
+    if (this.editor !== currentRange.editor) return false;
+    var lastIndex = this.editor.blocks.length - 1;
+    var textLength = this.editor.blocks[lastIndex].text.length;
+    return currentRange.collapsed &&
+           currentRange.anchorBlockIndex === lastIndex &&
+           currentRange.anchorIndex === textLength;
+  },
+
+  /**
    * Returns a range for this selection
    * @return {EditorRange} The range of the selection in the given editor
    */
