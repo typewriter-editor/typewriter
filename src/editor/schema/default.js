@@ -1,20 +1,7 @@
 var Schema = require('./schema');
-var Paragraph = require('../blocks/paragraph');
-var blocks = [
-  Paragraph,
-  require('../blocks/header1'),
-  require('../blocks/header2'),
-  require('../blocks/header3'),
-  require('../blocks/header4'),
-  require('../blocks/header5'),
-  require('../blocks/header6'),
-  require('../blocks/blockquote'),
-  require('../blocks/preformatted')
-];
-var markups = [
-  require('../markups/link'),
-  require('../markups/bold'),
-  require('../markups/italic')
-];
+var Block = require('../block');
+var blocks = [ 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'blockquote', 'figure' ];
+var markups = [ 'a[href]', 'b', 'i' ];
 
-module.exports = new Schema(blocks, markups, [ new Paragraph() ]);
+
+module.exports = new Schema(blocks, markups, [ new Block('p') ]);

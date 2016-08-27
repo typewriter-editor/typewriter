@@ -1,4 +1,5 @@
 module.exports = Editor;
+require('es6-object-assign').polyfill();
 var Class = require('chip-utils/class');
 var shortcuts = require('shortcut-string');
 var History = require('./history');
