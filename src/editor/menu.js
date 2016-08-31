@@ -50,7 +50,7 @@ function updateSelection(event) {
     lastSelectionEvent = event;
   }
 
-  if (currentEditor.selection.type !== 'text' || currentEditor.selection.collapsed || mouseDown) {
+  if (currentEditor.selection.type !== 'text' || currentEditor.selection.isCollapsed || mouseDown) {
     menu.hide();
   } else {
     menu.show();

@@ -1,17 +1,13 @@
-module.exports = Preformatted;
-var Block = require('../blocks/block');
+module.exports = PreformattedBlock;
+var Block = require('./block');
 
 
-function Preformatted(text, markups) {
-  Block.call(this, text, markups);
+function PreformattedBlock(selector, text, markups) {
+  Block.call(this, selector, text, markups);
 }
 
-Block.extend(Preformatted, {
+Block.extend(PreformattedBlock, {
   static: {
-    selector: 'pre'
-  },
-
-  toDOM: function() {
-    return document.createElement('pre');
+    enterMode: 'contained'
   }
 });

@@ -1,6 +1,6 @@
 module.exports = DeleteBlockCommand;
-var mapping = require('../mapping');
 var Command = require('../command');
+var mapping = require('../mapping');
 
 /**
  * Deletes a block from an editor.
@@ -17,21 +17,12 @@ function DeleteBlockCommand(args) {
 Command.extend(DeleteBlockCommand, {
 
   exec: function() {
-    this.block = this.history.editor.blocks.splice(this.index, 1)[0];
+    this.block = this.editor.blocks.splice(this.index, 1)[0];
+    mapping.removeElement(this.editor, this.block);
   },
 
   undo: function() {
-    var editor = this.history.editor;
-    editor.blocks.splice(this.index, 0, this.block);
-    var element = mapping.blockToDOM(editor.schema, this.block);
-    var after = editor.element.children[this.index];
-    editor.element.insertBefore(element, after);
-  },
-
-  redo: function() {
-    var editor = this.history.editor;
-    this.block = editor.blocks.splice(this.index, 1)[0];
-    var element = editor.element.children[this.index];
-    editor.element.removeChild(element);
+    this.editor.blocks.splice(this.index, 0, this.block);
+    mapping.generateElement(this.editor, this.block);
   }
 });

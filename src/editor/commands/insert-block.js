@@ -1,7 +1,7 @@
 module.exports = InsertBlockCommand;
-var mapping = require('../mapping');
 var Command = require('../command');
 var Block = require('../blocks/block');
+var mapping = require('../mapping');
 
 /**
  * Creates and adds a block to an editor.
@@ -19,21 +19,12 @@ function InsertBlockCommand(args) {
 Command.extend(InsertBlockCommand, {
 
   exec: function() {
-    this.history.editor.blocks.splice(this.index, 0, this.block);
+    this.editor.blocks.splice(this.index, 0, this.block);
+    mapping.generateElement(this.editor, this.block);
   },
 
   undo: function() {
-    var editor = this.history.editor;
-    editor.blocks.splice(this.index, 1);
-    var element = editor.element.children[this.index];
-    editor.element.removeChild(element);
-  },
-
-  redo: function() {
-    var editor = this.history.editor;
-    editor.blocks.splice(this.index, 0, this.block);
-    var element = mapping.blockToDOM(editor.schema, this.block);
-    var after = editor.element.children[this.index];
-    editor.element.insertBefore(element, after);
+    this.editor.blocks.splice(this.index, 1);
+    mapping.removeElement(this.editor, this.block);
   }
 });

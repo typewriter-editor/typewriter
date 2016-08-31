@@ -1,4 +1,11 @@
+/*
 
+******* PASTED CONTENT NEEDS TO BE CLEANED **********
+13. the user pastes multiple blocks into the editor
+  * delete before.start + 1 to before.end
+  * update before.start
+  * insert before.start + 1 to after.end
+ */
 
 
 exports.enable = function(editor) {

@@ -1,7 +1,7 @@
 module.exports = UpdateBlockCommand;
-var mapping = require('../mapping');
 var Command = require('../command');
 var Block = require('../blocks/block');
+var mapping = require('../mapping');
 var stylesExp = / style="[^"]+"/g;
 /**
  * Udates a block in an editor.
@@ -20,21 +20,13 @@ function UpdateBlockCommand(args) {
 Command.extend(UpdateBlockCommand, {
 
   exec: function() {
-    var editor = this.history.editor;
-    this.oldBlock = editor.blocks[this.index];
-    editor.blocks.splice(this.index, 1, this.block);
-    var element = mapping.blockToDOM(editor.schema, this.block);
-    var replace = editor.element.children[this.index];
-    if (element.outerHTML !== replace.outerHTML.replace(stylesExp, '')) {
-      editor.element.replaceChild(element, replace);
-    }
+    this.oldBlock = this.editor.blocks.splice(this.index, 1, this.block)[0];
+    this.block.id = this.oldBlock.id;
+    mapping.generateElement(this.editor, this.block);
   },
 
   undo: function() {
-    var editor = this.history.editor;
-    editor.blocks.splice(this.index, 1, this.oldBlock);
-    var element = mapping.blockToDOM(editor.schema, this.oldBlock);
-    var replace = editor.element.children[this.index];
-    editor.element.replaceChild(element, replace);
+    this.editor.blocks.splice(this.index, 1, this.oldBlock);
+    mapping.generateElement(this.editor, this.oldBlock);
   }
 });

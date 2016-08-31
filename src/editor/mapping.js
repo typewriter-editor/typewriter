@@ -1,41 +1,129 @@
 var slice = Array.prototype.slice;
-var Schema = require('./schema/schema');
+var selectors = require('./selectors');
+var Editor = require('./editor');
+var Block = require('./blocks/block');
 var mapping = exports;
 
+/**
+ * Generate (and insert/replace) an element for the given block
+ * @param {Editor} editor The editor
+ * @param {Block} block The block to generate the element from
+ */
+mapping.generateElement = function(editor, block) {
+  if (!(editor instanceof Editor)) throw new TypeError('Must include editor for mapping');
+  if (!(block instanceof Block)) throw new TypeError('Must include block for mapping');
+  var index = editor.blocks.indexOf(block);
+  if (index === -1) throw new TypeError('Must be a block in the editor');
+  var blockElements = editor.blockElements;
+  var isDeep = selectors.isDeep(block.selector);
+  var prev = editor.blocks[index - 1];
+  var next = editor.blocks[index + 1];
+  var prevElement = blockElements[index - 1];
+  var nextElement = blockElements[index];
+  var element = mapping.blockToDOM(editor, block);
 
-mapping.blocksFromDOM = function(schema, element, startIndex, endIndex) {
-  if (!(schema instanceof Schema)) throw new TypeError('Must include schema for mapping');
-  if (!(element instanceof HTMLElement)) throw new TypeError('Must include element for mapping');
+  // Remove the existing one if there is one
+  if (nextElement && nextElement.getAttribute('blockid') === block.id) {
+    removeElement(editor, block, nextElement);
+    nextElement = blockElements[index + 1];
+    blockElements.splice(index, 1, element);
+  } else {
+    blockElements.splice(index, 0, element);
+  }
 
-  var blocks = slice.call(element.children, startIndex, endIndex).map(function(blockElement) {
-    return mapping.blockFromDOM(schema, blockElement);
+  // Add the new element to the DOM
+  if (isDeep && prev && prev.selector === block.selector && prevElement) {
+    prevElement.parentNode.insertBefore(element, prevElement.nextSibling);
+
+    // If next is also the same but with a different parent, we need to join it to this list
+    if (next && next.selector === block.selector && nextElement) {
+      var prevSibling = outerElement(editor, prevElement);
+      var nextSibling = outerElement(editor, nextElement);
+
+      if (prevSibling !== nextSibling) {
+        var i = index, sibling;
+        while ((sibling = editor.blocks[++i]) && sibling.selector === block.selector && blockElements[i]) {
+          prevElement.parentNode.appendChild(blockElements[i]);
+        }
+        nextSibling.parentNode.removeChild(nextSibling);
+      }
+    }
+  } else if (isDeep && next && next.selector === block.selector && nextElement) {
+    nextElement.parentNode.insertBefore(element, nextElement);
+  } else {
+    // If this is a list, be sure to get the outermost element (the ul/ol)
+    element = selectors.createElementDeep(block.selector, element);
+    var prevSibling = outerElement(editor, prevElement);
+    var nextSibling = outerElement(editor, nextElement);
+
+    // If we need to split a list into two to insert our element
+    if (prev && next && prev.selector === next.selector && selectors.isDeep(prev.selector)
+             && prevElement && nextElement) {
+      nextSibling = selectors.createElementDeep(next.selector, nextElement);
+      var i = index + 1, sibling;
+      while ((sibling = editor.blocks[++i]) && sibling.selector === prev.selector && blockElements[i]) {
+        nextElement.parentNode.appendChild(blockElements[i]);
+      }
+      prevSibling.parentNode.insertBefore(nextSibling, prevSibling.nextSibling);
+    }
+
+    if (prevSibling) {
+      editor.element.insertBefore(element, prevSibling.nextSibling);
+    } else {
+      editor.element.insertBefore(element, nextSibling);
+    }
+  }
+};
+
+/**
+ * Generate (and insert/replace) all elements in the editor
+ * @param {Editor} editor The editor
+ * @param {Block} block The block to generate the element from
+ */
+mapping.generateElements = function(editor) {
+  editor.element.innerHTML = '';
+  editor.blocks.forEach(mapping.generateElement.bind(null, editor));
+};
+
+
+
+mapping.removeElement = function(editor, block) {
+  var element = editor.blockElements.find(function(elem) {
+    return elem.getAttribute('blockid') === block.id;
+  });
+  removeElement(editor, block, element);
+};
+
+
+
+mapping.blocksFromDOM = function(editor, container, startOffset, endOffset) {
+  if (!(editor instanceof Editor)) throw new TypeError('Must include editor for mapping');
+  if (!container) container = editor.element;
+  var blockElements = slice.call(container.querySelectorAll(editor.schema.blocksSelector));
+  var blocks = blockElements.slice(startOffset, endOffset).map(function(blockElement) {
+    return mapping.blockFromDOM(editor, blockElement, container);
   }).filter(Boolean);
 
   if (!blocks.length) {
-    blocks = schema.getInitial();
+    blocks = editor.schema.getInitial();
   }
 
   return blocks;
 };
 
 
-mapping.blocksToDOM = function(schema, blocks) {
-  if (!(schema instanceof Schema)) throw new TypeError('Must include schema for mapping');
-  if (!Array.isArray(blocks)) throw new TypeError('Must include blocks array for mapping');
-  var fragment = document.createDocumentFragment();
-  blocks.forEach(function(block) {
-    fragment.appendChild(mapping.blockToDOM(schema, block));
-  });
-  return fragment;
-};
-
-
-mapping.blockFromDOM = function(schema, element) {
-  if (!(schema instanceof Schema)) throw new TypeError('Must include schema for mapping');
+mapping.blockFromDOM = function(editor, element, container) {
+  if (!(editor instanceof Editor)) throw new TypeError('Must include editor for mapping');
   if (!(element instanceof HTMLElement)) throw new TypeError('Must include element for mapping');
-  var block = schema.blockFromDOM(element);
+  if (!container) container = editor.element;
+  var Type = editor.schema.getBlockType(element);
+  var block = Type && new Type(selectors.fromElement(element, container));
   if (block) {
-    var result = mapping.textFromDOM(schema, element);
+    var id = element.getAttribute('blockid');
+    if (id) {
+      block.id = id;
+    }
+    var result = mapping.textFromDOM(editor, element);
     block.text = result.text;
     block.markups = result.markups;
     return block;
@@ -43,11 +131,11 @@ mapping.blockFromDOM = function(schema, element) {
 };
 
 
-mapping.blockToDOM = function(schema, block) {
-  if (!(schema instanceof Schema)) throw new TypeError('Must include schema for mapping');
+mapping.blockToDOM = function(editor, block) {
+  if (!(editor instanceof Editor)) throw new TypeError('Must include editor for mapping');
   if (!block.markups) throw new TypeError('Must include block for mapping');
-  var element = block.toDOM();
-  var fragment = mapping.textToDOM(schema, block);
+  var element = block.createElement();
+  var fragment = mapping.textToDOM(editor, block);
   var contentElement = element;
 
   if (contentElement.contentEditable === 'false') {
@@ -67,8 +155,8 @@ mapping.blockToDOM = function(schema, block) {
 };
 
 
-mapping.textFromDOM = function(schema, element) {
-  if (!(schema instanceof Schema)) throw new TypeError('Must include schema for mapping');
+mapping.textFromDOM = function(editor, element) {
+  if (!(editor instanceof Editor)) throw new TypeError('Must include editor for mapping');
   if (!(element instanceof HTMLElement)) throw new TypeError('Must include element for mapping');
   var result = { text: '', markups: [] };
 
@@ -97,9 +185,10 @@ mapping.textFromDOM = function(schema, element) {
     } else if (name === 'br') {
       result.text += '\n';
     } else if (node.textContent.trim() !== '') {
-      markup = schema.markupFromDOM(node);
+      var Type = editor.schema.getMarkupType(node);
+      var markup = Type && new Type(selectors.fromElement(node));
       if (markup) {
-        markup.startIndex = result.text.length;
+        markup.startOffset = result.text.length;
         markupMap.set(node, markup);
         result.markups.push(markup);
       }
@@ -110,7 +199,7 @@ mapping.textFromDOM = function(schema, element) {
         if (markupMap.has(node.parentNode)) {
           markup = markupMap.get(node.parentNode);
           if (markup) {
-            markup.endIndex = result.text.length;
+            markup.endOffset = result.text.length;
           }
         }
         node = node.parentNode;
@@ -118,15 +207,15 @@ mapping.textFromDOM = function(schema, element) {
     }
   }
 
-  schema.normalizeMarkups(result);
+  editor.schema.normalizeMarkups(result);
 
   return result;
 }
 
 
-mapping.textToDOM = function(schema, block) {
-  if (!(schema instanceof Schema)) throw new TypeError('Must include schema for mapping');
-  if (!block.markups) throw new TypeError('Must include block for mapping');
+mapping.textToDOM = function(editor, block) {
+  if (!(editor instanceof Editor)) throw new TypeError('Must include editor for mapping');
+  if (!(block instanceof Block)) throw new TypeError('Must include block for mapping');
   var fragment = document.createDocumentFragment();
   var text = block.text;
   var markups = block.markups;
@@ -143,16 +232,16 @@ mapping.textToDOM = function(schema, block) {
 
   markups.forEach(function(markup) {
     // Start at the beginning and find the text node this markup starts before
-    var remainingLength = markup.endIndex - markup.startIndex;
+    var remainingLength = markup.endOffset - markup.startOffset;
     walker.currentNode = fragment;
     var textNode = walker.nextNode();
 
     // Find the first textNode this markup starts in
     var currentIndex = 0;
     while (textNode) {
-      if (currentIndex + textNode.data.length > markup.startIndex) {
-        if (markup.startIndex !== currentIndex) {
-          breakTextNode(textNode, markup.startIndex - currentIndex);
+      if (currentIndex + textNode.data.length > markup.startOffset) {
+        if (markup.startOffset !== currentIndex) {
+          breakTextNode(textNode, markup.startOffset - currentIndex);
           textNode = walker.nextNode();
         }
         break;
@@ -177,7 +266,7 @@ mapping.textToDOM = function(schema, block) {
 
   // Insert the BRs
   walker.currentNode = fragment;
-  var textNode = walker.nextNode();
+  var textNode;
   while ((textNode = walker.nextNode())) {
     var index = textNode.data.indexOf('\n');
     if (index !== -1) {
@@ -194,4 +283,20 @@ mapping.textToDOM = function(schema, block) {
 function breakTextNode(node, index) {
   node.parentNode.insertBefore(document.createTextNode(node.data.slice(index)), node.nextSibling);
   node.data = node.data.slice(0, index);
+}
+
+function outerElement(editor, element) {
+  while (element && element.parentNode !== editor.element) {
+    element = element.parentNode;
+  }
+  return element;
+}
+
+function removeElement(editor, block, element) {
+  if (element) {
+    if (selectors.isDeep(block.selector) && !element.previousSibling && !element.nextSibling) {
+      var element = outerElement(editor, element);
+    }
+    element.parentNode.removeChild(element);
+  }
 }

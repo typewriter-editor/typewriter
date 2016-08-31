@@ -21,7 +21,7 @@ Command.extend(CompositeCommand, {
 
   exec: function() {
     this.commands.forEach(function(command) {
-      command.history = this.history;
+      command.editor = this.editor;
       command.exec();
     }, this);
   },

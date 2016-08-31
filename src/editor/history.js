@@ -13,6 +13,7 @@ function History(options) {
   this.undoStack = [];
   this.redoStack = [];
   this.composite = null;
+  this.nextSelection = null;
 }
 
 
@@ -31,14 +32,30 @@ Class.extend(History, {
     maxHistory: 100
   },
 
+  /**
+   * Whether there are any actions that can be undone or not
+   * @return {Boolean}
+   */
+  get canUndo() {
+    return this.undoStack.length > 0;
+  },
+
+  /**
+   * Whether there are any actions that can be redone or not
+   * @return {Boolean}
+   */
+  get canRedo() {
+    return this.redoStack.length > 0;
+  },
 
   /**
    * Execute a command by name with the given arguments. Each command may take different arguments.
+   * @param {Editor} editor The editor to apply this command to
    * @param {String} commandName The name of the command to be executed
    * @param {Object} args Zero or more arguments which will be passed to the command
    * @return {Boolean} `false` if the command failed, `true` otherwise
    */
-  exec: function(commandName, args) {
+  exec: function(editor, commandName, args) {
     var command;
     if (commandName instanceof Command) {
       command = commandName;
@@ -50,7 +67,7 @@ Class.extend(History, {
       command = new CommandClass(args);
     }
 
-    command.history = this;
+    command.editor = editor;
 
     // If we are in a command transaction started with `start` append this command to composite to be exec'ed later
     if (this.composite) {
@@ -62,9 +79,17 @@ Class.extend(History, {
       return false;
     }
 
-    command.selectionBefore = this.editor.selection.lastRange;
-    command.selectionAfter = this.editor.selection.range;
+    if (this.nextSelection) {
+      command.selectionBefore = this.editor.selection.range;
+      command.selectionAfter = this.nextSelection;
+      this.nextSelection = null;
+    } else {
+      command.selectionBefore = this.editor.selection.lastRange;
+      command.selectionAfter = this.editor.selection.range;
+    }
+
     this.editor.selection.range = command.selectionAfter;
+    this.editor.selection.update();
 
     this.undoStack.push(command);
     if (this.options.maxHistory && this.undoStack.length >= this.options.maxHistory) {
@@ -72,14 +97,25 @@ Class.extend(History, {
     }
     this.redoStack.length = 0;
 
+    this.editor.dispatch('change');
+
     return command;
   },
 
   /**
    * Start a composite command. Every `exec` call after this will add to the composite until `commit` is called.
    */
-  start: function() {
-    return this.composite = new commands.composite({ commands: [] });
+  start: function(editor) {
+    if (this.composite && this.composite.editor !== editor) {
+      throw new Error('Two editors trying to run a transaction at once with the same history. Can\'t compute.');
+    }
+    if (this.composite) {
+      return this.composite;
+    } else {
+      this.composite = new commands.composite({ commands: [] });
+      this.composite.editor = editor;
+      return this.composite;
+    }
   },
 
   /**
@@ -87,28 +123,25 @@ Class.extend(History, {
    * @return {Boolean} The result of executing the composite command
    */
   commit: function() {
-    var command = this.composite;
-    this.composite = null;
-    if (command.commands.length === 0) return false;
-    if (command.commands.length === 1) command = command.commands[0];
-    return this.exec(command);
+    if (this.composite) {
+      var command = this.composite;
+      var editor = command.editor;
+      this.composite = null;
+      if (command.commands.length) {
+        if (command.commands.length === 1) command = command.commands[0];
+        return this.exec(editor, command);
+      }
+    }
+    this.nextSelection = null;
+    return false;
   },
 
   /**
-   * Whether there are any actions that can be undone or not
-   * @return {Boolean}
+   * Set the selection used for the end of the next exec operation
+   * @param {SelectionRange} range The selection range that will be used
    */
-  get canUndo() {
-    return this.undoStack.length > 0;
-  },
-
-
-  /**
-   * Whether there are any actions that can be redone or not
-   * @return {Boolean}
-   */
-  get canRedo() {
-    return this.redoStack.length > 0;
+  setNextSelection: function(range) {
+    this.nextSelection = range;
   },
 
 
@@ -123,6 +156,7 @@ Class.extend(History, {
     command.undo();
     this.editor.selection.range = command.selectionBefore;
     this.redoStack.push(command);
+    this.editor.dispatch('change');
     return true;
   },
 
@@ -138,6 +172,7 @@ Class.extend(History, {
     command.redo();
     this.editor.selection.range = command.selectionAfter;
     this.undoStack.push(command);
+    this.editor.dispatch('change');
     return true;
   }
 

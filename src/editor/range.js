@@ -1,15 +1,19 @@
 module.exports = EditorRange;
 var Class = require('chip-utils/class');
+var types = { text: true, media: true, none: true };
 
 
-function EditorRange(editor, type, anchorBlockIndex, anchorIndex, focusBlockIndex, focusIndex) {
+function EditorRange(editor, type, anchorBlockIndex, anchorOffset, focusBlockIndex, focusOffset) {
+  if (type && !types[type]) {
+    throw new TypeError('Invalid selection range type: ' + type);
+  }
   // Keep editor from enumeration so it won't serialize into JSON
   Object.defineProperty(this, 'editor', { value: editor, writable: true, configurable: true });
   this.type = type || 'none';
   this.anchorBlockIndex = anchorBlockIndex !== undefined ? anchorBlockIndex : -1;
-  this.anchorIndex = anchorIndex !== undefined ? anchorIndex : -1;
+  this.anchorOffset = anchorOffset !== undefined ? anchorOffset : -1;
   this.focusBlockIndex = focusBlockIndex !== undefined ? focusBlockIndex : -1;
-  this.focusIndex = focusIndex !== undefined ? focusIndex : -1;
+  this.focusOffset = focusOffset !== undefined ? focusOffset : -1;
 }
 
 Class.extend(EditorRange, {
@@ -18,9 +22,9 @@ Class.extend(EditorRange, {
       return new EditorRange(null,
         value.type,
         value.anchorBlockIndex,
-        value.anchorIndex,
+        value.anchorOffset,
         value.focusBlockIndex,
-        value.focusIndex
+        value.focusOffset
       );
     }
   },
@@ -29,22 +33,22 @@ Class.extend(EditorRange, {
     return this.editor &&
       this.type !== 'none' &&
       this.anchorBlockIndex !== -1 &&
-      this.anchorIndex !== -1 &&
+      this.anchorOffset !== -1 &&
       this.focusBlockIndex !== -1 &&
-      this.focusIndex !== -1;
+      this.focusOffset !== -1;
   },
 
   get startBlockIndex() {
     return Math.min(this.anchorBlockIndex, this.focusBlockIndex);
   },
 
-  get startIndex() {
+  get startOffset() {
     if (this.anchorBlockIndex === this.focusBlockIndex) {
-      return Math.min(this.anchorIndex, this.focusIndex);
+      return Math.min(this.anchorOffset, this.focusOffset);
     } else if (this.anchorBlockIndex < this.focusBlockIndex) {
-      return this.anchorIndex;
+      return this.anchorOffset;
     } else {
-      return this.focusIndex;
+      return this.focusOffset;
     }
   },
 
@@ -52,18 +56,18 @@ Class.extend(EditorRange, {
     return Math.max(this.anchorBlockIndex, this.focusBlockIndex);
   },
 
-  get endIndex() {
+  get endOffset() {
     if (this.anchorBlockIndex === this.focusBlockIndex) {
-      return Math.max(this.anchorIndex, this.focusIndex);
+      return Math.max(this.anchorOffset, this.focusOffset);
     } else if (this.anchorBlockIndex > this.focusBlockIndex) {
-      return this.anchorIndex;
+      return this.anchorOffset;
     } else {
-      return this.focusIndex;
+      return this.focusOffset;
     }
   },
 
-  get collapsed() {
-    return this.anchorBlockIndex === this.focusBlockIndex && this.anchorIndex === this.focusIndex;
+  get isCollapsed() {
+    return this.anchorBlockIndex === this.focusBlockIndex && this.anchorOffset === this.focusOffset;
   },
 
   equals: function(range) {
@@ -71,17 +75,17 @@ Class.extend(EditorRange, {
       this.editor === range.editor &&
       this.type === range.type &&
       this.anchorBlockIndex === range.anchorBlockIndex &&
-      this.anchorIndex === range.anchorIndex &&
+      this.anchorOffset === range.anchorOffset &&
       this.focusBlockIndex === range.focusBlockIndex &&
-      this.focusIndex === range.focusIndex;
+      this.focusOffset === range.focusOffset;
   },
 
   clone: function() {
     return new EditorRange(this.editor,
       this.type,
       this.anchorBlockIndex,
-      this.anchorIndex,
+      this.anchorOffset,
       this.focusBlockIndex,
-      this.focusIndex);
+      this.focusOffset);
   }
 });

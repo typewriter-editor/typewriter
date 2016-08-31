@@ -3,7 +3,8 @@
  */
 
 // Export functions
-exports.normalize = normalizeSelector;
+exports.isDeep = isDeep;
+exports.normalize = normalize;
 exports.fromElement = fromElement;
 exports.createElementDeep = createElementDeep;
 exports.createElement = createElement;
@@ -53,24 +54,33 @@ function fromElement(element, container, ignore) {
   if (!ignore) ignore = {};
   if (!ignore.classes) ignore.classes = {};
   if (!ignore.attributes) ignore.attributes = {};
+  ignore.classes.empty = true;
+  ignore.classes.selected = true;
   ignore.attributes.class = true;
   ignore.attributes.blockid = true;
+  ignore.attributes.placeholder = true;
 
   var selector = element.tagName.toLowerCase();
-  if (element.className) {
-    selector += '.' + element.className.split(/\s+/).filter(function(name) {
-      return !ignore.classes[name];
-    }).sort().join('.');
+
+  var classList = element.className.split(/\s+/).filter(function(name) {
+    return name && !ignore.classes[name];
+  }).sort();
+
+  if (classList.length) {
+    selector += '.' + classList.join('.');
   }
+
   var attrNames = [];
   for (var i = 0; i < element.attributes.length; i++) {
     var attr = element.attributes[i];
     if (!ignore.attributes[attr.name]) attrNames.push(attr.name);
   }
+
   attrNames.forEach(function(name) {
     var value = element.getAttribute('name');
     selector += '[' + name + (!value ? ']' : '="' + value + '"]');
   });
+
   if (container && element.parentNode !== container) {
     selector = fromElement(element.parentNode, container, ignore) + '>' + selector;
   }
@@ -82,12 +92,14 @@ function fromElement(element, container, ignore) {
  * @param {String} selector The selector to use for creating
  * @return {Element} The element created from the selector, with possible children
  */
-function createElementDeep(selector) {
-  return selector.split(descExp).reverse().reduce(function(child, selector) {
+function createElementDeep(selector, blockElement) {
+  var parts = selector.split(descExp)
+  if (blockElement) parts.pop();
+  return parts.reverse().reduce(function(child, selector) {
     var element = createElement(selector);
     if (child) element.appendChild(child);
     return element;
-  }, null);
+  }, blockElement);
 }
 
 /**

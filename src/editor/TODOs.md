@@ -1,5 +1,6 @@
 # TODOs
 
-* dispatch a "change" event whenever the contents of the editor are changed
-* dispatch a "selection" event whenever the selection changes in the editor
 * update the menu position on a selection AND change event
+
+Set the class .selected on blocks that have the selection (all of it)
+Make it work inside the window it resides

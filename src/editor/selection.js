@@ -6,7 +6,6 @@ var indexOf = Array.prototype.indexOf;
 
 var lastRange = new EditorRange();
 var currentRange = new EditorRange();
-var skip = 0;
 var paused = false;
 
 
@@ -19,10 +18,6 @@ Class.extend(EditorSelection, {
   static: {
     get activeEditor() {
       return currentRange.editor;
-    },
-
-    skip: function(count) {
-      skip += (count || 1);
     },
 
     pause: function() {
@@ -71,15 +66,15 @@ Class.extend(EditorSelection, {
    * @return {HTMLElement} The element the selection starts in
    */
   get anchorBlockElement() {
-    return this.editor === currentRange.editor ? this.editor.element.children[currentRange.anchorBlockIndex] : null;
+    return this.editor === currentRange.editor ? this.editor.blockElements[currentRange.anchorBlockIndex] : null;
   },
 
   /**
-   * The selection's anchor index, the index into the text the selection starts at
-   * @return {Number} The text index the selection starts at
+   * The selection's anchor offset, the index into the text the selection starts at
+   * @return {Number} The text offset the selection starts at
    */
-  get anchorIndex() {
-    return this.editor === currentRange.editor ? currentRange.anchorIndex : -1;
+  get anchorOffset() {
+    return this.editor === currentRange.editor ? currentRange.anchorOffset : -1;
   },
 
   /**
@@ -103,15 +98,15 @@ Class.extend(EditorSelection, {
    * @return {HTMLElement} The element the selection ends in
    */
   get focusBlockElement() {
-    return this.editor === currentRange.editor ? this.editor.element.children[currentRange.focusBlockIndex] : null;
+    return this.editor === currentRange.editor ? this.editor.blockElements[currentRange.focusBlockIndex] : null;
   },
 
   /**
-   * The selection's focus index, the index into the text the selection ends at
-   * @return {Number} The text index the selection ends at
+   * The selection's focus offset, the index into the text the selection ends at
+   * @return {Number} The text offset the selection ends at
    */
-  get focusIndex() {
-    return this.editor === currentRange.editor ? currentRange.focusIndex : -1;
+  get focusOffset() {
+    return this.editor === currentRange.editor ? currentRange.focusOffset : -1;
   },
 
   /**
@@ -123,11 +118,27 @@ Class.extend(EditorSelection, {
   },
 
   /**
-   * The selection's starting index. This is the first of anchor or focus as it appears in the document.
-   * @return {Number} The index of the first block in the selection
+   * The selection's start block. This is the first of anchor or focus as it appears in the document.
+   * @return {Number} The first block in the selection
    */
-  get startIndex() {
-    return this.editor === currentRange.editor ? currentRange.startIndex : -1;
+  get startBlock() {
+    return this.editor === currentRange.editor ? this.editor.blocks[currentRange.startBlockIndex] : -1;
+  },
+
+  /**
+   * The selection's start block element, the element the selection starts in
+   * @return {HTMLElement} The element the selection starts in
+   */
+  get startBlockElement() {
+    return this.editor === currentRange.editor ? this.editor.blockElements[currentRange.startBlockIndex] : null;
+  },
+
+  /**
+   * The selection's starting offset. This is the first of anchor or focus as it appears in the document.
+   * @return {Number} The offset of the first block in the selection
+   */
+  get startOffset() {
+    return this.editor === currentRange.editor ? currentRange.startOffset : -1;
   },
 
   /**
@@ -139,11 +150,27 @@ Class.extend(EditorSelection, {
   },
 
   /**
-   * The selection's ending index. This is the first of anchor or focus as it appears in the document.
-   * @return {Number} The index of the first block in the selection
+   * The selection's end block. This is the last of anchor or focus as it appears in the document.
+   * @return {Number} The last block in the selection
    */
-  get endIndex() {
-    return this.editor === currentRange.editor ? currentRange.endIndex : -1;
+  get endBlock() {
+    return this.editor === currentRange.editor ? this.editor.blocks[currentRange.endBlockIndex] : -1;
+  },
+
+  /**
+   * The selection's end block element, the element the selection ends in
+   * @return {HTMLElement} The element the selection ends in
+   */
+  get endBlockElement() {
+    return this.editor === currentRange.editor ? this.editor.blockElements[currentRange.endBlockIndex] : null;
+  },
+
+  /**
+   * The selection's ending offset. This is the first of anchor or focus as it appears in the document.
+   * @return {Number} The offset of the first block in the selection
+   */
+  get endOffset() {
+    return this.editor === currentRange.editor ? currentRange.endOffset : -1;
   },
 
   get selectedBlocks() {
@@ -164,8 +191,8 @@ Class.extend(EditorSelection, {
    * Indicates if the selection is a single point rather than a range of items
    * @return {Boolean} Whether the selection is collapsed
    */
-  get collapsed() {
-    return this.editor !== currentRange.editor || currentRange.collapsed;
+  get isCollapsed() {
+    return this.editor !== currentRange.editor || currentRange.isCollapsed;
   },
 
   /**
@@ -174,7 +201,7 @@ Class.extend(EditorSelection, {
    */
   get atBeginning() {
     if (this.editor !== currentRange.editor) return false;
-    return currentRange.collapsed && currentRange.anchorBlockIndex === 0 && currentRange.anchorIndex === 0;
+    return currentRange.isCollapsed && currentRange.anchorBlockIndex === 0 && currentRange.anchorOffset === 0;
   },
 
   /**
@@ -185,9 +212,9 @@ Class.extend(EditorSelection, {
     if (this.editor !== currentRange.editor) return false;
     var lastIndex = this.editor.blocks.length - 1;
     var textLength = this.editor.blocks[lastIndex].text.length;
-    return currentRange.collapsed &&
+    return currentRange.isCollapsed &&
            currentRange.anchorBlockIndex === lastIndex &&
-           currentRange.anchorIndex === textLength;
+           currentRange.anchorOffset === textLength;
   },
 
   /**
@@ -235,9 +262,7 @@ Class.extend(EditorSelection, {
 document.addEventListener('selectionchanged', updateSelectionRange);
 
 function updateSelectionRange(forceLastRangeUpdate) {
-  if (skip) {
-    skip--;
-  } else if (!paused) {
+  if (!paused) {
     var previousRange = currentRange;
     currentRange = getEditorRange();
 
@@ -249,15 +274,15 @@ function updateSelectionRange(forceLastRangeUpdate) {
     lastRange = previousRange;
     // Dispatch one selection change event per editor that was affected
     if (lastRange.editor) {
-      dispatchSelectionEvent(lastRange.editor, 'selectionchanged');
+      dispatchSelectionEvent(lastRange.editor, 'selectionchange');
     }
     if (currentRange.editor && currentRange.editor !== lastRange.editor) {
-      dispatchSelectionEvent(currentRange.editor, 'selectionchanged');
+      dispatchSelectionEvent(currentRange.editor, 'selectionchange');
     }
 
     // Dispatch an editor selection change event once, with the target being either the current editor or the last
     // editor if there are no current editor's selected. This one bubbles
-    dispatchSelectionEvent(currentRange.editor || lastRange.editor, 'editorselectionchanged', { bubbles: true });
+    dispatchSelectionEvent(currentRange.editor || lastRange.editor, 'editorselectionchange', { bubbles: true });
   }
 }
 
@@ -277,22 +302,26 @@ function getEditorRange() {
     return editorRange;
   }
 
+  var blockElements = editor.blockElements;
   editorRange.editor = editor;
-  var anchor = getBlock(anchorElement, editorElement);
-  var focus = getBlock(focusElement, editorElement);
-  editorRange.anchorBlockIndex = indexOf.call(editorElement.children, anchor);
-  editorRange.focusBlockIndex = indexOf.call(editorElement.children, focus);
+  var anchor = getBlock(anchorElement, editor);
+  var focus = getBlock(focusElement, editor);
+  if (!anchor || !focus) {
+    return editorRange;
+  }
+  editorRange.anchorBlockIndex = indexOf.call(blockElements, anchor);
+  editorRange.focusBlockIndex = indexOf.call(blockElements, focus);
 
   editorRange.type = getType(selection);
   if (editorRange.type === 'media') {
     var element = getSelectedElement(selection);
-    editorRange.anchorIndex = focusIndex = getElementIndex(anchor, element);
+    editorRange.anchorOffset = focusOffset = getElementIndex(anchor, element);
   } else {
-    editorRange.anchorIndex = getTextIndex(anchor, selection.anchorNode, selection.anchorOffset);
+    editorRange.anchorOffset = getTextOffset(anchor, selection.anchorNode, selection.anchorOffset);
     if (selection.isCollapsed) {
-      editorRange.focusIndex = editorRange.anchorIndex;
+      editorRange.focusOffset = editorRange.anchorOffset;
     } else {
-      editorRange.focusIndex = getTextIndex(focus, selection.focusNode, selection.focusOffset);
+      editorRange.focusOffset = getTextOffset(focus, selection.focusNode, selection.focusOffset);
     }
   }
 
@@ -304,17 +333,17 @@ function selectEditorRange(editorRange) {
   if (!editorRange.editor) {
     return;
   }
-  var element = editorRange.editor.element;
-  var anchorBlockElement = element.children[editorRange.anchorBlockIndex];
-  var focusBlockElement = element.children[editorRange.focusBlockIndex];
+  var blockElements = editorRange.editor.blockElements;
+  var anchorBlockElement = blockElements[editorRange.anchorBlockIndex];
+  var focusBlockElement = blockElements[editorRange.focusBlockIndex];
   var selection = window.getSelection();
   var range = document.createRange();
 
   if (editorRange.type === 'media') {
     // TODO support media selection
   } else {
-    var anchor = getDOMIndex(anchorBlockElement, editorRange.anchorIndex);
-    var focus = editorRange.collapsed ? anchor : getDOMIndex(focusBlockElement, editorRange.focusIndex);
+    var anchor = getDOMOffset(anchorBlockElement, editorRange.anchorOffset);
+    var focus = editorRange.isCollapsed ? anchor : getDOMOffset(focusBlockElement, editorRange.focusOffset);
 
     // Only change the selection if it is not correct
     if (selection.anchorNode !== anchor.node ||
@@ -323,13 +352,12 @@ function selectEditorRange(editorRange) {
       selection.focusOffset !== focus.offset)
     {
       range.setStart(anchor.node, anchor.offset);
-      skip++; // removeAllRanges and addRange will both trigger the selectionchange event, we only ned to update once
       selection.removeAllRanges();
       selection.addRange(range);
 
       // Since native browser Ranges don't allow the "start" to be after the "end" we need to use the selection APIs to
       // move the focus so that it may go in reverse
-      if (!editorRange.collapsed) {
+      if (!editorRange.isCollapsed) {
         selection.extend(focus.node, focus.offset);
       }
     }
@@ -344,7 +372,8 @@ function getSelectedElement(selection) {
   return selection.anchorNode.childNodes[selection.anchorOffset];
 }
 
-function getBlock(node, editorElement) {
+function getBlock(node, editor) {
+  return node.closest(editor.schema.blocksSelector);
   while (node && node.parentNode !== editorElement) {
     node = node.parentNode;
   }
@@ -363,11 +392,26 @@ function getType(selection) {
   return 'text';
 }
 
-function getTextIndex(within, node, offset) {
-  var range = document.createRange();
-  range.setStartBefore(within);
-  range.setEnd(node, offset);
-  return range.toString().length;
+// Given a text node and local offset, get the text offset within the block element
+function getTextOffset(within, selectionNode, offset) {
+  if (within === selectionNode) {
+    // This happens when there is a single BR child and no text nodes
+    return offset;
+  }
+
+  var walker = getTextWalker(within);
+  var node, i = 0;
+  while ( (node = walker.nextNode())) {
+    if (node.nodeName === 'BR') {
+      i++;
+    } else if (node === selectionNode) {
+      i += offset;
+      break;
+    } else {
+      i += node.nodeValue.length;
+    }
+  }
+  return i;
 }
 
 function getElementIndex(within, element) {
@@ -376,25 +420,31 @@ function getElementIndex(within, element) {
 }
 
 
-function getDOMIndex(within, index) {
+// Given the block element and text offset within it, find the text node + local offset of that node for selecting
+function getDOMOffset(within, index) {
   if (index === 0 && within.childNodes.length === 1 && within.firstChild.nodeName === 'BR') {
     return { node: within, offset: 0 };
   }
 
-  var walker = document.createTreeWalker(within, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+  var walker = getTextWalker(within);
   var node, i = 0;
   while ( (node = walker.nextNode())) {
-    var name = node.nodeName.toLowerCase();
-    if (name === 'br') {
+    if (node.nodeName === 'BR') {
       i++; // newline
-    } else if (name === '#text') {
-      if (i + node.data.length >= index) {
+    } else {
+      if (i + node.nodeValue.length >= index) {
         return { node: node, offset: index - i };
       } else {
-        i += node.data.length;
+        i += node.nodeValue.length;
       }
     }
   }
+}
+
+function getTextWalker(root) {
+  return document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, function(node) {
+    return node.nodeName === '#text' || node.nodeName === 'BR';
+  });
 }
 
 function dispatchSelectionEvent(editor, name, options) {

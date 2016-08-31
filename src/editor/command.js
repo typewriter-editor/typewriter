@@ -7,7 +7,7 @@ function Command(args) {
 
 Class.extend(Command, {
   // Set by the history that executes the command
-  history: null,
+  editor: null,
   selectionAfter: null,
   selectionBefore: null,
 

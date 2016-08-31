@@ -10,8 +10,10 @@ var mapping = require('./mapping');
 var menu = require('./menu');
 var Block = require('./blocks/block');
 var interactions = require('./interactions');
+var slice = Array.prototype.slice;
 var modifiedEvents = [ 'input', 'focus', 'blur', 'focusin', 'focusout', 'paste' ];
 require('./selectionchange-polyfill');
+require('./arrayfind-polyfill');
 
 
 /**
@@ -92,13 +94,22 @@ Class.extend(Editor, {
    * @type {String}
    */
   get html() {
-    return this.element.innerHTML;
+    var content = this.element.cloneNode(true);
+    slice.call(content.querySelectorAll(this.schema.blocksSelector)).forEach(function(blockElement) {
+      blockElement.removeAttribute('blockid');
+      blockElement.removeAttribute('placeholder');
+      blockElement.classList.remove('empty', 'selected');
+      if (blockElement.getAttribute('class') === '') {
+        blockElement.removeAttribute('class');
+      }
+    });
+    return content.innerHTML;
   },
 
   set html(html) {
     var div = document.createElement('div');
     div.innerHTML = html;
-    this.blocks = mapping.blocksFromDOM(this.schema, div);
+    this.blocks = mapping.blocksFromDOM(this, div);
     this.render();
   },
 
@@ -138,44 +149,65 @@ Class.extend(Editor, {
     this._history = value;
   },
 
-  toggleBlockType: function(type) {
-    var BlockType = this.schema.getBlockType(type);
+  /**
+   * Returns all the block elements
+   * @return {Array} An array of all the block elements
+   */
+  get blockElements() {
+    return slice.call(this.element.querySelectorAll(this.schema.blocksSelector));
+  },
+
+
+  setBlockType: function(selector, toggle) {
+    var BlockType = this.schema.blocks[selector];
     if (!BlockType) return;
 
     var selectedBlocks = this.selection.selectedBlocks;
     var blockStart = this.selection.startBlockIndex;
 
-    var toggleOff = selectedBlocks.every(function(block) {
-      return block instanceof BlockType;
-    });
+    if (toggle) {
+      var toggleOff = selectedBlocks.every(function(block) {
+        return block.selector === selector;
+      });
 
-    if (toggleOff) BlockType = this.schema.defaultBlock;
+      if (toggleOff) {
+        selector = this.schema.defaultBlock;
+        BlockType = this.schema.blocks[selector];
+      }
+    }
 
     this.startTransaction();
     selectedBlocks.forEach(function(block, index) {
-      if (block instanceof BlockType) return;
+      if (block.selector === selector) return;
       block = block.clone(BlockType);
+      block = new BlockType(selector, block.text, block.markups);
       this.exec('updateBlock', { index: blockStart + index, block: block });
     }, this);
     this.commit();
   },
 
-  toggleMarkup: function(type) {
-    var MarkupType = this.schema.getMarkupType(type);
+
+  toggleBlockType: function(selector) {
+    this.setBlockType(selector, true);
+  },
+
+
+  toggleMarkup: function(selector) {
+    var MarkupType = this.schema.markups[selector];
     if (!MarkupType) return;
 
     var selectedBlocks = this.selection.selectedBlocks;
     var blockStart = this.selection.startBlockIndex;
-    var textStart = this.selection.startIndex;
+    var textStart = this.selection.startOffset;
     var blockEnd = this.selection.endBlockIndex;
-    var textEnd = this.selection.endIndex;
+    var textEnd = this.selection.endOffset;
 
     var toggleOff = selectedBlocks.every(function(block, index) {
       // check if the selected range in this block is already marked up with the same type
-      var startIndex = index === 0 ? textStart : 0;
-      var endIndex = index === selectedBlocks.length - 1 ? textEnd : block.text.length - 1;
+      var startOffset = index === 0 ? textStart : 0;
+      var endOffset = index === selectedBlocks.length - 1 ? textEnd : block.text.length - 1;
       return block.markups.some(function(markup) {
-        return markup instanceof MarkupType && markup.startIndex <= startIndex && markup.endIndex >= endIndex;
+        return markup instanceof MarkupType && markup.startOffset <= startOffset && markup.endOffset >= endOffset;
       });
     });
 
@@ -184,34 +216,34 @@ Class.extend(Editor, {
     // TODO clean this up, moving methods to block/markup/schema where necessary
 
     selectedBlocks.forEach(function(block, index) {
-      var startIndex = index === 0 ? textStart : 0;
-      var endIndex = index === selectedBlocks.length - 1 ? textEnd : block.text.length - 1;
+      var startOffset = index === 0 ? textStart : 0;
+      var endOffset = index === selectedBlocks.length - 1 ? textEnd : block.text.length - 1;
       block = block.clone();
 
       // Remove the markup (or reduce it)
       // TODO determine if this could be part of the Add Markup code, but with a negative markup object, (flag for remove?)
       if (toggleOff) {
         block.markups.some(function(markup, i) {
-          if (!(markup instanceof MarkupType) || markup.startIndex > startIndex || markup.endIndex < endIndex) {
+          if (!(markup instanceof MarkupType) || markup.startOffset > startOffset || markup.endOffset < endOffset) {
             return false;
           }
           markup = markup.clone();
           block.markups[i] = markup;
 
           // If the whole markup needs to be removed
-          if (markup.startIndex === startIndex && markup.endIndex === endIndex) {
+          if (markup.startOffset === startOffset && markup.endOffset === endOffset) {
             block.markups.splice(i, 1);
           // If the markup needs to be split into two
-          } else if (markup.startIndex !== startIndex && markup.endIndex !== endIndex) {
+          } else if (markup.startOffset !== startOffset && markup.endOffset !== endOffset) {
             var secondMarkup = markup.clone();
-            markup.endIndex = startIndex;
-            secondMarkup.startIndex = endIndex;
+            markup.endOffset = startOffset;
+            secondMarkup.startOffset = endOffset;
             block.markups.splice(i + 1, 0, secondMarkup);
           // If the markup needs to be shortened at the front or back
-          } else if (markup.startIndex === startIndex) {
-            markup.startIndex = endIndex;
+          } else if (markup.startOffset === startOffset) {
+            markup.startOffset = endOffset;
           } else {
-            markup.endIndex = startIndex;
+            markup.endOffset = startOffset;
           }
 
           return true;
@@ -220,7 +252,7 @@ Class.extend(Editor, {
       // Add the markup
       } else {
 
-        var markup = new MarkupType(startIndex, endIndex);
+        var markup = new MarkupType(startOffset, endOffset);
         block.markups.push(markup);
 
         this.schema.normalizeMarkups(block);
@@ -232,15 +264,21 @@ Class.extend(Editor, {
   },
 
   exec: function(commandName, action) {
-    return this.history.exec.apply(this.history, arguments);
+    return this.history.exec(this, commandName, action);
   },
 
   startTransaction: function() {
-    return this.history.start();
+    return this.history.start(this);
   },
 
   commit: function() {
     return this.history.commit();
+  },
+
+  setTransactionSelection(type, anchorIndex, anchorOffset, focusIndex, focusOffset) {
+    this.history.setNextSelection(new EditorRange(this, type, anchorIndex, anchorOffset,
+      focusIndex !== undefined ? focusIndex : anchorIndex,
+      focusOffset !== undefined ? focusOffset : anchorOffset));
   },
 
   on: function(event, listener) {
@@ -261,9 +299,7 @@ Class.extend(Editor, {
   },
 
   render: function() {
-    var fragment = mapping.blocksToDOM(this.schema, this.blocks);
-    while (this.element.lastChild) this.element.removeChild(this.element.lastChild);
-    this.element.appendChild(fragment);
+    mapping.generateElements(this);
     if (this.element.hasAttribute('placeholder')) {
       this.element.firstChild.setAttribute('placeholder', this.element.getAttribute('placeholder'));
     }
@@ -271,7 +307,7 @@ Class.extend(Editor, {
 
   onKeyDown: function(event) {
     var shortcut = shortcuts.fromEvent(event);
-    if (!this.dispatch('shortcut', { shortcut: shortcut, originalEvent: event })) {
+    if (!this.dispatch('shortcut', { cancelable: true, shortcut: shortcut, originalEvent: event })) {
       event.preventDefault();
     }
   }
