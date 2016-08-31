@@ -1,6 +1,5 @@
 module.exports = Block;
 var Class = require('chip-utils/class');
-var Markup = require('../markups/markup');
 var selectors = require('../selectors');
 
 /**
@@ -46,7 +45,7 @@ Class.extend(Block, {
 
   createElement: function() {
     var block = selectors.createElement(this.selector);
-    block.setAttribute('blockid', this.id);
+    block.setAttribute('name', this.id);
     return block;
   },
 

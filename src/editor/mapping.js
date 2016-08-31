@@ -23,7 +23,7 @@ mapping.generateElement = function(editor, block) {
   var element = mapping.blockToDOM(editor, block);
 
   // Remove the existing one if there is one
-  if (nextElement && nextElement.getAttribute('blockid') === block.id) {
+  if (nextElement && nextElement.getAttribute('name') === block.id) {
     removeElement(editor, block, nextElement);
     nextElement = blockElements[index + 1];
     blockElements.splice(index, 1, element);
@@ -89,7 +89,7 @@ mapping.generateElements = function(editor) {
 
 mapping.removeElement = function(editor, block) {
   var element = editor.blockElements.find(function(elem) {
-    return elem.getAttribute('blockid') === block.id;
+    return elem.getAttribute('name') === block.id;
   });
   removeElement(editor, block, element);
 };
@@ -119,7 +119,7 @@ mapping.blockFromDOM = function(editor, element, container) {
   var Type = editor.schema.getBlockType(element);
   var block = Type && new Type(selectors.fromElement(element, container));
   if (block) {
-    var id = element.getAttribute('blockid');
+    var id = element.getAttribute('name');
     if (id) {
       block.id = id;
     }
@@ -181,7 +181,7 @@ mapping.textFromDOM = function(editor, element) {
     var markup;
 
     if (name === '#text') {
-      result.text += node.data;
+      result.text += node.nodeValue;
     } else if (name === 'br') {
       result.text += '\n';
     } else if (node.textContent.trim() !== '') {
@@ -239,27 +239,27 @@ mapping.textToDOM = function(editor, block) {
     // Find the first textNode this markup starts in
     var currentIndex = 0;
     while (textNode) {
-      if (currentIndex + textNode.data.length > markup.startOffset) {
+      if (currentIndex + textNode.nodeValue.length > markup.startOffset) {
         if (markup.startOffset !== currentIndex) {
           breakTextNode(textNode, markup.startOffset - currentIndex);
           textNode = walker.nextNode();
         }
         break;
       }
-      currentIndex += textNode.data.length;
+      currentIndex += textNode.nodeValue.length;
       textNode = walker.nextNode();
     }
 
     // Add the elements to each text node necessary
     while (remainingLength > 0) {
-      if (textNode.data.length > remainingLength) {
+      if (textNode.nodeValue.length > remainingLength) {
         breakTextNode(textNode, remainingLength);
       }
 
-      var element = markup.toDOM();
+      var element = markup.createElement();
       textNode.parentNode.replaceChild(element, textNode);
       element.appendChild(textNode);
-      remainingLength -= textNode.data.length;
+      remainingLength -= textNode.nodeValue.length;
       textNode = walker.nextNode();
     }
   });
@@ -268,21 +268,29 @@ mapping.textToDOM = function(editor, block) {
   walker.currentNode = fragment;
   var textNode;
   while ((textNode = walker.nextNode())) {
-    var index = textNode.data.indexOf('\n');
+    var index = textNode.nodeValue.indexOf('\n');
     if (index !== -1) {
       breakTextNode(textNode, index + 1);
       textNode.parentNode.insertBefore(document.createElement('br'), textNode.nextSibling);
-      textNode.data = textNode.data.slice(0, index);
+      textNode.nodeValue = textNode.nodeValue.slice(0, index);
     }
-    textNode.data = textNode.data.replace(/  /g, ' &nbsp;')
+    textNode.nodeValue = textNode.nodeValue.replace(/  /g, ' &nbsp;')
+  }
+
+  if (text.slice(-1) === '\n') {
+    var parent = fragment;
+    while (parent.lastChild.nodeType !== Node.TEXT_NODE && parent.lastChild.nodeName !== 'BR') {
+      parent = parent.lastChild;
+    }
+    parent.appendChild(document.createElement('br'));
   }
 
   return fragment;
 }
 
 function breakTextNode(node, index) {
-  node.parentNode.insertBefore(document.createTextNode(node.data.slice(index)), node.nextSibling);
-  node.data = node.data.slice(0, index);
+  node.parentNode.insertBefore(document.createTextNode(node.nodeValue.slice(index)), node.nextSibling);
+  node.nodeValue = node.nodeValue.slice(0, index);
 }
 
 function outerElement(editor, element) {

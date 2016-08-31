@@ -19,7 +19,7 @@ Class.extend(Schema, {
   },
 
   getMarkupType: function(element) {
-    return findType(this.blocks, element);
+    return findType(this.markups, element);
   },
 
   getInitial: function() {

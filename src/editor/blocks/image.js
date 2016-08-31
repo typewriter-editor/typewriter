@@ -17,7 +17,7 @@ Block.extend(ImageBlock, {
     var figure = selectors.createElement('figure[contenteditable="false"]');
     var image = selectors.createElement('img[src="' + this.metadata.src + '"]');
     var caption = selectors.createElement('figcaption[contenteditable="true"]');
-    figure.setAttribute('blockid', this.id);
+    figure.setAttribute('name', this.id);
     figure.appendChild(image);
     figure.appendChild(caption);
     return figure;

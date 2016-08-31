@@ -1,5 +1,6 @@
 module.exports = Markup;
 var Class = require('chip-utils/class');
+var selectors = require('../selectors');
 
 
 function Markup(selector, startOffset, endOffset) {
@@ -10,6 +11,11 @@ function Markup(selector, startOffset, endOffset) {
 }
 
 Class.extend(Markup, {
+
+
+  createElement: function() {
+    return selectors.createElement(this.selector);
+  },
 
   same: function(markup) {
     return markup && this.constructor === markup.constructor && this.selector === markup.selector;

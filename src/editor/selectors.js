@@ -57,7 +57,7 @@ function fromElement(element, container, ignore) {
   ignore.classes.empty = true;
   ignore.classes.selected = true;
   ignore.attributes.class = true;
-  ignore.attributes.blockid = true;
+  ignore.attributes.name = true;
   ignore.attributes.placeholder = true;
 
   var selector = element.tagName.toLowerCase();

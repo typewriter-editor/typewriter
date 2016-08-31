@@ -96,7 +96,7 @@ Class.extend(Editor, {
   get html() {
     var content = this.element.cloneNode(true);
     slice.call(content.querySelectorAll(this.schema.blocksSelector)).forEach(function(blockElement) {
-      blockElement.removeAttribute('blockid');
+      blockElement.removeAttribute('name');
       blockElement.removeAttribute('placeholder');
       blockElement.classList.remove('empty', 'selected');
       if (blockElement.getAttribute('class') === '') {
@@ -121,9 +121,41 @@ Class.extend(Editor, {
    * @type {String}
    */
   get text() {
-    return this.blocks.map(function(block) {
-      return block.text;
-    }).join('\n');
+    var count = 0;
+    var tagExp = /^[a-z1-6]+/;
+    var headerExp = /^h(\d)$/;
+
+    return this.blocks.map(function(block, i, blocks) {
+      var tag = block.selector.match(tagExp)[0];
+      var prev = blocks[i - 1];
+      var text = block.text;
+      var match;
+
+      if (tag === 'ol') {
+        text = ++count + '. ' + text;
+      } else {
+        count = 0;
+      }
+
+      if (tag === 'ul') {
+        text = '* ' + text;
+      } else if (tag === 'blockquote') {
+        text = '> ' + text;
+      } else if ((match = tag.match(headerExp))) {
+        text = ' ' + text;
+        var i = parseInt(match[1]);
+        while (i--) text = '#' + text;
+      }
+
+      if (prev) {
+        if ((tag === 'ul' || tag === 'ol') && prev.selector === block.selector) {
+          text = '\n' + text;
+        } else {
+          text = '\n\n' + text;
+        }
+      }
+      return text;
+    }).join('');
   },
 
   set text(text) {
@@ -207,7 +239,7 @@ Class.extend(Editor, {
       var startOffset = index === 0 ? textStart : 0;
       var endOffset = index === selectedBlocks.length - 1 ? textEnd : block.text.length - 1;
       return block.markups.some(function(markup) {
-        return markup instanceof MarkupType && markup.startOffset <= startOffset && markup.endOffset >= endOffset;
+        return markup.selector === selector && markup.startOffset <= startOffset && markup.endOffset >= endOffset;
       });
     });
 
@@ -224,11 +256,9 @@ Class.extend(Editor, {
       // TODO determine if this could be part of the Add Markup code, but with a negative markup object, (flag for remove?)
       if (toggleOff) {
         block.markups.some(function(markup, i) {
-          if (!(markup instanceof MarkupType) || markup.startOffset > startOffset || markup.endOffset < endOffset) {
+          if (markup.selector !== selector || markup.startOffset > startOffset || markup.endOffset < endOffset) {
             return false;
           }
-          markup = markup.clone();
-          block.markups[i] = markup;
 
           // If the whole markup needs to be removed
           if (markup.startOffset === startOffset && markup.endOffset === endOffset) {
@@ -252,7 +282,7 @@ Class.extend(Editor, {
       // Add the markup
       } else {
 
-        var markup = new MarkupType(startOffset, endOffset);
+        var markup = new MarkupType(selector, startOffset, endOffset);
         block.markups.push(markup);
 
         this.schema.normalizeMarkups(block);

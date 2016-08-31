@@ -443,7 +443,11 @@ function getDOMOffset(within, index) {
 
 function getTextWalker(root) {
   return document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, function(node) {
-    return node.nodeName === '#text' || node.nodeName === 'BR';
+    if (node.nodeName === '#text' || node.nodeName === 'BR') {
+      return NodeFilter.FILTER_ACCEPT;
+    } else {
+      return NodeFilter.FILTER_SKIP;
+    }
   });
 }
 
