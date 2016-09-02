@@ -32,8 +32,8 @@ Class.extend(Schema, {
   sortMarkups: function(block) {
     var schema = this;
     block.markups.sort(function(markupA, markupB) {
-      var indexA = schema.markups.indexOf(markupA.constructor);
-      var indexB = schema.markups.indexOf(markupB.constructor);
+      var indexA = schema.markupsSelector.indexOf(markupA.selector);
+      var indexB = schema.markupsSelector.indexOf(markupB.selector);
       if (indexA === indexB) return markupA.startOffset - markupB.startOffset;
       return indexA - indexB;
     });
