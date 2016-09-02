@@ -98,6 +98,7 @@ Class.extend(History, {
     this.redoStack.length = 0;
 
     this.editor.dispatch('change');
+    this.editor.dispatch('editorchange', { bubbles: true });
 
     return command;
   },
@@ -157,6 +158,7 @@ Class.extend(History, {
     this.editor.selection.range = command.selectionBefore;
     this.redoStack.push(command);
     this.editor.dispatch('change');
+    this.editor.dispatch('editorchange', { bubbles: true });
     return true;
   },
 
@@ -173,6 +175,7 @@ Class.extend(History, {
     this.editor.selection.range = command.selectionAfter;
     this.undoStack.push(command);
     this.editor.dispatch('change');
+    this.editor.dispatch('editorchange', { bubbles: true });
     return true;
   }
 
