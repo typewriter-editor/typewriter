@@ -261,7 +261,8 @@ Class.extend(Editor, {
     var toggleOff = selectedBlocks.every(function(block, index) {
       // check if the selected range in this block is already marked up with the same type
       var startOffset = index === 0 ? textStart : 0;
-      var endOffset = index === selectedBlocks.length - 1 ? textEnd : block.text.length - 1;
+      var endOffset = index === selectedBlocks.length - 1 ? textEnd : block.text.length;
+      if (startOffset === endOffset) return true;
       return block.markups.some(function(markup) {
         return markup.selector === selector && markup.startOffset <= startOffset && markup.endOffset >= endOffset;
       });
@@ -273,7 +274,8 @@ Class.extend(Editor, {
 
     selectedBlocks.forEach(function(block, index) {
       var startOffset = index === 0 ? textStart : 0;
-      var endOffset = index === selectedBlocks.length - 1 ? textEnd : block.text.length - 1;
+      var endOffset = index === selectedBlocks.length - 1 ? textEnd : block.text.length;
+      if (startOffset === endOffset) return;
       block = block.clone();
 
       // Remove the markup (or reduce it)
