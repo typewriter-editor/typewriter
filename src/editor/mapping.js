@@ -218,6 +218,9 @@ mapping.textFromDOM = function(editor, element) {
     }
   }
 
+  // If the block.text ends in <br> there will be 1 extra \n, we can always take off the last \n
+  result.text = result.text.replace(/\n$/, '');
+
   editor.schema.normalizeMarkups(result);
 
   return result;
@@ -284,8 +287,16 @@ mapping.textToDOM = function(editor, block) {
       breakTextNode(textNode, index + 1);
       textNode.parentNode.insertBefore(document.createElement('br'), textNode.nextSibling);
       textNode.nodeValue = textNode.nodeValue.slice(0, index);
+      if (textNode.nodeValue.length === 0) {
+        walker.previousNode();
+        textNode.remove();
+      }
     }
     textNode.nodeValue = textNode.nodeValue.replace(/  /g, ' &nbsp;')
+  }
+
+  if (fragment.lastChild.nodeType === Node.TEXT_NODE && fragment.lastChild.nodeValue.length === 0) {
+    fragment.lastChild.remove();
   }
 
   if (text.slice(-1) === '\n') {

@@ -322,7 +322,9 @@ function getEditorRange() {
   editorRange.focusBlockIndex = indexOf.call(blockElements, focus);
 
   editorRange.type = getType(selection);
-  if (editorRange.type === 'media') {
+  if (editorRange.type === 'none') {
+    editorRange.anchorBlockIndex = editorRange.focusBlockIndex = -1;
+  } else if (editorRange.type === 'media') {
     var element = getSelectedElement(selection);
     editorRange.anchorOffset = focusOffset = getElementIndex(anchor, element);
   } else {
@@ -385,7 +387,7 @@ function getElement(node) {
 }
 
 function getSelectedElement(selection) {
-  return selection.anchorNode.childNodes[selection.anchorOffset];
+  return selection.anchorNode.childNodes[selection.anchorOffset] || selection.anchorNode.childNodes[selection.anchorOffset - 1];
 }
 
 function getBlock(node, editor) {
@@ -401,7 +403,9 @@ function getBlock(node, editor) {
 function getType(selection) {
   if (selection.isCollapsed && selection.anchorNode.nodeType === Node.ELEMENT_NODE) {
     var selectedNode = getSelectedElement(selection);
-    if (selectedNode.nodeType === Node.ELEMENT_NODE && selectedNode.tagName !== 'BR') {
+    if (!selectedNode) {
+      return 'none';
+    } else if (selectedNode.nodeType === Node.ELEMENT_NODE && selectedNode.tagName !== 'BR') {
       return 'media';
     }
   }
@@ -411,18 +415,21 @@ function getType(selection) {
 // Given a text node and local offset, get the text offset within the block element
 function getTextOffset(within, selectionNode, offset) {
   if (within === selectionNode) {
+    if (offset === 0) return 0;
+    selectionNode = within.childNodes[offset];
+    offset = 0;
     // This happens when there is a single BR child and no text nodes
-    return offset;
+    // return offset;
   }
 
   var walker = getTextWalker(within);
   var node, i = 0;
   while ( (node = walker.nextNode())) {
-    if (node.nodeName === 'BR') {
-      i++;
-    } else if (node === selectionNode) {
+    if (node === selectionNode) {
       i += offset;
       break;
+    } else if (node.nodeName === 'BR') {
+      i++;
     } else {
       i += node.nodeValue.length;
     }
@@ -447,6 +454,9 @@ function getDOMOffset(within, index) {
   while ( (node = walker.nextNode())) {
     if (node.nodeName === 'BR') {
       i++; // newline
+      if (i === index) {
+        return { node: node.parentNode, offset: indexOf.call(node.parentNode.childNodes, node) + 1 };
+      }
     } else {
       if (i + node.nodeValue.length >= index) {
         return { node: node, offset: index - i };
