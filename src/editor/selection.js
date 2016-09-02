@@ -266,6 +266,15 @@ function updateSelectionRange(forceLastRangeUpdate) {
     var previousRange = currentRange;
     currentRange = getEditorRange();
 
+    if (previousRange && previousRange.anchorBlockIndex !== -1 && previousRange.anchorBlockIndex === previousRange.focusBlockIndex) {
+      var prevBlock = previousRange.editor.blockElements[previousRange.anchorBlockIndex];
+      prevBlock && prevBlock.classList.remove('selected');
+    }
+
+    if (currentRange && currentRange.anchorBlockIndex !== -1 && currentRange.anchorBlockIndex === currentRange.focusBlockIndex) {
+      currentRange.editor.blockElements[currentRange.anchorBlockIndex].classList.add('selected');
+    }
+
     if (previousRange.equals(currentRange)) {
       if (forceLastRangeUpdate) lastRange = previousRange;
       return;

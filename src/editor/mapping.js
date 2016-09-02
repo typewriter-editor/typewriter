@@ -1,4 +1,5 @@
 var slice = Array.prototype.slice;
+var forEach = Array.prototype.forEach;
 var selectors = require('./selectors');
 var Editor = require('./editor');
 var Block = require('./blocks/block');
@@ -22,8 +23,15 @@ mapping.generateElement = function(editor, block) {
   var nextElement = blockElements[index];
   var element = mapping.blockToDOM(editor, block);
 
-  // Remove the existing one if there is one
+  // If there is an existing element we can update it or remove it to be replaced
   if (nextElement && nextElement.getAttribute('name') === block.id) {
+    // Update the element in-place and don't worry about the rest
+    if (nextElement.nodeName === element.nodeName) {
+      cloneElementTo(nextElement, element);
+      return;
+    }
+
+    // Remove the element for replacing
     removeElement(editor, block, nextElement);
     nextElement = blockElements[index + 1];
     blockElements.splice(index, 1, element);
@@ -148,6 +156,9 @@ mapping.blockToDOM = function(editor, block) {
 
     if (!block.text) {
       contentElement.classList.add('empty');
+    }
+    if (editor.blocks[0] === block && editor.element.getAttribute('placeholder')) {
+      contentElement.setAttribute('placeholder', editor.element.getAttribute('placeholder'));
     }
   }
 
@@ -306,5 +317,25 @@ function removeElement(editor, block, element) {
       var element = outerElement(editor, element);
     }
     element.parentNode.removeChild(element);
+  }
+}
+
+function cloneElementTo(target, source) {
+  // remove attributes that are not on the source
+  forEach.call(target.attributes, function(attr) {
+    if (!source.attributes[attr.name]) {
+      target.removeAttribute(attr.name);
+    }
+  });
+
+  // set the attributes that are on the source
+  forEach.call(source.attributes, function(attr) {
+    if (target.getAttribute(attr.name) !== attr.value) {
+      target.setAttribute(attr.name, attr.value);
+    }
+  });
+
+  if (target.innerHTML !== source.innerHTML) {
+    target.innerHTML = source.innerHTML;
   }
 }

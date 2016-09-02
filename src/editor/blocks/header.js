@@ -13,7 +13,10 @@ Block.extend(HeaderBlock, {
 
   createElement: function() {
     var element = Block.prototype.createElement.call(this);
-    element.id = this.text.toLowerCase().replace("'", '').replace(/[^a-z]+/, '-').replace(/^-|-$/g, '');
+    var trimmed = this.text.trim().toLowerCase();
+    if (trimmed) {
+      element.id = trimmed.replace("'", '').replace(/[^a-z]+/, '-').replace(/^-|-$/g, '');
+    }
     return element;
   }
 });

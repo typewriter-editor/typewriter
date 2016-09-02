@@ -6,29 +6,29 @@ var PreformattedBlock = require('../blocks/preformatted');
 var ImageBlock = require('../blocks/image');
 var Markup = require('../markups/markup');
 
-
-var blocks = {
-  p: Block,
-  h1: HeaderBlock,
-  h2: HeaderBlock,
-  h3: HeaderBlock,
-  h4: HeaderBlock,
-  h5: HeaderBlock,
-  h6: HeaderBlock,
-  pre: PreformattedBlock,
-  'blockquote.pullquote': Block,
-  blockquote: Block,
-  'ul>li': ListBlock,
-  'ol>li': ListBlock,
-  figure: ImageBlock
-};
-
-
-var markups = {
-  'a[href]': Markup,
-  strong: Markup,
-  em: Markup
-};
+exports.get = function() {
+  var blocks = {
+    p: Block,
+    h1: HeaderBlock,
+    h2: HeaderBlock,
+    h3: HeaderBlock,
+    h4: HeaderBlock,
+    h5: HeaderBlock,
+    h6: HeaderBlock,
+    pre: PreformattedBlock,
+    'blockquote.pullquote': Block,
+    blockquote: Block,
+    'ul>li': ListBlock,
+    'ol>li': ListBlock,
+    figure: ImageBlock
+  };
 
 
-module.exports = new Schema(blocks, markups, 'p', [ new Block('p') ]);
+  var markups = {
+    'a[href]': Markup,
+    strong: Markup,
+    em: Markup
+  };
+
+  return new Schema(blocks, markups, 'p', [ new Block('p') ]);
+}

@@ -56,6 +56,7 @@ function fromElement(element, container, ignore) {
   if (!ignore.attributes) ignore.attributes = {};
   ignore.classes.empty = true;
   ignore.classes.selected = true;
+  ignore.attributes.id = true;
   ignore.attributes.class = true;
   ignore.attributes.name = true;
   ignore.attributes.placeholder = true;

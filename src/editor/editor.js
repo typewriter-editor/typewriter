@@ -24,7 +24,7 @@ require('./arrayfind-polyfill');
 function Editor(element, options) {
   this.element = element;
   this.options = options || {};
-  this.schema = this.options.schema || defaultSchema;
+  this.schema = this.options.schema || defaultSchema.get();
   this.history = new History();
   this.history.editor = this;
   this.selection = new EditorSelection(this);
@@ -159,11 +159,35 @@ Class.extend(Editor, {
   },
 
   set text(text) {
+    var prefixExp = /^(#+|\d+\.|\*|>) /;
+
     this.blocks = text.split(/\n/).map(function(text) {
-      var block = new Block('p');
+      if (!text) return;
+      var selector = this.schema.defaultBlock;
+      var match = text.match(prefixExp);
+      if (match) {
+        var prefix = match[1];
+        if (prefix[0] === '#') {
+          selector = 'h' + prefix.length;
+        } else if (prefix === '*') {
+          selector = 'ul>li';
+        } else if (prefix === '>') {
+          selector = 'blockquote';
+        } else {
+          selector = 'ol>li';
+        }
+        if (!this.schema.blocks[selector]) {
+          selector = this.schema.defaultBlock;
+        } else {
+          text = text.replace(prefixExp, '');
+        }
+      }
+
+      var BlockType = this.schema.blocks[selector];
+      var block = new BlockType(selector);
       block.text = text;
       return block;
-    });
+    }, this).filter(Boolean);
     this.render();
   },
 
@@ -330,9 +354,6 @@ Class.extend(Editor, {
 
   render: function() {
     mapping.generateElements(this);
-    if (this.element.hasAttribute('placeholder')) {
-      this.element.firstChild.setAttribute('placeholder', this.element.getAttribute('placeholder'));
-    }
   },
 
   onKeyDown: function(event) {
