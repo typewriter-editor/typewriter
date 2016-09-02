@@ -226,7 +226,7 @@ Class.extend(EditorSelection, {
   },
 
   set range(editorRange) {
-    if (editorRange.equals(getEditorRange())) {
+    if (!editorRange || editorRange.equals(getEditorRange())) {
       return;
     }
     editorRange.editor = this.editor;
@@ -332,6 +332,13 @@ function getEditorRange() {
     } else {
       editorRange.focusOffset = getTextOffset(focus, selection.focusNode, selection.focusOffset);
     }
+  }
+
+  if (editorRange.type === 'text' && editorRange.anchorBlockIndex !== editorRange.focusBlockIndex && editorRange.endOffset === 0) {
+    var which = editorRange.anchorBlockIndex === editorRange.endBlockIndex ? 'anchor' : 'focus';
+    var index = --editorRange[which + 'BlockIndex'];
+    editorRange[which + 'Offset'] = editor.blocks[index].text.length;
+    selectEditorRange(editorRange);
   }
 
   return editorRange;
