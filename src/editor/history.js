@@ -80,16 +80,16 @@ Class.extend(History, {
     }
 
     if (this.nextSelection) {
-      command.selectionBefore = this.editor.selection.range;
+      command.selectionBefore = editor.selection.range;
       command.selectionAfter = this.nextSelection;
       this.nextSelection = null;
     } else {
-      command.selectionBefore = this.editor.selection.lastRange;
-      command.selectionAfter = this.editor.selection.range;
+      command.selectionBefore = editor.selection.lastRange;
+      command.selectionAfter = editor.selection.range;
     }
 
-    this.editor.selection.range = command.selectionAfter;
-    this.editor.selection.update();
+    editor.selection.range = command.selectionAfter;
+    editor.selection.update();
 
     this.undoStack.push(command);
     if (this.options.maxHistory && this.undoStack.length >= this.options.maxHistory) {
@@ -97,8 +97,8 @@ Class.extend(History, {
     }
     this.redoStack.length = 0;
 
-    this.editor.dispatch('change');
-    this.editor.dispatch('editorchange', { bubbles: true });
+    editor.dispatch('change');
+    editor.dispatch('editorchange', { bubbles: true });
 
     return command;
   },
@@ -155,10 +155,10 @@ Class.extend(History, {
     if (!command) return false;
 
     command.undo();
-    this.editor.selection.range = command.selectionBefore;
+    command.editor.selection.range = command.selectionBefore;
     this.redoStack.push(command);
-    this.editor.dispatch('change');
-    this.editor.dispatch('editorchange', { bubbles: true });
+    command.editor.dispatch('change');
+    command.editor.dispatch('editorchange', { bubbles: true });
     return true;
   },
 
@@ -172,10 +172,10 @@ Class.extend(History, {
     if (!command) return false;
 
     command.redo();
-    this.editor.selection.range = command.selectionAfter;
+    command.editor.selection.range = command.selectionAfter;
     this.undoStack.push(command);
-    this.editor.dispatch('change');
-    this.editor.dispatch('editorchange', { bubbles: true });
+    command.editor.dispatch('change');
+    command.editor.dispatch('editorchange', { bubbles: true });
     return true;
   }
 

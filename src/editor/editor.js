@@ -26,7 +26,6 @@ function Editor(element, options) {
   this.options = options || {};
   this.schema = this.options.schema || defaultSchema.get();
   this.history = new History();
-  this.history.editor = this;
   this.selection = new EditorSelection(this);
   this.blocks = this.schema.getInitial();
   this.onKeyDown = this.onKeyDown.bind(this);
@@ -200,8 +199,6 @@ Class.extend(Editor, {
   },
 
   set history(value) {
-    if (this._history) delete this._history.editor;
-    if (value) Object.defineProperty(value, 'editor', { configurable: true, value: this });
     this._history = value;
   },
 
