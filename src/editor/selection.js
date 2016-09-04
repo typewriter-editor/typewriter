@@ -226,7 +226,11 @@ Class.extend(EditorSelection, {
   },
 
   set range(editorRange) {
-    if (!editorRange || editorRange.equals(getEditorRange())) {
+    var actualRange = getEditorRange();
+    if (!editorRange || editorRange.equals(actualRange)) {
+      if (!currentRange.equals(actualRange)) {
+        currentRange = actualRange;
+      }
       return;
     }
     editorRange.editor = this.editor;
@@ -445,7 +449,7 @@ function getElementIndex(within, element) {
 
 // Given the block element and text offset within it, find the text node + local offset of that node for selecting
 function getDOMOffset(within, index) {
-  if (index === 0 && within.childNodes.length === 1 && within.firstChild.nodeName === 'BR') {
+  if (index === 0 && within.firstChild.nodeName === 'BR') {
     return { node: within, offset: 0 };
   }
 

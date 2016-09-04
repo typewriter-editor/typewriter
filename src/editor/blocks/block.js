@@ -63,7 +63,7 @@ Class.extend(Block, {
   },
 
   clone: function(newId) {
-    var block = new Block(this.selector, this.text, this.markups.map(function(markup) {
+    var block = new this.constructor(this.selector, this.text, this.markups.map(function(markup) {
       return markup.clone();
     }));
     if (!newId) block.id = this.id;

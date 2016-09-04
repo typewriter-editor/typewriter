@@ -85,7 +85,8 @@ function onInput(event) {
   }
 
   // Update the first block with the change
-  var updated = mapping.blockFromDOM(editor, editor.blockElements[afterRange.anchorBlockIndex]);
+  var start = selection.startBlock;
+  var updated = mapping.updateBlock(editor, start.clone(), selection.startBlockElement);
   editor.exec('updateBlock', { index: afterRange.anchorBlockIndex, block: updated });
 
   editor.commit();

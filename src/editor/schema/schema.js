@@ -4,6 +4,7 @@ var map = Array.prototype.map;
 
 
 function Schema(blocks, markups, defaultBlock, initial) {
+  this.locked = false;
   this.blocks = blocks || [];
   this.markups = markups || [];
   this.defaultBlock = defaultBlock;
@@ -13,6 +14,18 @@ function Schema(blocks, markups, defaultBlock, initial) {
 }
 
 Class.extend(Schema, {
+
+  createDefaultBlock: function(text, markups) {
+    return new this.blocks[this.defaultBlock](this.defaultBlock, text, markups);
+  },
+
+  getBlockSelector: function(element) {
+    return findSelector(this.blocks, element);
+  },
+
+  getMarkupSelector: function(element) {
+    return findSelector(this.markups, element);
+  },
 
   getBlockType: function(element) {
     return findType(this.blocks, element);
@@ -47,6 +60,9 @@ Class.extend(Schema, {
     for (var i = 1; i < block.markups.length; i++) {
       var currentMarkup = block.markups[i];
       var prevMarkup = block.markups[i - 1];
+      if (currentMarkup.endOffset > block.text.length) {
+        currentMarkup.endOffset = block.text.length;
+      }
 
       // If it is a different type of markup don't try to merge
       // If they don't overlap in any way don't try to merge either
@@ -64,8 +80,11 @@ Class.extend(Schema, {
 
 
 function findType(items, element) {
-  var selector = Object.keys(items).find(function(selector) {
+  return items[findSelector(items, element)];
+}
+
+function findSelector(items, element) {
+  return Object.keys(items).find(function(selector) {
     return element.matches(selector);
   });
-  return items[selector];
 }

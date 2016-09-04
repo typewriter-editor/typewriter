@@ -104,16 +104,19 @@ mapping.removeElement = function(editor, block) {
 
 
 
-mapping.blocksFromDOM = function(editor, container, startOffset, endOffset) {
+mapping.blocksFromDOM = function(editor, container, options) {
   if (!(editor instanceof Editor)) throw new TypeError('Must include editor for mapping');
   if (!container) container = editor.element;
   var blockElements = slice.call(container.querySelectorAll(editor.schema.blocksSelector));
-  var blocks = blockElements.slice(startOffset, endOffset).map(function(blockElement) {
+  var blocks = blockElements.map(function(blockElement) {
     return mapping.blockFromDOM(editor, blockElement, container);
   }).filter(Boolean);
 
-  if (!blocks.length) {
+  if (!blocks.length && (!options || !options.noDefault)) {
     blocks = editor.schema.getInitial();
+    if (blocks.length) {
+      blocks[0]
+    }
   }
 
   return blocks;
@@ -127,15 +130,16 @@ mapping.blockFromDOM = function(editor, element, container) {
   var Type = editor.schema.getBlockType(element);
   var block = Type && new Type(selectors.fromElement(element, container));
   if (block) {
-    var id = element.getAttribute('name');
-    if (id) {
-      block.id = id;
-    }
-    var result = mapping.textFromDOM(editor, element);
-    block.text = result.text;
-    block.markups = result.markups;
-    return block;
+    return mapping.updateBlock(editor, block, element);
   }
+};
+
+
+mapping.updateBlock = function(editor, block, element) {
+  var result = mapping.textFromDOM(editor, element);
+  block.text = result.text;
+  block.markups = result.markups;
+  return block;
 };
 
 

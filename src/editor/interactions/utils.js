@@ -1,7 +1,8 @@
 exports.insertAfter = insertAfter;
 exports.deleteSelection = deleteSelection;
-exports.mergeBlocks = mergeBlocks;
+exports.mergeIntoSelection = mergeIntoSelection;
 exports.splitBlock = splitBlock;
+exports.mergeBlocks = mergeBlocks;
 exports.deleteTextInBlock = deleteTextInBlock;
 
 
@@ -46,10 +47,7 @@ function deleteSelection(editor, includeLastBlock) {
 
     if (includeLastBlock) {
       editor.exec('deleteBlock', { index: endBlockIndex });
-      var mergedBlock = mergeBlocks(editor, updatedStartBlock, endBlock, editor.selection.endOffset);
-      if (mergedBlock) {
-        updatedStartBlock = mergedBlock;
-      }
+      var updatedStartBlock = mergeBlocks(editor, updatedStartBlock, endBlock, editor.selection.endOffset);
     } else {
       var updatedEndBlock = deleteTextInBlock(editor, endBlock, 0, editor.selection.endOffset);
       // Since we've deleted the other blocks, the end block is now just 1 after the start block
@@ -69,6 +67,52 @@ function deleteSelection(editor, includeLastBlock) {
 }
 
 
+function mergeIntoSelection(editor, blocks) {
+  var selection = editor.selection;
+  var startIndex = selection.startBlockIndex;
+  var endIndex = selection.endBlockIndex;
+  var startOffset = selection.startOffset;
+  var endOffset = selection.endOffset;
+  var start = selection.startBlock;
+  var end = selection.endBlock;
+  var i, updatedStart, updatedEnd, merged;
+  var firstBlock = blocks[0];
+  var lastBlock = blocks[blocks.length - 1];
+
+  if (start.text) {
+    updatedStart = deleteTextInBlock(editor, start, startOffset);
+    updatedStart = mergeBlocks(editor, updatedStart, firstBlock);
+  } else {
+    updatedStart = firstBlock.clone();
+  }
+
+  updatedEnd = deleteTextInBlock(editor, end, 0, endOffset);
+
+  if (blocks.length === 1) {
+    updatedStart = mergeBlocks(editor, updatedStart, updatedEnd);
+    editor.exec('updateBlock', { index: startIndex, block: updatedStart });
+  } else {
+    updatedEnd = mergeBlocks(editor, lastBlock, updatedEnd);
+    editor.exec('updateBlock', { index: startIndex, block: updatedStart });
+    if (start === end) {
+      editor.exec('insertBlock', { index: startIndex + 1, block: updatedEnd });
+    } else {
+      editor.exec('updateBlock', { index: endIndex, block: updatedEnd });
+    }
+  }
+
+  // Delete the fully-selected blocks
+  for (i = endIndex - 1; i > startIndex; i--) {
+    editor.exec('deleteBlock', { index: i });
+  }
+
+  // Insert the blocks other than the first/last
+  for (i = 1; i < blocks.length - 1; i++) {
+    editor.exec('insertBlock', { index: startIndex + i, block: blocks[i] });
+  }
+}
+
+
 function splitBlock(editor, blockIndex, offset) {
   var block = editor.blocks[blockIndex];
   editor.exec('updateBlock', { index: blockIndex, block: deleteTextInBlock(editor, block, offset) });
@@ -79,7 +123,7 @@ function splitBlock(editor, blockIndex, offset) {
 function mergeBlocks(editor, target, source, fromOffset) {
   fromOffset = fromOffset || 0;
   var text = source.text.slice(fromOffset);
-  if (!text) return false;
+  if (!text) return target.clone();
 
   var markups = [];
   var newStart = target.text.length;
@@ -98,6 +142,7 @@ function mergeBlocks(editor, target, source, fromOffset) {
     // Move it out to the new position
     markup.startOffset += newStart;
     markup.endOffset += newStart;
+    markups.push(markup);
   });
 
   var merged = target.clone();
@@ -114,23 +159,24 @@ function deleteTextInBlock(editor, target, startOffset, endOffset) {
   if (endOffset === undefined) endOffset = target.text.length;
   var updated = target.clone();
   updated.text = updated.text.slice(0, startOffset) + updated.text.slice(endOffset);
+  var length = endOffset - startOffset;
 
   updated.markups = updated.markups.filter(function(markup) {
-    if (markup.endOffset <= startOffset || markup.startOffset >= endOffset) return;
 
-    // If it was contained, remove it
-    if (markup.startOffset >= startOffset && markup.endOffset <= endOffset) {
+    if (markup.startOffset < startOffset) {
+      markup.endOffset = Math.min(markup.endOffset, startOffset);
+      return true;
+    } else {
+
+    }
+
+    if (markup.endOffset > endOffset) {
+      markup.endOffset -= length;
+      markup.startOffset = Math.max(markup.startOffset, endOffset) - length;
+      return true;
+    } else {
       return false;
     }
-
-    if (markup.startOffset < endOffset) {
-      markup.startOffset = endOffset;
-    }
-
-    if (markup.endOffset > startOffset) {
-      markup.endOffset = startOffset;
-    }
-    return true;
   });
 
   editor.schema.normalizeMarkups(updated);

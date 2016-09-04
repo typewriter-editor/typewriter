@@ -72,6 +72,10 @@ function onShiftEnter(editor) {
   var start = editor.selection.startBlock;
   var startBlockIndex = editor.selection.startBlockIndex;
   var startOffset = editor.selection.startOffset;
+  if (start.getEnterMode() === 'none') {
+    return;
+  }
+
   editor.setTransactionSelection('text', startBlockIndex, startOffset + 1);
 
   if (editor.selection.isCollapsed) {
