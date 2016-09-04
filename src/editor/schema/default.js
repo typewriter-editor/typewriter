@@ -20,7 +20,7 @@ exports.get = function() {
     blockquote: Block,
     'ul>li': ListBlock,
     'ol>li': ListBlock,
-    figure: ImageBlock
+    // figure: ImageBlock
   };
 
 
