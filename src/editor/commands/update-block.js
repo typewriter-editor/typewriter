@@ -26,7 +26,8 @@ Command.extend(UpdateBlockCommand, {
   },
 
   undo: function() {
-    this.editor.blocks.splice(this.index, 1, this.oldBlock);
+    var newBlock = this.editor.blocks.splice(this.index, 1, this.oldBlock)[0];
+    this.oldBlock.id = newBlock.id;
     mapping.generateElement(this.editor, this.oldBlock);
   }
 });

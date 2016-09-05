@@ -84,7 +84,8 @@ Class.extend(History, {
       command.selectionAfter = this.nextSelection;
       this.nextSelection = null;
     } else {
-      command.selectionBefore = editor.selection.lastRange;
+      command.selectionBefore = editor.selection.range;
+      editor.selection.update();
       command.selectionAfter = editor.selection.range;
     }
 

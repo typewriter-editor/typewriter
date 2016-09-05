@@ -29,7 +29,6 @@ function Editor(element, options) {
   this.selection = new EditorSelection(this);
   this.blocks = this.schema.getInitial();
   this.onKeyDown = this.onKeyDown.bind(this);
-  modifiedEvents.forEach(addEditorToEvent.bind(null, this));
   this.enabled = true;
   this.render();
 }
@@ -60,6 +59,7 @@ Class.extend(Editor, {
   },
 
   set enabled(value) {
+    if (value === this.enabled) return;
     if (value) {
       this.element.setAttribute('spellcheck', 'true');
       this.element.classList.add('editable');
@@ -67,6 +67,7 @@ Class.extend(Editor, {
       this.on('input', this.onInput);
       this.on('focus', this.onFocus);
       this.on('blur', this.onBlur);
+      modifiedEvents.forEach(addEditorToEvent.bind(null, this));
       this.element.editor = this;
       Object.keys(interactions).forEach(function(key) {
         interactions[key].enable(this);
@@ -78,6 +79,7 @@ Class.extend(Editor, {
       this.off('input', this.onInput);
       this.off('focus', this.onFocus);
       this.off('blur', this.onBlur);
+      modifiedEvents.forEach(removeEditorToEvent.bind(null, this));
       this.element.editor = null;
       Object.keys(interactions).forEach(function(key) {
         interactions[key].disable(this);
@@ -343,6 +345,7 @@ Class.extend(Editor, {
   },
 
   dispatch: function(eventName, data) {
+    if (!this.element) return;
     var event = new Event(eventName, data);
     if (data) Object.keys(data).forEach(function(key) {
       event[key] = data[key];
@@ -365,7 +368,12 @@ Class.extend(Editor, {
 
 
 function addEditorToEvent(editor, eventName) {
-  editor.on(eventName, function(event) {
+  editor._modifiedEvents = {};
+  editor.on(eventName, editor._modifiedEvents[eventName] = function(event) {
     event.editor = editor;
   });
+}
+
+function removeEditorToEvent(editor, eventName) {
+  editor.off(eventName, editor._modifiedEvents[eventName]);
 }

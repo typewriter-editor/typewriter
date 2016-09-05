@@ -71,23 +71,22 @@ function onInput(event) {
   var changeMode = isDelete ? 'delete' : 'input';
   var editor = event.editor;
   var element = editor.element;
-  var selection = editor.selection;
-  selection.update();
-  var beforeRange = selection.lastRange;
-  var afterRange = selection.range;
+  var startBlockIndex = editor.selection.startBlockIndex;
+  var endBlockIndex = editor.selection.endBlockIndex;
+  var start = editor.selection.startBlock;
+  var startElement = editor.selection.startBlockElement;
 
   // Delete the blocks that were selected except for the first one, update the first one
   editor.startTransaction();
 
   // Delete the blocks except the first
-  for (var i = beforeRange.startBlockIndex + 1; i <= beforeRange.endBlockIndex; i++) {
+  for (var i = startBlockIndex + 1; i <= endBlockIndex; i++) {
     editor.exec('deleteBlock', { index: i });
   }
 
   // Update the first block with the change
-  var start = selection.startBlock;
-  var updated = mapping.updateBlock(editor, start.clone(), selection.startBlockElement);
-  editor.exec('updateBlock', { index: afterRange.anchorBlockIndex, block: updated });
+  var updated = mapping.updateBlock(editor, start.clone(), startElement);
+  editor.exec('updateBlock', { index: startBlockIndex, block: updated });
 
   editor.commit();
 

@@ -38,6 +38,22 @@ Class.extend(EditorSelection, {
   },
 
   /**
+   * Selects the range provided
+   * @param {String} type Selection type, text or media
+   * @param {Number} anchorBlockIndex Anchor block of the selection
+   * @param {Number} anchorOffset Anchor offset of the selection
+   * @param {Number} focusBlockIndex [Optional] Focus block of the selection
+   * @param {Number} focusOffset [Optional] Focus offset of the selection
+   */
+  select: function(type, anchorBlockIndex, anchorOffset, focusBlockIndex, focusOffset) {
+    if (focusBlockIndex === undefined) {
+      focusBlockIndex = anchorBlockIndex;
+      focusOffset = anchorOffset;
+    }
+    this.range = new EditorRange(this.editor, type, anchorBlockIndex, anchorOffset, focusBlockIndex, focusOffset);
+  },
+
+  /**
    * The type of this selection, either text, media, or none
    * @return {String} One of 'text', 'media', or 'none'
    */
@@ -122,7 +138,7 @@ Class.extend(EditorSelection, {
    * @return {Number} The first block in the selection
    */
   get startBlock() {
-    return this.editor === currentRange.editor ? this.editor.blocks[currentRange.startBlockIndex] : -1;
+    return this.editor === currentRange.editor ? this.editor.blocks[currentRange.startBlockIndex] : null;
   },
 
   /**
@@ -154,7 +170,7 @@ Class.extend(EditorSelection, {
    * @return {Number} The last block in the selection
    */
   get endBlock() {
-    return this.editor === currentRange.editor ? this.editor.blocks[currentRange.endBlockIndex] : -1;
+    return this.editor === currentRange.editor ? this.editor.blocks[currentRange.endBlockIndex] : null;
   },
 
   /**
@@ -270,12 +286,12 @@ function updateSelectionRange(forceLastRangeUpdate) {
     var previousRange = currentRange;
     currentRange = getEditorRange();
 
-    if (previousRange && previousRange.anchorBlockIndex !== -1 && previousRange.anchorBlockIndex === previousRange.focusBlockIndex) {
+    if (previousRange && previousRange.anchorBlockIndex !== -1 && previousRange.anchorBlockIndex === previousRange.focusBlockIndex && previousRange.editor.element) {
       var prevBlock = previousRange.editor.blockElements[previousRange.anchorBlockIndex];
       prevBlock && prevBlock.classList.remove('selected');
     }
 
-    if (currentRange && currentRange.anchorBlockIndex !== -1 && currentRange.anchorBlockIndex === currentRange.focusBlockIndex) {
+    if (currentRange && currentRange.anchorBlockIndex !== -1 && currentRange.anchorBlockIndex === currentRange.focusBlockIndex && currentRange.editor.element) {
       currentRange.editor.blockElements[currentRange.anchorBlockIndex].classList.add('selected');
     }
 
