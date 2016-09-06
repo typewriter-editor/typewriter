@@ -86,9 +86,19 @@ function onInput(event) {
 
   // Update the first block with the change
   var updated = mapping.updateBlock(editor, start.clone(), startElement);
-  editor.exec('updateBlock', { index: startBlockIndex, block: updated });
 
-  editor.commit();
+  // Something changed that didn't take, put the selection back and continue
+  if (updated.equals(start)) {
+    mapping.generateElement(this.editor, start);
+    editor.selection.range = editor.selection.range;
+    if (!editor.commit()) {
+      changing = false;
+      return;
+    }
+  } else {
+    editor.exec('updateBlock', { index: startBlockIndex, block: updated });
+    editor.commit();
+  }
 
   if (inputMode === changeMode) {
     // Remove the newly added command and merge it with the previous

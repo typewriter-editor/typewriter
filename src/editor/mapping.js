@@ -196,7 +196,7 @@ mapping.textFromDOM = function(editor, element) {
     var markup;
 
     if (name === '#text') {
-      result.text += node.nodeValue;
+      result.text += node.nodeValue.replace(/[  ]+/g, ' ');
     } else if (name === 'br') {
       result.text += '\n';
     } else if (node.textContent.trim() !== '') {
@@ -296,8 +296,8 @@ mapping.textToDOM = function(editor, block) {
         textNode.remove();
       }
     }
-    // You can't tell, but that second space is a non-breaking space (&nbsp;)
-    textNode.nodeValue = textNode.nodeValue.replace(/  /g, '  ');
+    // You can't tell, but that first replacement space is a non-breaking space (&nbsp;)
+    textNode.nodeValue = textNode.nodeValue.replace(/ $/g, ' ');
   }
 
   if (fragment.lastChild.nodeType === Node.TEXT_NODE && fragment.lastChild.nodeValue.length === 0) {
