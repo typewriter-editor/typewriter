@@ -212,6 +212,25 @@ Class.extend(Editor, {
     return slice.call(this.element.querySelectorAll(this.schema.blocksSelector));
   },
 
+  isBlockType: function(selector) {
+    return this.selection.selectedBlocks.every(function(block) {
+      return block.selector === selector;
+    });
+  },
+
+  isMarkupType: function(selector) {
+    var selection = this.selection;
+    return selection.selectedBlocks.every(function(block, index) {
+      // check if the selected range in this block is already marked up with the same type
+      var startOffset = index === 0 ? selection.startOffset : 0;
+      var endOffset = index === selection.endBlockIndex - selection.startBlockIndex ?
+                                selection.endOffset : block.text.length;
+      return block.markups.some(function(markup) {
+        return markup.selector === selector && markup.startOffset <= startOffset && markup.endOffset >= endOffset;
+      });
+    });
+  },
+
 
   setBlockType: function(selector, toggle) {
     var BlockType = this.schema.blocks[selector];
@@ -221,11 +240,7 @@ Class.extend(Editor, {
     var blockStart = this.selection.startBlockIndex;
 
     if (toggle) {
-      var toggleOff = selectedBlocks.every(function(block) {
-        return block.selector === selector;
-      });
-
-      if (toggleOff) {
+      if (this.isBlockType(selector)) {
         selector = this.schema.defaultBlock;
         BlockType = this.schema.blocks[selector];
       }
@@ -238,6 +253,7 @@ Class.extend(Editor, {
       block = new BlockType(selector, block.text, block.markups);
       this.exec('updateBlock', { index: blockStart + index, block: block });
     }, this);
+    this.history.setTransactionSelection(this.selection.range);
     this.commit();
   },
 
@@ -313,6 +329,7 @@ Class.extend(Editor, {
         this.schema.normalizeMarkups(block);
       }
 
+      this.history.setTransactionSelection(this.selection.range);
       this.exec('updateBlock', { index: blockStart + index, block: block });
     }, this);
     this.commit();
@@ -331,9 +348,13 @@ Class.extend(Editor, {
   },
 
   setTransactionSelection(type, anchorIndex, anchorOffset, focusIndex, focusOffset) {
-    this.history.setNextSelection(new EditorRange(this, type, anchorIndex, anchorOffset,
-      focusIndex !== undefined ? focusIndex : anchorIndex,
-      focusOffset !== undefined ? focusOffset : anchorOffset));
+    if (type instanceof EditorRange) {
+      this.history.setNextSelection(type);
+    } else {
+      this.history.setNextSelection(new EditorRange(this, type, anchorIndex, anchorOffset,
+        focusIndex !== undefined ? focusIndex : anchorIndex,
+        focusOffset !== undefined ? focusOffset : anchorOffset));
+    }
   },
 
   on: function(event, listener) {

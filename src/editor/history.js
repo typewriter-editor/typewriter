@@ -75,6 +75,8 @@ Class.extend(History, {
       return command;
     }
 
+    var rangeNow = editor.selection.getRange();
+
     if (command.exec() === false) {
       return false;
     }
@@ -85,8 +87,7 @@ Class.extend(History, {
       this.nextSelection = null;
     } else {
       command.selectionBefore = editor.selection.range;
-      editor.selection.update();
-      command.selectionAfter = editor.selection.range;
+      command.selectionAfter = rangeNow;
     }
 
     editor.selection.range = command.selectionAfter;

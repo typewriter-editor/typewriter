@@ -296,7 +296,8 @@ mapping.textToDOM = function(editor, block) {
         textNode.remove();
       }
     }
-    textNode.nodeValue = textNode.nodeValue.replace(/  /g, ' &nbsp;')
+    // You can't tell, but that second space is a non-breaking space (&nbsp;)
+    textNode.nodeValue = textNode.nodeValue.replace(/  /g, '  ');
   }
 
   if (fragment.lastChild.nodeType === Node.TEXT_NODE && fragment.lastChild.nodeValue.length === 0) {

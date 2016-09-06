@@ -1,6 +1,10 @@
 module.exports = Schema;
 var Class = require('chip-utils/class');
 var map = Array.prototype.map;
+var aliases = {
+  strong: 'b',
+  em: 'i'
+};
 
 
 function Schema(blocks, markups, defaultBlock, initial) {
@@ -85,6 +89,7 @@ function findType(items, element) {
 
 function findSelector(items, element) {
   return Object.keys(items).find(function(selector) {
+    if (aliases[selector]) selector += ',' + aliases[selector];
     return element.matches(selector);
   });
 }

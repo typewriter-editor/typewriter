@@ -253,6 +253,10 @@ Class.extend(EditorSelection, {
     selectEditorRange(editorRange);
   },
 
+  getRange: function() {
+    return getEditorRange();
+  },
+
   /**
    * Returns the last range for this selection before the current selection
    * @return {EditorRange} The last range of the selection in the given editor

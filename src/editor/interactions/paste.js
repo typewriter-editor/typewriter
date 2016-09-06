@@ -99,12 +99,16 @@ function pasteText(editor, text) {
     editor.setTransactionSelection('text', startIndex, offset + text.length);
     updated.text = updated.text.slice(0, offset) + text + updated.text.slice(offset);
   } else {
-    var lines = text.split(newlineExp);
-    updated.text = updated.text.slice(0, offset) + lines[0] + updated.text.slice(offset);
+    var trailing = updated.text.slice(offset);
+    updated.text = updated.text.slice(0, offset) + lines[0];
 
     editor.setTransactionSelection('text', startIndex + lines.length - 1, lines[lines.length - 1].length);
     lines.slice(1).forEach(function(line, i) {
-      editor.exec('insertBlock', { index: startIndex + i + 1, block: editor.schema.createDefaultBlock(line) });
+      var block = editor.schema.createDefaultBlock(line);
+      if (i == lines.length - 1) {
+        block.text += trailing;
+      }
+      editor.exec('insertBlock', { index: startIndex + i + 1, block: block });
     });
   }
 

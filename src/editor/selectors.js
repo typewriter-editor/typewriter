@@ -16,6 +16,10 @@ var classesExp = new RegExp('\\.([-a-z]+)', 'g');
 var attribsExp = new RegExp('\\[([-a-z]+)(?:="([^"]*)")?\\]', 'g');
 var membersExp = new RegExp(classesExp.source + '|' + attribsExp.source, 'gi');
 var selectorExp = new RegExp(tagExp.source + '((?:' + membersExp.source + ')*)', 'i');
+var aliases = {
+  b: 'strong',
+  i: 'em'
+};
 
 
 /**
@@ -62,6 +66,9 @@ function fromElement(element, container, ignore) {
   ignore.attributes.placeholder = true;
 
   var selector = element.tagName.toLowerCase();
+  if (aliases[selector]) {
+    selector = aliases[selector];
+  }
 
   var classList = element.className.split(/\s+/).filter(function(name) {
     return name && !ignore.classes[name];

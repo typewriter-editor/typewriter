@@ -29,12 +29,15 @@
   cursor: pointer;
 }
 #editor-menu button:first-child {
-  padding-left: 18px;
+  padding-left: 14px;
 }
 #editor-menu button:last-child {
-  padding-right: 18px;
+  padding-right: 14px;
 }
-#editor-menu .editor-button-separator {
+#editor-menu button.active {
+  color: limegreen;
+}
+#editor-menu .editor-menu-separator {
   display: inline-block;
   vertical-align: middle;
   width: 1px;
@@ -63,4 +66,8 @@
     transform: matrix(1, 0, 0, 1, 0, 0);
     opacity: 1
   }
+}
+
+#editor-menu .editor-menu-input {
+  display: none;
 }
