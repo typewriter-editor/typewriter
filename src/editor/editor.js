@@ -253,7 +253,7 @@ Class.extend(Editor, {
       block = new BlockType(selector, block.text, block.markups);
       this.exec('updateBlock', { index: blockStart + index, block: block });
     }, this);
-    this.history.setTransactionSelection(this.selection.range);
+    this.setTransactionSelection(this.selection.range);
     this.commit();
   },
 
@@ -329,7 +329,7 @@ Class.extend(Editor, {
         this.schema.normalizeMarkups(block);
       }
 
-      this.history.setTransactionSelection(this.selection.range);
+      this.setTransactionSelection(this.selection.range);
       this.exec('updateBlock', { index: blockStart + index, block: block });
     }, this);
     this.commit();
