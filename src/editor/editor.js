@@ -61,7 +61,7 @@ Class.extend(Editor, {
   set enabled(value) {
     if (value === this.enabled) return;
     if (value) {
-      this.element.setAttribute('spellcheck', 'true');
+      this.element.setAttribute('spellcheck', 'false');
       this.element.classList.add('editable');
       this.on('keydown', this.onKeyDown);
       this.on('input', this.onInput);
