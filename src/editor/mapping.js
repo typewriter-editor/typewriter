@@ -197,10 +197,8 @@ mapping.textFromDOM = function(editor, element) {
 
     if (name === '#text') {
       result.text += node.nodeValue.replace(/[  ]+/g, ' ')
-                                   .replace(/\B"\b/g, '“')
-                                   .replace(/"\B/g, '”')
-                                   .replace(/\b'/g, '’')
-                                   .replace(/'\b/g, '‘');
+                                   .replace(/[“”]/g, '"')
+                                   .replace(/[’‘]/g, "'");
     } else if (name === 'br') {
       result.text += '\n';
     } else if (node.textContent.trim() !== '') {
@@ -249,7 +247,10 @@ mapping.textToDOM = function(editor, block) {
   }
 
   // Add open/closing quotes
-  text = text.replace(/\B"\b/g, '“').replace(/"\B/g, '”').replace(/\b'/g, '’').replace(/'\b/g, '‘');
+  text = text.replace(/(^|\s)"/g, '$1“')
+             .replace(/"($|\s)/g, '”$1')
+             .replace(/\b'/g, '’')
+             .replace(/'\b/g, '‘');
 
   // TODO update to follow algorithm, respecting schema correctly
   fragment.appendChild(document.createTextNode(text));
