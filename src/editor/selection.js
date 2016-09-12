@@ -245,7 +245,7 @@ Class.extend(EditorSelection, {
     var actualRange = getEditorRange();
     if (!editorRange || editorRange.equals(actualRange)) {
       if (!currentRange.equals(actualRange)) {
-        currentRange = actualRange;
+        updateSelectionRange();
       }
       return;
     }
