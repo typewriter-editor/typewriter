@@ -90,7 +90,7 @@ function onInput(event) {
   // Something changed that didn't take, put the selection back and continue
   if (updated.equals(start)) {
     mapping.generateElement(this.editor, start);
-    editor.selection.range = editor.selection.range;
+    editor.selection.range = editor.selection.range.collapse(true);
     if (!editor.commit()) {
       changing = false;
       return;

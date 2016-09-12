@@ -70,6 +70,17 @@ Class.extend(EditorRange, {
     return this.anchorBlockIndex === this.focusBlockIndex && this.anchorOffset === this.focusOffset;
   },
 
+  collapse: function(toEnd) {
+    if (toEnd) {
+      this.anchorBlockIndex = this.focusBlockIndex;
+      this.anchorOffset = this.focusOffset;
+    } else {
+      this.focusBlockIndex = this.anchorBlockIndex;
+      this.focusOffset = this.anchorOffset;
+    }
+    return this;
+  },
+
   equals: function(range) {
     return range &&
       this.editor === range.editor &&
