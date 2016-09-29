@@ -8,10 +8,13 @@ exports.get = function() {
     var range = selection.getRangeAt(0);
     var rects = range.getClientRects();
     var rect = rects[rects.length - 1];
+    if (!rect && range.startContainer.nodeType === Node.ELEMENT_NODE) {
+      var child = range.startContainer.childNodes[range.startOffset];
+      rect = child.getBoundingClientRect();
+    }
     if (!rect) {
       var shadowCaret = document.createTextNode('|');
       range.insertNode(shadowCaret);
-      range.selectNode(shadowCaret);
       rect = range.getBoundingClientRect();
       shadowCaret.parentNode.removeChild(shadowCaret);
     }
