@@ -347,7 +347,7 @@ Class.extend(Editor, {
     return this.history.commit();
   },
 
-  setTransactionSelection(type, anchorIndex, anchorOffset, focusIndex, focusOffset) {
+  setTransactionSelection: function(type, anchorIndex, anchorOffset, focusIndex, focusOffset) {
     if (type instanceof EditorRange) {
       this.history.setNextSelection(type);
     } else {

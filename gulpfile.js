@@ -29,8 +29,8 @@ var paths = {
     images: 'images',
   },
   scripts: 'index.js',
-  images: 'src/images/**/*',
-  less: 'src/**/*.less',
+  images: [ 'src/images/**/*', 'plugins/*/images/**/*' ],
+  less: [ 'src/**/*.less', 'plugins/**/*.less' ],
   files: 'src/public/**/*'
 };
 
