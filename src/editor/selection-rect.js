@@ -10,7 +10,7 @@ exports.get = function() {
     var rect = rects[rects.length - 1];
     if (!rect && range.startContainer.nodeType === Node.ELEMENT_NODE) {
       var child = range.startContainer.childNodes[range.startOffset];
-      if (child.getBoundingClientRect) {
+      if (child && child.getBoundingClientRect) {
         rect = child.getBoundingClientRect();
       } else {
         return;

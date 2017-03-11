@@ -29,7 +29,9 @@ function Editor(element, options) {
   this.selection = new EditorSelection(this);
   this.blocks = this.schema.getInitial();
   this.onKeyDown = this.onKeyDown.bind(this);
-  this.enabled = true;
+  if (!options.initiallyDisabled) {
+    this.enabled = true;
+  }
   this.render();
 }
 
@@ -55,7 +57,7 @@ Class.extend(Editor, {
    * @type {Boolean}
    */
   get enabled() {
-    return this.element.contentEditable;
+    return !!this.element && this.element.contentEditable === 'true';
   },
 
   set enabled(value) {

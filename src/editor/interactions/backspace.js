@@ -34,7 +34,7 @@ function onShortcut(event) {
     }
 
     event.preventDefault();
-    onDelete(event.editor, isBackspace.test(event.shortcut) ? -1 : 1);
+    onDelete(event.editor, back ? -1 : 1);
   }
 }
 

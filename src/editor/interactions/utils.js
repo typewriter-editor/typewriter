@@ -116,7 +116,7 @@ function mergeIntoSelection(editor, blocks) {
 function splitBlock(editor, blockIndex, offset) {
   var block = editor.blocks[blockIndex];
   editor.exec('updateBlock', { index: blockIndex, block: deleteTextInBlock(editor, block, offset) });
-  editor.exec('insertBlock', { index: blockIndex + 1, block: deleteTextInBlock(editor, block, 0, offset) });
+  editor.exec('insertBlock', { index: blockIndex + 1, block: deleteTextInBlock(editor, block.clone(true), 0, offset) });
 }
 
 

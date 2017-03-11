@@ -11,12 +11,12 @@ menu.items = menu.firstChild;
 menu.input = menu.lastChild;
 
 
-addItem('format_bold', function() {
+addItem('editor-bold', function() {
   currentEditor.toggleMarkup('strong');
 }, function() {
   return currentEditor.isMarkupType('strong');
 });
-addItem('format_italic', function() {
+addItem('editor-italic', function() {
   currentEditor.toggleMarkup('em');
 }, function() {
   return currentEditor.isMarkupType('em');
@@ -27,12 +27,12 @@ addItem('format_italic', function() {
 //   return currentEditor.isMarkupType('a[href]');
 // });
 addSeparator();
-addItem('text_fields', function() {
+addItem('editor-header', function() {
   currentEditor.toggleBlockType('h2');
 }, function() {
   return currentEditor.isBlockType('h2');
 });
-addItem('format_quote', function() {
+addItem('editor-quote', function() {
   currentEditor.toggleBlockType('blockquote');
 }, function() {
   return currentEditor.isBlockType('blockquote');
@@ -95,7 +95,7 @@ function updateSelection(event) {
 
   if (currentEditor.selection.type !== 'text' || currentEditor.selection.isCollapsed || mouseDown) {
     menu.hide();
-  } else {
+  } else if (!currentEditor.element.hasAttribute('no-menu')) {
     menu.show();
     menu.reposition();
   }
@@ -104,7 +104,7 @@ function updateSelection(event) {
 function addItem(icon, callback, stateCheck) {
   var item = document.createElement('button');
   item.className = 'editor-menu-' + icon;
-  item.innerHTML = '<i class="icon">' + icon + '</i>';
+  item.innerHTML = '<i class="icon ' + icon + '"></i>';
   item.addEventListener('click', callback);
   item.stateCheck = stateCheck;
   menu.items.appendChild(item);

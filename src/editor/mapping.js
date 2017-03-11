@@ -196,7 +196,7 @@ mapping.textFromDOM = function(editor, element) {
     var markup;
 
     if (name === '#text') {
-      result.text += node.nodeValue.replace(/[  ]+/g, ' ')
+      result.text += node.nodeValue.replace(/[  ]+$/g, ' ')
                                    .replace(/[“”]/g, '"')
                                    .replace(/[’‘]/g, "'");
     } else if (name === 'br') {

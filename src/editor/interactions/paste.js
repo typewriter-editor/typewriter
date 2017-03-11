@@ -156,13 +156,40 @@ function getBlocks(editor, html) {
   while ( (node = walker.nextNode()) ) {
     var name = node.nodeName.toLowerCase();
 
+    if (name === 'style' || name === 'script') {
+      walker.previousNode();
+      node.parentNode.removeChild(node);
+      continue;
+    }
+
     // Text
-    if (name === '#text' || name === 'br') {
+    if (name === '#text') {
+      var value = node.nodeValue;
+      if (value.trim() === '') {
+        if (value && currentBlock && currentBlock.text) {
+          currentBlock.text += ' ';
+        }
+      } else {
+        if (!currentBlock) {
+          currentBlock = schema.createDefaultBlock();
+          blocks.push(currentBlock);
+        }
+        var normalized = value.replace(/\s+/g, ' ');
+        if (normalized[0] === ' ' && currentBlock.text.slice(-1) === ' ') {
+          normalized = normalized.slice(1);
+        }
+        currentBlock.text += normalized;
+      }
+      continue;
+    }
+
+    // Newline
+    if (name === 'br') {
       if (!currentBlock) {
         currentBlock = schema.createDefaultBlock();
         blocks.push(currentBlock);
       }
-      currentBlock.text += node.nodeValue || '\n';
+      currentBlock.text += '\n';
       continue;
     }
 
