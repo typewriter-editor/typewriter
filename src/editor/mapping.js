@@ -196,9 +196,10 @@ mapping.textFromDOM = function(editor, element) {
     var markup;
 
     if (name === '#text') {
-      result.text += node.nodeValue.replace(/[  ]+$/g, ' ')
-                                   .replace(/[“”]/g, '"')
-                                   .replace(/[’‘]/g, "'");
+      result.text += node.nodeValue
+        .replace(/[“”]/g, '"')
+        .replace(/[’‘]/g, "'")
+        .replace(/[  ]{2,}/g, '  ');
     } else if (name === 'br') {
       result.text += '\n';
     } else if (node.textContent.trim() !== '') {
@@ -248,7 +249,7 @@ mapping.textToDOM = function(editor, block) {
 
   // Add open/closing quotes
   text = text.replace(/(^|\s)"/g, '$1“')
-             .replace(/"($|\s)/g, '”$1')
+             .replace(/"($|[\s,.!])/g, '”$1')
              .replace(/\b'/g, '’')
              .replace(/'\b/g, '‘');
 

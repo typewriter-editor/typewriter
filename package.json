@@ -18,6 +18,7 @@
     "node": ">=4"
   },
   "dependencies": {
+    "chip-utils": "^0.3.0",
     "es6-object-assign": "^1.0.3",
     "es6-shim": "^0.35.1",
     "shortcut-string": "^1.0.0"
