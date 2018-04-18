@@ -1,3 +1,4 @@
+const SOURCE_USER = 'user';
 const lastWord = /\w+[^\w]*$/;
 const firstWord = /^[^\w]*\w+/;
 const lastLine = /[^\n]*$/;
@@ -10,13 +11,29 @@ export default function input(view) {
   function onEnter(event, shortcut) {
     if (event.defaultPrevented) return;
     event.preventDefault();
-    const [ from, to ] = editor.getSelectedRange();
+    let [ from, to ] = editor.getSelectedRange();
 
     if (shortcut === 'Shift+Enter') {
-      editor.insertText(from, to, '\r');
+      editor.insertText(from, to, '\r', null, SOURCE_USER);
     } else {
       const line = editor.contents.getLine(from);
-      editor.insertText([from, to], '\n', line.attributes);
+      let attributes = line.attributes;
+      const block = view.dom.blocks.find(attributes);
+      const isDefault = !block;
+      const length = line.contents.length();
+      if (isDefault || block.defaultFollows) {
+        attributes = {};
+      }
+      if (!length && !block.defaultFollows && !isDefault && from === to) {
+        editor.formatLine(from, to, {}, SOURCE_USER);
+      } else {
+        let selection = from + 1;
+        if (from === to && from === line.endIndex - 1) {
+          from++;
+          to++;
+        }
+        editor.insertText(from, to, '\n', attributes, SOURCE_USER, selection);
+      }
     }
   }
 
@@ -26,7 +43,9 @@ export default function input(view) {
 
     let [ from, to ] = editor.selection;
     if (from + to === 0) {
-      editor.formatLine(0, {});
+      const line = editor.contents.getLine(from);
+      const block = view.dom.blocks.find(line.attributes);
+      if (block) editor.formatLine(0, {}, SOURCE_USER);
     } else {
       // The "from" block needs to stay the same. The "to" block gets merged into it
       if (from === to) {
@@ -37,10 +56,23 @@ export default function input(view) {
           const match = editor.getText().slice(0, from).match(lastLine);
           if (match) from -= match[0].length;
         } else {
+          const line = editor.contents.getLine(from);
+          if (from === line.startIndex) {
+            const block = view.dom.blocks.find(line.attributes);
+            if (block && !block.defaultFollows) {
+              const prevLine = editor.contents.getLine(line.startIndex - 1);
+              const prevBlock = prevLine && view.dom.blocks.find(prevLine.attributes);
+              if (block !== prevBlock) {
+                editor.formatLine(from, {}, SOURCE_USER);
+                return;
+              }
+            }
+          }
+
           from--;
         }
       }
-      editor.deleteText([from, to]);
+      editor.deleteText(from, to, SOURCE_USER);
     }
   }
 
@@ -59,7 +91,7 @@ export default function input(view) {
         to++;
       }
     }
-    editor.deleteText([from, to]);
+    editor.deleteText(from, to, SOURCE_USER);
   }
 
   view.on('shortcut:Enter', onEnter);

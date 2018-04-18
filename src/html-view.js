@@ -78,7 +78,7 @@ export default class HTMLView extends EventDispatcher {
     const vdom = deltaToVdom(this, contents.compose(this.decorations));
     this.root = patch(vdom, this.root);
     this.updateBrowserSelection();
-    this.fire('update');
+    this.fire('update', this);
   }
 
   updateBrowserSelection() {
@@ -124,7 +124,13 @@ export default class HTMLView extends EventDispatcher {
         this.root.node = null; // The DOM may have (or will be) changing, refresh from scratch
       }
       const text = node.nodeValue.slice(offset, offset + 1).replace(/\xA0/g, ' ');
-      this.editor.insertText(this.editor.selection, text, this.editor.getTextFormat(from));
+      const contents = this.editor.contents;
+      this.editor.insertText(this.editor.selection, text, null, SOURCE_USER);
+      if (this.editor.contents === contents) {
+        // If the change was denied to the model, update the view which is now out of sync
+        this.root.node = null;
+        this.update();
+      }
     };
 
     const onSelectionChange = () => {

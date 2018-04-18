@@ -4,8 +4,21 @@ const defaultSettings = {
   maxStack: 500,
 };
 
-export default function history(view, settings = defaultSettings) {
+/**
+ * Stores history for all user-generated changes. Like-changes will be combined until a selection or timeout by delay
+ * breaks the combining. E.g. if a user types "Hello" the 5 changes will be combined into one history. If the user moves
+ * the cursor somewhere and then back to the end and types " World" the next 6 changes are combined separately from the
+ * first 5.
+ *
+ * The default settings can be adjusted by wrapping history. To remove the timeout and make it act like a textarea you
+ * could set delay to zero like this:
+ * modules = [
+ *   view => history(view, { delay: 0 })
+ * ]
+ */
+export default function history(view, settings = {}) {
   const editor = view.editor;
+  settings = { ...defaultSettings, settings };
 
   const stack = {
     undo: [],
@@ -45,7 +58,7 @@ export default function history(view, settings = defaultSettings) {
     if (!action || lastAction !== action) lastRecorded = 0;
     lastAction = action;
 
-    if (lastRecorded + settings.delay > timestamp && stack.undo.length > 0) {
+    if ((!settings.delay || lastRecorded + settings.delay > timestamp) && stack.undo.length > 0) {
       // Combine with the last change
       let entry = stack.undo.pop();
       oldSelection = entry.undoSelection;
@@ -80,13 +93,8 @@ export default function history(view, settings = defaultSettings) {
   }
 
 
-  editor.on('editor-change', ({ change, contents, oldContents, selection, oldSelection, source }) => {
+  editor.on('text-change', ({ change, contents, oldContents, selection, oldSelection, source }) => {
     if (ignoreChange) return;
-    if (!change) {
-      // Break the history merging when selection changes
-      lastRecorded = 0;
-      return;
-    }
     if (source === SOURCE_USER) {
       record(change, contents, oldContents, selection, oldSelection);
     } else {
@@ -94,7 +102,11 @@ export default function history(view, settings = defaultSettings) {
     }
   });
 
-  editor.on('selection')
+  editor.on('selection-change', ({ change }) => {
+    if (change) return;
+    // Break the history merging when selection changes
+    lastRecorded = 0;
+  });
 
   if (view.isMac) {
     view.on('shortcut:Cmd+Z', undo);

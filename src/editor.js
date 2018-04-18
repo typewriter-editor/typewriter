@@ -27,17 +27,21 @@ export default class Editor extends EventDispatcher {
     return this.contents.slice(from, to);
   }
 
-  getText(from, to) {
-    return this.getContents(from, to)
-      .filter(op => typeof op.insert === 'string')
-      .map(op => op.insert)
-      .join('')
-      .slice(0, -1); // remove the trailing newline
+  getText(from = 0, to = this.length) {
+    [ from, to ] = this._normalizeArguments(from, to);
+    return this.text.slice(from, to);
   }
 
   getChange(producer) {
     let change = this.delta();
-    this.updateContents = singleChange => change = change.compose(singleChange);
+    this.updateContents = singleChange => {
+      if (singleChange.ops.length) {
+        change = change.compose(singleChange);
+        return singleChange;
+      } else {
+        return null;
+      }
+    };
     producer();
     delete this.updateContents;
     return change;
@@ -57,11 +61,17 @@ export default class Editor extends EventDispatcher {
       this._normalizeArguments(from, to, text, formats, source, selection);
     if (selection == null) selection = from + text.length;
     let change = this.delta().retain(from).delete(to - from);
-    const lineFormat = from === to && text.indexOf('\n') === -1 ? null : this.getLineFormat(from);
-    text.split('\n').forEach((line, i) => {
-      if (i) change.insert('\n', lineFormat);
-      line.length && change.insert(line, formats);
-    });
+
+    if (text === '\n') {
+      change.insert('\n', formats || this.getLineFormat(from));
+    } else {
+      const lineFormat = text.indexOf('\n') === -1 ? null : this.getLineFormat(from);
+      const textFormat = formats || this.getTextFormat(from);
+      text.split('\n').forEach((line, i) => {
+        if (i) change.insert('\n', lineFormat);
+        line.length && change.insert(line, formats);
+      });
+    }
 
     change = cleanDelete(this, from, to, change);
     return this.updateContents(change, source, selection);
@@ -195,7 +205,7 @@ export default class Editor extends EventDispatcher {
     return this.updateContents(change, source);
   }
 
-  updateContents(change, source = SOURCE_USER, selection) {
+  updateContents(change, source = SOURCE_API, selection) {
     const oldContents = this.contents;
     const contents = normalizeContents(oldContents.compose(change));
     const length = contents.length();
@@ -204,7 +214,7 @@ export default class Editor extends EventDispatcher {
     selection = selection && this.getSelectedRange(selection, length - 1);
 
     const changeEvent = { contents, oldContents, change, selection, oldSelection, source };
-    const selectionEvent = shallowEqual(oldSelection, selection) ? null : { selection, oldSelection, source };
+    const selectionChanged = shallowEqual(oldSelection, selection);
 
     if (change.ops.length && this.fire('text-changing', changeEvent)) {
       setContents(this, contents);
@@ -212,12 +222,13 @@ export default class Editor extends EventDispatcher {
 
       if (source !== SOURCE_SILENT) {
         this.fire('text-change', changeEvent);
-        if (selectionEvent) this.fire('selection-change', selectionEvent);
+        if (selectionChanged) this.fire('selection-change', changeEvent);
       }
       this.fire('editor-change', changeEvent);
+      return change;
+    } else {
+      return null;
     }
-
-    return this.contents;
   }
 
   setSelection(selection, source = SOURCE_USER) {
@@ -294,6 +305,11 @@ function setContents(editor, contents) {
   contents.push = function() { return this; } // freeze from modification
   editor.contents = contents;
   editor.length = contents.length();
+  editor.text = contents
+    .filter(op => typeof op.insert === 'string')
+    .map(op => op.insert)
+    .join('')
+    .slice(0, -1); // remove the trailing newline
 }
 
 function combineFormats(formats, combined) {
@@ -316,9 +332,9 @@ Delta.prototype.getLines = function(from, to, predicate) {
   let startIndex = 0;
   const lines = [];
   this.eachLine((contents, attributes, number) => {
-    if (startIndex >= to) return false;
+    if (startIndex > to || (startIndex === to && from !== to)) return false;
     const endIndex = startIndex + contents.length() + 1;
-    if (endIndex > from || (from === to && endIndex === to)) {
+    if (endIndex > from) {
       lines.push({ contents, attributes, number, startIndex, endIndex });
     }
     startIndex = endIndex;

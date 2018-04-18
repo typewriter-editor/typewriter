@@ -10,6 +10,7 @@ export const paragraph = {
 export const header = {
   name: 'header',
   selector: 'h1, h2, h3, h4, h5, h6',
+  defaultFollows: true,
   attr: node => ({ header: parseInt(node.nodeName.replace('H', '')) }),
   vdom: (children, attr) => {
     const H = `h${attr.header}`;
@@ -25,12 +26,16 @@ export const list = {
   attr: node => {
     let indent = -1, parent = node.parentNode;
     const list = parent.nodeName === 'OL' ? 'ordered' : 'bullet';
+    const start = parent.start === 1 ? undefined : parent.start;
     while (parent) {
       if (/^UL|OL$/.test(parent.nodeName)) indent++;
       else if (parent.nodeName !== 'LI') break;
       parent = parent.parentNode;
     }
-    return indent ? { list, indent } : { list };
+    const attr = { list };
+    if (indent) attr.indent = indent;
+    if (start !== undefined) attr.start = start;
+    return attr;
   },
   vdom: lists => {
     const topLevelChildren = [];
@@ -45,7 +50,7 @@ export const list = {
       if (list && list.nodeName === List) {
         list.children.push(item);
       } else {
-        list = <List>{item}</List>;
+        list = <List start={attr.start}>{item}</List>;
         const childrenArray = index ? levels[index - 1].children : topLevelChildren;
         childrenArray.push(list);
         levels[index] = list;
@@ -56,6 +61,12 @@ export const list = {
 
     return topLevelChildren;
   },
+};
+
+export const blockquote = {
+  name: 'blockquote',
+  selector: 'blockquote',
+  vdom: children => <blockquote>{children}</blockquote>,
 };
 
 
@@ -99,7 +110,7 @@ export const image = {
 
 
 export default {
-  blocks: [ paragraph, header, list, container ],
+  blocks: [ paragraph, header, list, blockquote, container ],
   markups: [ bold, italics, link ],
   embeds: [ image ],
 };

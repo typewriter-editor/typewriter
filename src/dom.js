@@ -92,7 +92,7 @@ export function deltaToVdom(view, delta) {
       let children = [];
       op.insert.split(/\r/).forEach((child, i) => {
         if (i !== 0) children.push(br);
-        child && children.push(child.replace(/  /g, '\xA0 ').replace(/ +$/, '\xA0'));
+        child && children.push(child.replace(/  /g, '\xA0 ').replace(/^ | $/g, '\xA0'));
       });
 
       if (op.attributes) {

@@ -1,9 +1,10 @@
-import { Editor, HTMLView, defaultViewModules } from './index';
-import placeholder from './modules/placeholder';
+import { Editor, HTMLView, defaultViewModules, placeholder, smartEntry, smartQuotes } from './index';
 import { h } from 'ultradom';
 
 const editor = new Editor();
-const view = new HTMLView(editor, { modules: defaultViewModules });
+const view = new HTMLView(editor, { modules: defaultViewModules.concat([
+  smartQuotes, smartEntry()
+]) });
 
 window.editor = editor;
 window.view = view;
@@ -38,6 +39,8 @@ view.on('decorate', editor => {
   }
 });
 // ***** Search feature
+
+
 
 
 editor.setText(`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur quis sagittis libero. Etiam egestas rhoncus risus, sed accumsan nisi laoreet a. Praesent pulvinar porttitor lorem, vel tempor est vulputate nec. Duis magna justo, ultrices at ullamcorper a, sagittis quis mi. Duis id libero non augue faucibus faucibus sed nec sapien. Vivamus pulvinar justo nec metus dapibus, quis tincidunt justo fermentum. Aliquam erat volutpat. Nam hendrerit libero ut nunc rutrum pellentesque. Nulla erat eros, molestie ac nibh non, consectetur luctus lorem. Mauris vel egestas nisi.

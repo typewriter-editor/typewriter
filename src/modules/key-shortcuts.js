@@ -2,15 +2,15 @@ const SOURCE_USER = 'user';
 
 
 export const keymap = {
-  'Ctrl+B': editor => editor.toggleTextFormat(editor.selection, { bold: true }),
-  'Ctrl+I': editor => editor.toggleTextFormat(editor.selection, { italics: true }),
-  'Ctrl+1': editor => editor.toggleLineFormat(editor.selection, { header: 1 }),
-  'Ctrl+2': editor => editor.toggleLineFormat(editor.selection, { header: 2 }),
-  'Ctrl+3': editor => editor.toggleLineFormat(editor.selection, { header: 3 }),
-  'Ctrl+4': editor => editor.toggleLineFormat(editor.selection, { header: 4 }),
-  'Ctrl+5': editor => editor.toggleLineFormat(editor.selection, { header: 5 }),
-  'Ctrl+6': editor => editor.toggleLineFormat(editor.selection, { header: 6 }),
-  'Ctrl+0': editor => editor.formatLine(editor.selection, { }),
+  'Ctrl+B': editor => editor.toggleTextFormat(editor.selection, { bold: true }, SOURCE_USER),
+  'Ctrl+I': editor => editor.toggleTextFormat(editor.selection, { italics: true }, SOURCE_USER),
+  'Ctrl+1': editor => editor.toggleLineFormat(editor.selection, { header: 1 }, SOURCE_USER),
+  'Ctrl+2': editor => editor.toggleLineFormat(editor.selection, { header: 2 }, SOURCE_USER),
+  'Ctrl+3': editor => editor.toggleLineFormat(editor.selection, { header: 3 }, SOURCE_USER),
+  'Ctrl+4': editor => editor.toggleLineFormat(editor.selection, { header: 4 }, SOURCE_USER),
+  'Ctrl+5': editor => editor.toggleLineFormat(editor.selection, { header: 5 }, SOURCE_USER),
+  'Ctrl+6': editor => editor.toggleLineFormat(editor.selection, { header: 6 }, SOURCE_USER),
+  'Ctrl+0': editor => editor.formatLine(editor.selection, { }, SOURCE_USER),
 };
 
 export const macKeymap = {
