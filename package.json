@@ -1,9 +1,10 @@
 {
   "name": "typewriter-editor",
-  "version": "0.0.3",
+  "version": "0.2.1",
   "scripts": {
     "start": "rollup --config rollup.config.dev.js --watch",
-    "build": "rollup --config"
+    "build": "rollup --config",
+    "prepublish": "npm run build"
   },
   "license": "MIT",
   "repository": {
