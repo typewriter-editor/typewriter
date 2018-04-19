@@ -1,9 +1,9 @@
-import { h } from 'ultradom';
+import { h } from '../view/vdom';
 
 export default function placeholder(placeholder) {
   return view => {
 
-    view.dom.markups.add({
+    view.paper.markups.add({
       name: 'placeholder',
       selector: 'span.placholder',
       vdom: children => <span class="placeholder" style={{pointerEvents: 'none'}}>{children}</span>,

@@ -8,10 +8,10 @@ const header = /^#{1,6} $/;
  * function. The function's argument will be the captured text from the regular expression.
  */
 export const blockReplacements = [
-  [ /^(#{1,6}) $/, capture => ({ header: capture.length })],
-  [ /^[-*] $/, () => ({ list: 'bullet' })],
-  [ /^(\d+)\. $/, capture => (capture === '1' ? { list: 'ordered' } : { list: 'ordered', start: parseInt(capture) })],
-  [ /^> $/, () => ({ blockquote: true })],
+  [ /^(#{1,6}) $/, capture => ({ header: capture.length }) ],
+  [ /^[-*] $/, () => ({ list: 'bullet' }) ],
+  [ /^1\. $/, () => ({ list: 'ordered' }) ],
+  [ /^> $/, () => ({ blockquote: true }) ],
 ];
 
 /**

@@ -15,16 +15,26 @@ to the user but does not get merged into the editor contents or sent over the wi
 * No required stylesheet to make it work
 * Undo breaks correctly when actions change—follows the native OS behavior of Mac and Windows
 
+To test out run:
+
+```
+npm install
+npm start
+```
+
+The `dev.js` file is the dev/test runner for playing around with ideas.
+
 ### TODO
 
-* Add list handling, fix indent when deleting in the middle of a list (unindent as necessary)
-* Paste handling (should be pretty easy with deltaFromDom)
+* Paste handling (should be pretty easy with deltaFromDom) https://www.w3.org/TR/clipboard-apis/#override-paste
+* Handle copy to remove decorations and only copy source (https://developer.mozilla.org/en-US/docs/Web/Events/copy)
 * Code comments
 * Testing
 * More modules
+* Rethink the module API (objects with methods instead of just functions?), see quill's modules
 * Optional UI, toolbars, image handling, etc.
-* Benchmarking for good feels
+* Benchmarking
 
 ## Contributing
 
-Submit PRs, will get a gitter up
+Submit issues to discuss things, PRs to fix things

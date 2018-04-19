@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "scripts": {
     "start": "rollup --config rollup.config.dev.js --watch",
     "build": "rollup --config",
@@ -20,8 +20,7 @@
     "escape-html": "^1.0.3",
     "fast-equals": "^1.2.1",
     "quill-delta": "^3.6.2",
-    "shortcut-string": "^1.1.0",
-    "ultradom": "^2.3.4"
+    "shortcut-string": "^1.1.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -31,7 +30,7 @@
     "babel-plugin-transform-react-jsx": "^6.24.1",
     "babel-preset-env": "^1.6.1",
     "babel-preset-stage-2": "^6.24.1",
-    "rollup": "^0.57.1",
+    "rollup": "^0.58.1",
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-commonjs": "^9.1.0",
     "rollup-plugin-livereload": "^0.6.0",

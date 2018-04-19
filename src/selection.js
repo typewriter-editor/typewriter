@@ -63,7 +63,7 @@ export function getNodesForRange(view, range) {
 
 export function getNodeAndOffset(view, index) {
   const root = view.root;
-  const blocksSelector = view.dom.blocks.selector;
+  const blocksSelector = view.paper.blocks.selector;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
       return (node.nodeType === Node.TEXT_NODE || node.offsetParent) &&
@@ -101,7 +101,7 @@ export function getNodeAndOffset(view, index) {
 // Get the index the node starts at in the content
 export function getNodeIndex(view, node) {
   const root = view.root;
-  const blocksSelector = view.dom.blocks.selector;
+  const blocksSelector = view.paper.blocks.selector;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
       return (node.nodeType === Node.TEXT_NODE || node.offsetParent) &&

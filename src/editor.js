@@ -42,9 +42,14 @@ export default class Editor extends EventDispatcher {
         return null;
       }
     };
-    producer();
+    producer(this);
     delete this.updateContents;
     return change;
+  }
+
+  transaction(producer, source, selection) {
+    const change = this.getChange(producer);
+    return this.updateContents(change, source, selection);
   }
 
   setContents(newContents, source, selection) {
@@ -69,7 +74,7 @@ export default class Editor extends EventDispatcher {
       const textFormat = formats || this.getTextFormat(from);
       text.split('\n').forEach((line, i) => {
         if (i) change.insert('\n', lineFormat);
-        line.length && change.insert(line, formats);
+        line.length && change.insert(line, textFormat);
       });
     }
 
@@ -81,7 +86,7 @@ export default class Editor extends EventDispatcher {
     [ from, to, embed, value, source, selection ] =
       this._normalizeArguments(from, to, embed, value, source, selection);
     if (selection == null) selection = from + 1;
-    let change = this.delta().retain(index).delete(to - from).insert({ [embed]: value });
+    let change = this.delta().retain(from).delete(to - from).insert({ [embed]: value });
     change = cleanDelete(this, from, to, change);
     return this.updateContents(change, source, selection);
   }
@@ -112,6 +117,7 @@ export default class Editor extends EventDispatcher {
     let formats;
 
     this.contents.getOps(from, to).forEach(({ op }) => {
+      if (op.insert === '\n') return;
       if (!op.attributes) formats = {};
       else if (!formats) formats = { ...op.attributes };
       else formats = combineFormats(formats, op.attributes);
@@ -157,11 +163,11 @@ export default class Editor extends EventDispatcher {
       return;
     }
     Object.keys(formats).forEach(name => formats[name] === false && (formats[name] = null));
-    const text = this.getText();
     const change = this.delta().retain(from);
-    text.slice(from, to).split('\n').forEach(line => {
+    this.getText(from, to).split('\n').forEach(line => {
       line.length && change.retain(line.length, formats).retain(1);
     });
+    change.chop();
 
     return this.updateContents(change, source);
   }
@@ -286,6 +292,8 @@ export default class Editor extends EventDispatcher {
 
 function cleanDelete(editor, from, to, change) {
   if (from !== to) {
+    const line = editor.contents.getLine(from);
+    if (!line.contents.length() && to === from + 1) return change;
     const lineFormat = editor.getLineFormat(from);
     if (!deepEqual(lineFormat, editor.getLineFormat(to))) {
       const lineChange = editor.getChange(() => editor.formatLine(to, lineFormat))

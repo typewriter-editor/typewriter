@@ -1,5 +1,5 @@
 import Editor from './editor';
-import HTMLView from './html-view';
+import View from './view';
 
 import input from './modules/input';
 import keyShortcuts from './modules/key-shortcuts';
@@ -10,4 +10,4 @@ import smartQuotes from './modules/smart-quotes';
 
 const defaultViewModules = [ input, keyShortcuts, history ];
 
-export { Editor, HTMLView, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, defaultViewModules };
+export { Editor, View, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, defaultViewModules };
