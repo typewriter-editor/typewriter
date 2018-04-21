@@ -1,5 +1,7 @@
 # Typewriter
 
+[![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A Quill.js clone that uses the [Delta](https://github.com/quilljs/delta/) data format for content but manages the DOM
 with a virtual DOM like React and similar frameworks use. Typewriter uses the tiny
 [Ultradom](https://github.com/jorgebucaran/ultradom/) for this. This allows decorators—temporary markup which is visible
