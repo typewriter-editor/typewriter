@@ -1,6 +1,6 @@
 
 
-export class Paper {
+export default class Paper {
   constructor(types) {
     this.blocks = new Types();
     this.markups = new Types();

@@ -63,7 +63,7 @@ export function getNodesForRange(view, range) {
 
 export function getNodeAndOffset(view, index) {
   const root = view.root;
-  const blocksSelector = view.paper.blocks.selector;
+  const { blocks, embeds } = view.paper;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
       return (node.nodeType === Node.TEXT_NODE || node.offsetParent) &&
@@ -79,7 +79,9 @@ export function getNodeAndOffset(view, index) {
       const size = node.nodeValue.length
       if (index <= count + size) return [ node, index - count ];
       count += size;
-    } else if (node.matches(blocksSelector)) {
+    } else if (embeds.matches(node)) {
+      count += 1;
+    } else if (blocks.matches(node)) {
       if (firstBlockSeen) count += 1;
       else firstBlockSeen = true;
 
@@ -101,7 +103,7 @@ export function getNodeAndOffset(view, index) {
 // Get the index the node starts at in the content
 export function getNodeIndex(view, node) {
   const root = view.root;
-  const blocksSelector = view.paper.blocks.selector;
+  const { blocks, embeds } = view.paper;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
       return (node.nodeType === Node.TEXT_NODE || node.offsetParent) &&
@@ -115,7 +117,8 @@ export function getNodeIndex(view, node) {
   while ((node = walker.previousNode())) {
     if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
     else if (node.nodeName === 'BR' && node.parentNode.lastChild !== node) index++;
-    else if (node !== root && node.matches(blocksSelector)) index++;
+    else if (embeds.matches(node)) index++;
+    else if (node !== root && blocks.matches(node)) index++;
   }
   return index;
 }

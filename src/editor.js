@@ -8,63 +8,243 @@ const SOURCE_USER = 'user';
 const SOURCE_SILENT = 'silent';
 const empty = {};
 
+/**
+ * Event for text changes, called before the change has occurred. If a listener returns false the change will be
+ * canceled and not committed.
+ *
+ * @event Editor#text-changing
+ * @type  {Object}
+ * @property {Delta} change       The change which is being applied to the content
+ * @property {Delta} content      The new content after the change
+ * @property {Delta} oldContent   The old content before the change
+ * @property {Array} seleciton    The selection after the change
+ * @property {Array} oldSelection The selection before the change
+ * @property {String} source      The source of the change, api, user, or silent
+ */
+
+/**
+ * Event for text changes, called after the change has occurred.
+ *
+ * @event Editor#text-change
+ * @type  {Object}
+ * @property {Delta} change       The change which is being applied to the content
+ * @property {Delta} content      The new content after the change
+ * @property {Delta} oldContent   The old content before the change
+ * @property {Array} seleciton    The selection after the change
+ * @property {Array} oldSelection The selection before the change
+ * @property {String} source      The source of the change, api, user, or silent
+ */
+
+/**
+ * Event for selection changes. If part of a text change the `change`, `content`, and `oldContent` properties will be
+ * set. Otherwise they will not be set.
+ *
+ * @event Editor#selection-change
+ * @type  {Object}
+ * @property {Delta} change       [ Optional ] The change which is being applied to the content
+ * @property {Delta} content      [ Optional ] The new content after the change
+ * @property {Delta} oldContent   [ Optional ] The old content before the change
+ * @property {Array} seleciton    The selection after the change
+ * @property {Array} oldSelection The selection before the change
+ * @property {String} source      The source of the change, api, user, or silent
+ */
+
+/**
+ * A Typewriter Editor handles the logic for selection and editing of contents. It has no dependency on browser APIs
+ * and can be used in Node.js as easily as the browser. It has no logic to limit formatting (i.e. it does not disallow
+ * using bold, headers, links, or FOOBAR), that will need to be limited outside of the editor itself.
+ *
+ * @fires Editor#text-changing
+ * @fires Editor#text-change
+ * @fires Editor#selection-change
+ *
+ * @readonly @property {Delta}  contents      The data model for the text editor
+ * @readonly @property {Number} length        The length of the contents
+ * @readonly @property {String} text          The text of the contents
+ * @readonly @property {Array}  selection     The current editor selection, a tuple of `[ from, to ]` or `null`
+ * @readonly @property {Object} activeFormats The currently active formats (formats that will apply on the next insert)
+ */
 export default class Editor extends EventDispatcher {
 
+  /**
+   * Create a new Typewriter editor.
+   *
+   * @param {Object} options Options for this editor include initial `contents` and `modules`:
+   * @param {Delta}  options.contents The initial contents of this editor
+   * @param {Array}  options.modules  An array of functions which will be executed with the editor being passed as an
+   *                                  argument.
+   */
   constructor(options = {}) {
     super();
+    this.contents = null;
+    this.length = 0;
+    this.text = '';
     this.selection = null;
     this.activeFormats = empty;
     setContents(this, options.contents || this.delta().insert('\n'));
     if (options.modules) options.modules.forEach(module => module(this));
   }
 
+  /**
+   * Convenience method for creating a new delta (allows other modules to not need to require Delta). Used for creating
+   * change deltas for updating the contents.
+   *
+   * @param {Array} ops [Optional] The initial ops for the delta
+   * @returns {Delta}   A new Delta object
+   */
   delta(ops) {
     return new Delta(ops);
   }
 
+  /**
+   * Returns the contents or a slice of them.
+   *
+   * @param {Number} from The starting index
+   * @param {Number} to   The ending index
+   * @return {Delta}      The contents of this editor
+   */
   getContents(from = 0, to = this.length) {
     [ from, to ] = this._normalizeArguments(from, to);
     return this.contents.slice(from, to);
   }
 
+  /**
+   * Returns the text for the editor or a slice of it.
+   *
+   * @param {Number} from The starting index
+   * @param {Number} to   The ending index
+   * @return {String}     The text in the editor
+   */
   getText(from = 0, to = this.length) {
     [ from, to ] = this._normalizeArguments(from, to);
     return this.text.slice(from, to);
   }
 
-  getChange(producer) {
-    let change = this.delta();
-    this.updateContents = singleChange => {
-      if (singleChange.ops.length) {
-        change = change.compose(singleChange);
-        return singleChange;
-      } else {
-        return null;
-      }
-    };
-    producer(this);
-    delete this.updateContents;
+  /**
+   * Set the selection to a new location (or null for no selection). Will return false if the new selection is the same
+   * as the old selection. Dispatches "selection-change" once the selection is changed. This "selection-change" event
+   * won't have { contents, oldContnts, change } in it since the selection is changing without any content updates.
+   *
+   * @param {Number} from      The starting index
+   * @param {Number} to        The ending index
+   * @param {String} source    The source of the change, user, api, or silent
+   * @return {Boolean}         Whether the selection changed or not
+   */
+  setSelection(from, to, source = SOURCE_USER) {
+    const oldSelection = this.selection;
+    let selection;
+
+    if (from === null) {
+      selection = null;
+      if (typeof to === 'string') source = to;
+    } else {
+      [from, to, source ] = this._normalizeArguments(from, to, source);
+      selection = [ from, to ];
+    }
+
+    selection = this.getSelectedRange(selection);
+
+    if (shallowEqual(oldSelection, selection)) return false;
+
+    // Reset the active formats when selection changes (do this before setting selection)
+    this.activeFormats = selection ? this.getTextFormat(Math.min(selection[0], selection[1])) : empty;
+    this.selection = selection;
+    const event = { selection, oldSelection, source };
+
+    if (source !== SOURCE_SILENT) this.fire('selection-change', event);
+    this.fire('editor-change', event);
+    return true;
+  }
+
+  /**
+   * The method that all other methods use to update the contents (even setContents & setText). This method will
+   * dispatch the event "text-changing". If a listener returns `false` then the change will be canceled and null will
+   * be returned. Otherwise, the change will be successful and if the `source` is not "silent" a "text-change" event
+   * will be fired with an event object containing `{ contents, oldContents, selection, oldSelection, source }`. If the
+   * selection has changed as part of this update a "selection-change" event will also be fired with the same event
+   * object.
+   *
+   * @param {Delta} change    A delta change to the document
+   * @param {String} source   The source of the change, user, api, or silent
+   * @param {Array} selection Optional selection after the change has been applied
+   * @return {Delta}          Returns the change when successful, or null if not
+   */
+  updateContents(change, source = SOURCE_API, selection) {
+    if (!change.chop().ops.length) return null;
+
+    const oldContents = this.contents;
+    const contents = normalizeContents(oldContents.compose(change));
+    const length = contents.length();
+    const oldSelection = this.selection;
+    if (!selection) selection = oldSelection ? oldSelection.map(i => change.transform(i)) : oldSelection;
+    selection = selection && this.getSelectedRange(selection, length - 1);
+
+    const changeEvent = { contents, oldContents, change, selection, oldSelection, source };
+    const selectionChanged = !shallowEqual(oldSelection, selection);
+
+    if (!this.fire('text-changing', changeEvent)) return null;
+
+    setContents(this, contents);
+
+    if (selection) {
+      // Reset the active formats when selection changes (do this before setting selection)
+      this.activeFormats = selection ? this.getTextFormat(Math.min(selection[0], selection[1])) : empty;
+      this.selection = selection;
+    }
+
+    if (source !== SOURCE_SILENT) {
+      this.fire('text-change', changeEvent);
+      if (selectionChanged) this.fire('selection-change', changeEvent);
+    }
+    this.fire('editor-change', changeEvent);
     return change;
   }
 
-  transaction(producer, source, selection) {
-    const change = this.getChange(producer);
-    return this.updateContents(change, source, selection);
-  }
-
+  /**
+   * Sets the entire contents of the editor. This will calculate the difference between the old content and the new and
+   * only apply the difference, if any.
+   *
+   * @param {Delta} newContents The contents of the editor, as a delta object
+   * @param {String} source     The source of the change, user, api, or silent
+   * @param {Array} selection   Optional selection after the change has been applied
+   * @return {Delta}            Returns the change when successful, or null if not
+   */
   setContents(newContents, source, selection) {
-    const change = this.contents.diff(newContents);
+    const change = this.contents.diff(normalizeContents(newContents));
     return this.updateContents(change, source, selection);
   }
 
+  /**
+   * Sets the text content of the editor, removing existing contents and formatting.
+   *
+   * @param {String} text     Set the contents of this editor as text
+   * @param {String} source   The source of the change, user, api, or silent
+   * @param {Array} selection Optional selection after the change has been applied
+   * @return {Delta}          Returns the change when successful, or null if not
+   */
   setText(text, source, selection) {
     return this.setContents(this.delta().insert(text + '\n'), source, selection);
   }
 
+  /**
+   * Inserts text into the content of the editor, removing text between from and to if provided. If `text` is a newline
+   * ("\n") then the formats will apply to the line, otherwise they will apply to the text only (even if there are
+   * newlines in the text).
+   *
+   * @param {Number} from      Insert the text at this index, can also be a range Array tuple, default 0
+   * @param {Number} to        If provided and not equal to `from` will delete the text between `from` and `to`
+   * @param {String} text      The text to insert into the editor's contents
+   * @param {String} formats   The formats of the inserted text. If null the formats at `from` will be used.
+   * @param {String} source    The source of the change, user, api, or silent
+   * @param {Array}  selection Optional selection after the change has been applied
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
   insertText(from, to, text, formats, source, selection) {
     [ from, to, text, formats, source, selection ] =
       this._normalizeArguments(from, to, text, formats, source, selection);
-    if (selection == null) selection = from + text.length;
+    if (typeof formats === 'string') [ formats, source, selection ] = [ null, formats, source ];
+    [ from, to ] = this.getSelectedRange([ from, to ]);
+    if (selection == null && this.selection !== null) selection = from + text.length;
     let change = this.delta().retain(from).delete(to - from);
 
     if (text === '\n') {
@@ -82,23 +262,58 @@ export default class Editor extends EventDispatcher {
     return this.updateContents(change, source, selection);
   }
 
-  insertEmbed(from, to, embed, value, source, selection) {
+  /**
+   * Inserts an embed into the content of the editor, removing text between from and to if provided.
+   *
+   * @param {Number} from      Insert the embed at this index, can also be a range Array tuple, default 0
+   * @param {Number} to        If provided and not equal to `from` will delete the text between `from` and `to`
+   * @param {String} embed     Insert the text into the editor's contents
+   * @param {mixed}  value     Insert the text into the editor's contents
+   * @param {String} formats   The formats of the inserted text. If null the formats at `from` will be used.
+   * @param {String} source    The source of the change, user, api, or silent
+   * @param {Array}  selection Optional selection after the change has been applied
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
+  insertEmbed(from, to, embed, value, formats, source, selection) {
     [ from, to, embed, value, source, selection ] =
       this._normalizeArguments(from, to, embed, value, source, selection);
-    if (selection == null) selection = from + 1;
-    let change = this.delta().retain(from).delete(to - from).insert({ [embed]: value });
+    if (typeof formats === 'string') [ formats, source, selection ] = [ null, formats, source ];
+    if (from >= this.length) from = this.length - 1;
+    if (to >= this.length) to = this.length - 1;
+    if (selection == null && this.selection !== null) selection = from + 1;
+    const textFormat = formats || this.getTextFormat(from);
+    let change = this.delta().retain(from).delete(to - from).insert({ [embed]: value }, textFormat);
     change = cleanDelete(this, from, to, change);
     return this.updateContents(change, source, selection);
   }
 
+  /**
+   * Deletes text from `from` to `to`.
+   *
+   * @param {Number} from      Insert the text as this index, can also be a range Array tuple, default 0
+   * @param {Number} to        Will delete the text between `from` and `to`
+   * @param {String} source    The source of the change, user, api, or silent
+   * @param {Array}  selection Optional selection after the change has been applied
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
   deleteText(from, to, source, selection) {
     [ from, to, source, selection ] = this._normalizeArguments(from, to, source, selection);
-    if (selection == null) selection = from;
+    if (from === to) return null;
+    if (selection == null && this.selection !== null) selection = from;
     let change = this.delta().retain(from).delete(to - from);
     change = cleanDelete(this, from, to, change);
-    return this.updateContents(change, source, from);
+    return this.updateContents(change, source, selection);
   }
 
+  /**
+   * Get the line formats for the line that `from` is in to the line that `to` is in. Returns only the common formats
+   * between all the lines. If `from` equals `to` (or `to` is not provided) the formats will be all of those for the
+   * line `from` is on. If two lines are touched and they have different formats, an empty object will be returned.
+   *
+   * @param {Number} from Getting line formats starting at `from`
+   * @param {Number} to   Getting line formats ending at `to`
+   * @return {Object}     An object with all the common formats among the lines which intersect from and to
+   */
   getLineFormat(from, to) {
     [ from, to ] = this._normalizeArguments(from, to);
     let formats;
@@ -112,9 +327,24 @@ export default class Editor extends EventDispatcher {
     return formats;
   }
 
+  /**
+   * Get the text formats for all the text from `from` to `to`. Returns only the common formats between the two indexes.
+   * Will also return the `activeFormats`. Active formats are those which are toggled on when the selection is collapsed
+   * (from and to are equal) indicating inserted text should use (or not use) those formats.
+   *
+   * @param {Number} from Getting text formats starting at `from`
+   * @param {Number} to   Getting text formats ending at `to`
+   * @return {Object}     An object with all the common formats among the text
+   */
   getTextFormat(from, to) {
     [ from, to ] = this._normalizeArguments(from, to);
     let formats;
+
+    // optimize for current selection
+    const seleciton = this.selection;
+    if (from === to && shallowEqual(this.selection, [ from, to ])) {
+      return this.activeFormats;
+    }
 
     this.contents.getOps(from, to).forEach(({ op }) => {
       if (op.insert === '\n') return;
@@ -125,21 +355,30 @@ export default class Editor extends EventDispatcher {
 
     if (!formats) formats = {};
 
-    if (this.activeFormats !== empty) {
-      Object.keys(this.activeFormats).forEach(name => {
-        const value = this.activeFormats[name];
-        if (value === null) delete formats[name];
-        else formats[name] = value;
-      });
-    }
-
     return formats;
   }
 
+  /**
+   * Get the text and line formats for all the lines and text from `from` to `to`.
+   *
+   * @param {Number} from Getting line and text formats starting at `from`
+   * @param {Number} to   Getting line and text formats ending at `to`
+   * @return {Object}     An object with all the common formats among the lines and text which intersect from and to
+   */
   getFormat(from, to) {
     return { ...this.getTextFormat(from, to), ...this.getLineFormat(from, to) };
   }
 
+  /**
+   * Formats the lines intersected by `from` and `to` with the given line formats. To remove an existing format pass in
+   * `null` or `false` to turn it off (e.g. `{ blockquote: false }`).
+   *
+   * @param {Number} from      The starting index
+   * @param {Number} to        The ending index
+   * @param {String} formats   The formats for the line
+   * @param {String} source    The source of the change, user, api, or silent
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
   formatLine(from, to, formats, source) {
     [ from, to, formats, source ] = this._normalizeArguments(from, to, formats, source);
     const change = this.delta();
@@ -155,11 +394,25 @@ export default class Editor extends EventDispatcher {
     return change.ops.length ? this.updateContents(change, source) : this.contents;
   }
 
+  /**
+   * Formats the text from `from` to `to` with the given text formats. To remove an existing format pass in `null` or
+   * `false` to turn it off (e.g. `{ bold: false }`).
+   *
+   * @param {Number} from      The starting index
+   * @param {Number} to        The ending index
+   * @param {String} formats   The formats for the text
+   * @param {String} source    The source of the change, user, api, or silent
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
   formatText(from, to, formats, source) {
     [ from, to, formats, source ] = this._normalizeArguments(from, to, formats, source);
     if (from === to) {
       if (this.activeFormats === empty) this.activeFormats = {};
-      Object.keys(formats).forEach(key => this.activeFormats[key] = formats[key]);
+      Object.keys(formats).forEach(key => {
+        const value = formats[key];
+        if (value == null || value === false) delete this.activeFormats[key];
+        else this.activeFormats[key] = value;
+      });
       return;
     }
     Object.keys(formats).forEach(name => formats[name] === false && (formats[name] = null));
@@ -172,6 +425,16 @@ export default class Editor extends EventDispatcher {
     return this.updateContents(change, source);
   }
 
+  /**
+   * Toggles the line formats from `from` to `to` with the given line formats. If the line has the exact formats already
+   * they will be removed, otherwise they will be added.
+   *
+   * @param {Number} from      The starting index
+   * @param {Number} to        The ending index
+   * @param {String} formats   The formats for the line
+   * @param {String} source    The source of the change, user, api, or silent
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
   toggleLineFormat(from, to, format, source) {
     [ from, to, format, source ] = this._normalizeArguments(from, to, format, source);
     const existing = this.getLineFormat(from, to);
@@ -181,6 +444,16 @@ export default class Editor extends EventDispatcher {
     return this.formatLine(from, to, format, source);
   }
 
+  /**
+   * Toggles the text formats from `from` to `to` with the given text formats. If the text has the exact formats already
+   * they will be removed, otherwise they will be added.
+   *
+   * @param {Number} from      The starting index
+   * @param {Number} to        The ending index
+   * @param {String} formats   The formats for the text
+   * @param {String} source    The source of the change, user, api, or silent
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
   toggleTextFormat(from, to, format, source) {
     [ from, to, format, source ] = this._normalizeArguments(from, to, format, source);
     const existing = this.getTextFormat(from, to);
@@ -191,6 +464,15 @@ export default class Editor extends EventDispatcher {
     return this.formatText(from, to, format, source);
   }
 
+  /**
+   * Removes all formatting, text and line formats, for the text and lines from `from` to `to`.
+   *
+   * @param {Number} from      The starting index
+   * @param {Number} to        The ending index
+   * @param {String} formats   The formats for the text
+   * @param {String} source    The source of the change, user, api, or silent
+   * @return {Delta}           Returns the change when successful, or null if not
+   */
   removeFormat(from, to, source) {
     [ from, to, source ] = this._normalizeArguments(from, to, source);
     const formats = {};
@@ -211,47 +493,59 @@ export default class Editor extends EventDispatcher {
     return this.updateContents(change, source);
   }
 
-  updateContents(change, source = SOURCE_API, selection) {
-    const oldContents = this.contents;
-    const contents = normalizeContents(oldContents.compose(change));
-    const length = contents.length();
-    const oldSelection = this.selection;
-    if (!selection) selection = this.selection ? this.selection.map(i => change.transform(i)) : oldSelection;
-    selection = selection && this.getSelectedRange(selection, length - 1);
-
-    const changeEvent = { contents, oldContents, change, selection, oldSelection, source };
-    const selectionChanged = shallowEqual(oldSelection, selection);
-
-    if (change.ops.length && this.fire('text-changing', changeEvent)) {
-      setContents(this, contents);
-      if (selection) this.selection = selection;
-
-      if (source !== SOURCE_SILENT) {
-        this.fire('text-change', changeEvent);
-        if (selectionChanged) this.fire('selection-change', changeEvent);
+  /**
+   * Create a change delta calling one or more methods on the editor. The changes will not be applied as normal but will
+   * be collated into a single change delta and returned from this methnod. Example:
+   * ```js
+   * var change = editor.getChange(function() {
+   *   editor.deleteText(0, 5);
+   *   editor.insertText('\n', { blockquote: true });
+   *   editor.formatText(10, 20, { bold: true });
+   * });
+   *
+   * editor.updateContents(change, 'user');
+   * ```
+   *
+   * @param {Function} producer A function in which to call methods on the editor to produce a change
+   * @return {Delta}            The sum of all the changes made within the producer
+   */
+  getChange(producer) {
+    let change = this.delta();
+    this.updateContents = singleChange => {
+      if (singleChange.ops.length) {
+        change = change.compose(singleChange);
+        return singleChange;
+      } else {
+        return null;
       }
-      this.fire('editor-change', changeEvent);
-      return change;
-    } else {
-      return null;
-    }
+    };
+    producer(this);
+    delete this.updateContents;
+    return change;
   }
 
-  setSelection(selection, source = SOURCE_USER) {
-    const oldSelection = this.selection;
-    selection = this.getSelectedRange(selection);
-    this.activeFormats = empty;
-
-    if (shallowEqual(oldSelection, selection)) return false;
-
-    this.selection = selection;
-    const event = { selection, oldSelection, source };
-
-    if (source !== SOURCE_SILENT) this.fire('selection-change', event);
-    this.fire('editor-change', event);
-    return true;
+  /**
+   * Make several changes to the editor apply all at one in one commit. Changes made with the transaction will be
+   * applied all together and the "text-changing", "text-change", and "selection-change" events will be dispatched only
+   * once. Use this to combine multiple changes into one.
+   *
+   * @param {Function} producer A function which should make changes with the editor
+   * @param {String} source     The source of the change, user, api, or silent
+   * @param {Array} selection   Optional selection after the change has been applied
+   * @return {Delta}            Returns the change when successful, or null if not
+   */
+  transaction(producer, source, selection) {
+    const change = this.getChange(producer);
+    return this.updateContents(change, source, selection);
   }
 
+  /**
+   * Returns the selected range (or the provided range) in index order (lowest number first) and within the bounds of
+   * the content, between 0 and content.length() - 1 (the selection cannot be past the trailing newline).
+   *
+   * @param {Array} range Optional range, defaults to current selection
+   * @param {Number} max  The maxium number the range can be
+   */
   getSelectedRange(range = this.selection, max = this.length - 1) {
     if (range == null) return range;
     if (typeof range === 'number') range = [ range, range ];
@@ -290,6 +584,8 @@ export default class Editor extends EventDispatcher {
   }
 }
 
+// Ensures the format for the current line in a delete remains the same when multiple lines are deleted. This is needed
+// because the last line holds the formatting after a delete, but the first line is expected to be the retained format
 function cleanDelete(editor, from, to, change) {
   if (from !== to) {
     const line = editor.contents.getLine(from);
@@ -303,14 +599,23 @@ function cleanDelete(editor, from, to, change) {
   return change;
 }
 
+// Ensures contents end with a newline
 function normalizeContents(contents) {
-  if (!contents.ops.length || contents.ops[contents.ops.length - 1].insert.slice(-1) !== '\n') contents.insert('\n');
+  const lastOp = contents.ops[contents.ops.length - 1];
+  if (!lastOp || typeof lastOp.insert !== 'string' || lastOp.insert.slice(-1) !== '\n') contents.insert('\n');
   return contents;
 }
 
+// Delta no operation method
+function deltaNoop() {
+  return this;
+}
+
+// Sets the contents onto the editor after ensuring they end in a newline, freezes the contents from change, and
+// updates the length and text of the editor to the latest
 function setContents(editor, contents) {
   normalizeContents(contents);
-  contents.push = function() { return this; } // freeze from modification
+  contents.push = deltaNoop // freeze from modification
   editor.contents = contents;
   editor.length = contents.length();
   editor.text = contents
@@ -320,6 +625,7 @@ function setContents(editor, contents) {
     .slice(0, -1); // remove the trailing newline
 }
 
+// Combine formats removing ones that don't exist in both and creating an array for those with multiple values
 function combineFormats(formats, combined) {
   return Object.keys(combined).reduce(function(merged, name) {
     if (formats[name] == null) return merged;
@@ -336,7 +642,8 @@ function combineFormats(formats, combined) {
   }, {});
 }
 
-Delta.prototype.getLines = function(from, to, predicate) {
+// Extends Delta, get the lines from `from` to `to`.
+Delta.prototype.getLines = function(from, to) {
   let startIndex = 0;
   const lines = [];
   this.eachLine((contents, attributes, number) => {
@@ -350,10 +657,12 @@ Delta.prototype.getLines = function(from, to, predicate) {
   return lines;
 }
 
+// Extends Delta, get the line at `at`.
 Delta.prototype.getLine = function(at) {
   return this.getLines(at, at)[0];
 }
 
+// Extends Delta, get the ops from `from` to `to`.
 Delta.prototype.getOps = function(from, to) {
   let startIndex = 0;
   const ops = [];
@@ -368,6 +677,7 @@ Delta.prototype.getOps = function(from, to) {
   return ops;
 }
 
-Delta.prototype.getOp = function(from) {
-  return this.getOps(from, from)[0];
+// Extends Delta, get the op at `at`.
+Delta.prototype.getOp = function(at) {
+  return this.getOps(at, at)[0];
 }

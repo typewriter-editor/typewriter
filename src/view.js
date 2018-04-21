@@ -1,10 +1,10 @@
 import EventDispatcher from './eventdispatcher';
 import Editor from './editor';
 import { render } from './view/vdom';
-import defaultDom from './view/defaultDom';
+import defaultPaper from './view/defaultPaper';
 import { getSelection, setSelection, getBrowserRange, getNodeAndOffset, getNodeIndex } from './selection';
-import { deltaToVdom, deltaFromDom, deltaToHTML } from './view/dom';
-import { Paper } from './paper';
+import { deltaToVdom, deltaFromDom, deltaToHTML, deltaFromHTML } from './view/dom';
+import Paper from './paper';
 import shortcuts from 'shortcut-string';
 import { shallowEqual } from 'fast-equals';
 import diff from 'fast-diff';
@@ -23,7 +23,7 @@ export default class View extends EventDispatcher {
     if (!editor) throw new Error('Editor view requires an editor');
     this.editor = editor;
     this.root = document.createElement('div');
-    this.paper = new Paper(options.paper || defaultDom);
+    this.paper = new Paper(options.paper || defaultPaper);
     this.enabled = true;
     this.isMac = isMac;
     this._settingEditorSelection = false;
@@ -37,7 +37,8 @@ export default class View extends EventDispatcher {
   }
 
   focus() {
-    this.root.focus();
+    if (this.lastSelection) this.editor.setSelection(this.lastSelection);
+    else this.root.focus();
   }
 
   blur() {
@@ -75,8 +76,8 @@ export default class View extends EventDispatcher {
     return deltaToHTML(this, this.editor.contents);
   }
 
-  setHTML(html) {
-    this.editor.setContents(deltaFromHTML(this, html));
+  setHTML(html, source) {
+    this.editor.setContents(deltaFromHTML(this, html), source);
   }
 
   update(changeEvent) {
@@ -100,17 +101,38 @@ export default class View extends EventDispatcher {
   updateBrowserSelection() {
     if (this._settingEditorSelection) return;
     this._settingBrowserSelection = true;
-    setSelection(this, this.editor.selection);
+    this.setSelection(this.editor.selection);
     setTimeout(() => this._settingBrowserSelection = false, 20);
   }
 
   updateEditorSelection() {
     if (this._settingBrowserSelection) return this._settingBrowserSelection = false;
-    const range = getSelection(this);
+    const range = this.getSelection();
+
+    // Store the last non-null selection for restoration on focus()
+    if (range) this.lastSelection = range;
+
     this._settingEditorSelection = true;
     this.editor.setSelection(range);
     this._settingEditorSelection = false;
+
+    // If the selection was adjusted when set then update the browser's selection
     if (!shallowEqual(range, this.editor.selection)) this.updateBrowserSelection();
+  }
+
+  getSelection() {
+    let range = getSelection(this);
+    if (range && this.reverseDecorations.ops.length) {
+      range = range.map(i => this.reverseDecorations.transform(i));
+    }
+    return range;
+  }
+
+  setSelection(range) {
+    if (range && this.decorations.ops.length) {
+      range = range.map(i => this.decorations.transform(i));
+    }
+    setSelection(this, range);
   }
 
   mount(container) {
@@ -128,31 +150,11 @@ export default class View extends EventDispatcher {
       }
     };
 
-    // TODO this was added to replace the mutation observer, however, it does not accurately capture changes that
-    // occur with native changes such as spell-check replacements, cut or delete using the app menus, etc. Paste should
-    // be handled elsewhere (probably?).
-    // const onInput = () => {
-    //   if (!this.editor.selection) throw new Error('How did an input event occur without a selection?');
-    //   const [ from, to ] = this.editor.getSelectedRange();
-    //   const [ node, offset ] = getNodeAndOffset(this, from);
-    //   if (!node || (node.nodeType !== Node.TEXT_NODE && node.nodeName !== 'BR')) {
-    //     return this.update();
-    //     //throw new Error('Text entry should always result in a text node');
-    //   }
-    //   const text = node.nodeValue.slice(offset, offset + 1).replace(/\xA0/g, ' ');
-    //   const contents = this.editor.contents;
-    //   this.editor.insertText(this.editor.selection, text, null, SOURCE_USER);
-    //   if (this.editor.contents === contents) {
-    //     this.update();
-    //   }
-    // };
-
     const onSelectionChange = () => {
       this.updateEditorSelection();
     };
 
     this.root.addEventListener('keydown', onKeyDown);
-    // this.root.addEventListener('input', onInput);
     container.ownerDocument.addEventListener('selectionchange', onSelectionChange);
 
     const observer = new MutationObserver(list => {
@@ -163,7 +165,7 @@ export default class View extends EventDispatcher {
         return true;
       });
 
-      const selection = getSelection(this);
+      const selection = this.getSelection();
       const mutation = list[0];
       const isTextChange = list.length === 1 && mutation.type === 'characterData' ||
         (mutation.type === 'childList' && mutation.addedNodes.length === 1 &&
@@ -173,17 +175,20 @@ export default class View extends EventDispatcher {
       if (isTextChange) {
         const change = this.editor.delta();
         let index = getNodeIndex(this, mutation.target);
+        index = this.reverseDecorations.transform(index);
         change.retain(index);
         if (mutation.type === 'characterData') {
           const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
           diffs.forEach(([ action, string ]) => {
             if (action === diff.EQUAL) change.retain(string.length);
             else if (action === diff.DELETE) change.delete(string.length);
-            else if (action === diff.INSERT) change.insert(string);
+            else if (action === diff.INSERT) {
+              change.insert(string, editor.activeFormats);
+            }
           });
           change.chop();
         } else {
-          change.insert(mutation.addedNodes[0].nodeValue.replace(/\xA0/g, ' '));
+          change.insert(mutation.addedNodes[0].nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
         }
 
         if (change.ops.length) {
@@ -226,14 +231,13 @@ export default class View extends EventDispatcher {
 
     this.editor.on('text-changing', event => this._preventIncorrectFormats(event));
     this.editor.on('text-change', event => this.update(event));
-    this.editor.on('selection-change', () => !this._settingEditorSelection && this.updateBrowserSelection());
+    this.editor.on('selection-change', () => this.updateBrowserSelection());
     this.update();
 
     this.unmount = () => {
       devObserver.disconnect();
       observer.disconnect();
       this.root.removeEventListener('keydown', onKeyDown);
-      // this.root.removeEventListener('input', onInput);
       this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
       this.root.remove();
       this.unmount = () => {};

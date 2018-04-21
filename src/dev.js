@@ -68,7 +68,6 @@ let changes = editor.delta();
 view.on('decorate', (editor, event) => {
   if (event && event.change && event.source === 'user') {
     changes = changes.compose(event.change);
-    changes = changes.slice(0, changes.transform(pos));
   }
   editor.insertEmbed(changes.transform(pos), 'cursor', { name: 'Jacob', color: 'blue' });
 });

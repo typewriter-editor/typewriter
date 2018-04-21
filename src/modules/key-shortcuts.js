@@ -3,7 +3,7 @@ const SOURCE_USER = 'user';
 
 export const keymap = {
   'Ctrl+B': editor => editor.toggleTextFormat(editor.selection, { bold: true }, SOURCE_USER),
-  'Ctrl+I': editor => editor.toggleTextFormat(editor.selection, { italics: true }, SOURCE_USER),
+  'Ctrl+I': editor => editor.toggleTextFormat(editor.selection, { italic: true }, SOURCE_USER),
   'Ctrl+1': editor => editor.toggleLineFormat(editor.selection, { header: 1 }, SOURCE_USER),
   'Ctrl+2': editor => editor.toggleLineFormat(editor.selection, { header: 2 }, SOURCE_USER),
   'Ctrl+3': editor => editor.toggleLineFormat(editor.selection, { header: 3 }, SOURCE_USER),

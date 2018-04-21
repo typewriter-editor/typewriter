@@ -18,7 +18,18 @@ export default {
       include: 'node_modules/**'
     }),
     babel({
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
+      babelrc: false,
+      "presets": [
+        "stage-2",
+        ["env", {
+          "modules": false
+        }]
+      ],
+      "plugins": [
+        [ "transform-react-jsx", { "pragma": "h" }],
+        "external-helpers"
+      ]
     }),
     serve(),
     livereload()

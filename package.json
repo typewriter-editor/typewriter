@@ -4,7 +4,9 @@
   "scripts": {
     "start": "rollup --config rollup.config.dev.js --watch",
     "build": "rollup --config",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "test": "mocha -r jsdom-global/register -r babel-register",
+    "tdd": "mocha -r jsdom-global/register -r babel-register --watch"
   },
   "license": "MIT",
   "repository": {
@@ -20,6 +22,7 @@
     "escape-html": "^1.0.3",
     "fast-equals": "^1.2.1",
     "quill-delta": "^3.6.2",
+    "regenerator-runtime": "^0.11.1",
     "shortcut-string": "^1.1.0"
   },
   "devDependencies": {
@@ -30,11 +33,27 @@
     "babel-plugin-transform-react-jsx": "^6.24.1",
     "babel-preset-env": "^1.6.1",
     "babel-preset-stage-2": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2",
+    "jasmine-core": "^3.1.0",
+    "jsdom": "^11.8.0",
+    "jsdom-global": "^3.0.2",
+    "karma": "^2.0.2",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-jasmine": "^1.1.1",
+    "karma-mocha": "^1.3.0",
+    "karma-mocha-reporter": "^2.2.5",
+    "karma-rollup-plugin": "^0.2.4",
+    "karma-source-map-support": "^1.2.0",
+    "karma-sourcemap-loader": "^0.3.7",
+    "mocha": "^5.1.1",
     "rollup": "^0.58.1",
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-commonjs": "^9.1.0",
     "rollup-plugin-livereload": "^0.6.0",
     "rollup-plugin-node-resolve": "^3.3.0",
-    "rollup-plugin-serve": "^0.4.2"
+    "rollup-plugin-serve": "^0.4.2",
+    "tape": "^4.9.0"
   }
 }

@@ -26,6 +26,7 @@ The `dev.js` file is the dev/test runner for playing around with ideas.
 
 ### TODO
 
+* Find and fix the bug with redo which isn't redoing correctly (Repro: Enter, "> ", blockquote, type text, undo, undo, undo, redo, redo)
 * Paste handling (should be pretty easy with deltaFromDom) https://www.w3.org/TR/clipboard-apis/#override-paste
 * Handle copy to remove decorations and only copy source (https://developer.mozilla.org/en-US/docs/Web/Events/copy)
 * Code comments

@@ -2,6 +2,7 @@ import Delta from 'quill-delta';
 import { deepEqual } from 'fast-equals';
 import escape from 'escape-html';
 import { h } from './vdom';
+const nodeMarkup = new WeakMap();
 
 const br = <br/>;
 const voidElements = {
@@ -41,7 +42,7 @@ export function deltaToVdom(view, delta) {
             const markup = markups.get(name);
             if (markup) {
               const node = markup.vdom.call(paper, children, op.attributes);
-              node.markup = markup; // Store for merging
+              nodeMarkup.set(node, markup); // Store for merging
               children = [ node ];
             }
           });
@@ -86,13 +87,13 @@ export function deltaToVdom(view, delta) {
 }
 
 
-export function deltaFromDom(view, root = view.root) {
+export function deltaFromDom(view, root = view.root, notInDOM) {
   const paper = view.paper;
   const { blocks, markups, embeds } = paper;
 
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
-      return (node.nodeType === Node.TEXT_NODE || node.offsetParent) &&
+      return (node.nodeType === Node.TEXT_NODE || notInDOM || node.offsetParent) &&
         NodeFilter.FILTER_ACCEPT ||
         NodeFilter.FILTER_REJECT;
     }
@@ -106,7 +107,8 @@ export function deltaFromDom(view, root = view.root) {
     const isBr = node.nodeName === 'BR' && node.parentNode.lastChild !== node;
 
     if (node.nodeType === Node.TEXT_NODE || isBr) {
-      const text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ');
+      // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
+      const text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
       let parent = node.parentNode, attr = {};
 
       while (parent && !blocks.matches(parent) && parent !== root) {
@@ -116,7 +118,11 @@ export function deltaFromDom(view, root = view.root) {
         }
         parent = parent.parentNode;
       }
-      delta.insert(text, attr);
+
+      // If the text was not inside a block, ignore it (space between block perhaps)
+      if (parent !== root) {
+        delta.insert(text, attr);
+      }
     } else if (embeds.matches(node)) {
       const embed = embeds.find(node);
       if (embed) {
@@ -140,17 +146,17 @@ export function deltaFromDom(view, root = view.root) {
 /**
  * Converts a delta object into an HTML string based off of the supplied Paper definition.
  */
-export function deltaToHTML(view) {
-  return childrenToHTML(deltaToVdom(view).children);
+export function deltaToHTML(view, delta) {
+  return childrenToHTML(deltaToVdom(view, delta).children);
 }
 
 /**
  * Converts an HTML string into a delta object based off of the supplied Paper definition.
  */
 export function deltaFromHTML(view, html) {
-  var doc = new DOMParser().parseFromString('<div>' + html + '</div>', 'text/html');
-  const container = doc.body.firstChild;
-  return deltaFromDom(view, container);
+  const template = document.createElement('template');
+  template.innerHTML = '<div>' + html + '</div>';
+  return deltaFromDom(view, template.content.firstChild, true);
 }
 
 
@@ -160,8 +166,8 @@ function mergeChildren(oldChildren) {
   oldChildren.forEach((next, i) => {
     const prev = children[children.length - 1];
 
-    if (prev && typeof prev !== 'string' && typeof next !== 'string' && prev.markup &&
-      prev.markup === next.markup && deepEqual(prev.attributes, next.attributes))
+    if (prev && typeof prev !== 'string' && typeof next !== 'string' && nodeMarkup.get(prev) &&
+      nodeMarkup.get(prev) === nodeMarkup.get(next) && deepEqual(prev.attributes, next.attributes))
     {
       prev.children = prev.children.concat(next.children);
     } else {
@@ -184,5 +190,5 @@ function nodeToHTML(node) {
 // vdom children to HTML string
 function childrenToHTML(children) {
   if (!children || !children.length) return '';
-  return children.reduce((html, child) => html + (child.name ? nodeToHTML(child) : escape(child)), '');
+  return children.reduce((html, child) => html + (child.name ? nodeToHTML(child) : escape(child).replace(/\xA0/g, '&nbsp;')), '');
 }

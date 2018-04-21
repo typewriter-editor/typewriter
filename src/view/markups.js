@@ -9,7 +9,7 @@ export const bold = {
 
 
 export const italics = {
-  name: 'italics',
+  name: 'italic',
   selector: 'em, i',
   vdom: children => <em>{children}</em>,
 };
