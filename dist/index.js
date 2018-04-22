@@ -2078,20 +2078,19 @@
           formats = _ref[0];
           source = _ref[1];
           selection = _ref[2];
-        }
-        var _getSelectedRange = this.getSelectedRange([from, to]);
-
-        var _getSelectedRange2 = slicedToArray(_getSelectedRange, 2);
-
-        from = _getSelectedRange2[0];
-        to = _getSelectedRange2[1];
-
-        if (selection == null && this.selection !== null) selection = from + text.length;
+        }if (selection == null && this.selection !== null) selection = from + text.length;
         var change = this.delta().retain(from).delete(to - from);
 
         if (text === '\n') {
           change.insert('\n', formats || this.getLineFormat(from));
         } else {
+          var _getSelectedRange = this.getSelectedRange([from, to]);
+
+          var _getSelectedRange2 = slicedToArray(_getSelectedRange, 2);
+
+          from = _getSelectedRange2[0];
+          to = _getSelectedRange2[1];
+
           var lineFormat = text.indexOf('\n') === -1 ? null : this.getLineFormat(from);
           var textFormat = formats || this.getTextFormat(from);
           text.split('\n').forEach(function (line, i) {
@@ -3944,11 +3943,9 @@
         this.editor.on('text-changing', function (event) {
           return _this6._preventIncorrectFormats(event);
         });
-        this.editor.on('text-change', function (event) {
-          return _this6.update(event);
-        });
-        this.editor.on('selection-change', function () {
-          return _this6.updateBrowserSelection();
+        this.editor.on('editor-change', function (event) {
+          if (event.change) _this6.update(event);
+          _this6.updateBrowserSelection();
         });
         this.update();
 
@@ -4195,6 +4192,7 @@
   }
 
   var SOURCE_USER$4 = 'user';
+  var SOURCE_SILENT$2 = 'silent';
   var defaultSettings = {
     delay: 4000,
     maxStack: 500
@@ -4242,7 +4240,7 @@
       stack[dest].push(entry);
       lastRecorded = 0;
       ignoreChange = true;
-      editor.updateContents(entry[source], SOURCE_USER$4, entry[source + 'Selection']);
+      editor.updateContents(entry[source], SOURCE_SILENT$2, entry[source + 'Selection']);
       ignoreChange = false;
     }
 

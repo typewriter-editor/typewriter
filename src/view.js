@@ -230,8 +230,10 @@ export default class View extends EventDispatcher {
     devObserver.observe(this.root, { characterData: true, characterDataOldValue: true, childList: true, attributes: true, subtree: true });
 
     this.editor.on('text-changing', event => this._preventIncorrectFormats(event));
-    this.editor.on('text-change', event => this.update(event));
-    this.editor.on('selection-change', () => this.updateBrowserSelection());
+    this.editor.on('editor-change', event => {
+      if (event.change) this.update(event);
+      this.updateBrowserSelection();
+    });
     this.update();
 
     this.unmount = () => {

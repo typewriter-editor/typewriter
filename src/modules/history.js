@@ -1,4 +1,5 @@
 const SOURCE_USER = 'user';
+const SOURCE_SILENT = 'silent';
 const defaultSettings = {
   delay: 4000,
   maxStack: 500,
@@ -44,7 +45,7 @@ export default function history(view, settings = {}) {
     stack[dest].push(entry);
     lastRecorded = 0;
     ignoreChange = true;
-    editor.updateContents(entry[source], SOURCE_USER, entry[source + 'Selection']);
+    editor.updateContents(entry[source], SOURCE_SILENT, entry[source + 'Selection']);
     ignoreChange = false;
   }
 

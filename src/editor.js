@@ -243,13 +243,13 @@ export default class Editor extends EventDispatcher {
     [ from, to, text, formats, source, selection ] =
       this._normalizeArguments(from, to, text, formats, source, selection);
     if (typeof formats === 'string') [ formats, source, selection ] = [ null, formats, source ];
-    [ from, to ] = this.getSelectedRange([ from, to ]);
     if (selection == null && this.selection !== null) selection = from + text.length;
     let change = this.delta().retain(from).delete(to - from);
 
     if (text === '\n') {
       change.insert('\n', formats || this.getLineFormat(from));
     } else {
+      [ from, to ] = this.getSelectedRange([ from, to ]);
       const lineFormat = text.indexOf('\n') === -1 ? null : this.getLineFormat(from);
       const textFormat = formats || this.getTextFormat(from);
       text.split('\n').forEach((line, i) => {
