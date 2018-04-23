@@ -2073,7 +2073,15 @@
         source = _normalizeArguments9[4];
         selection = _normalizeArguments9[5];
 
-        if (typeof formats === 'string') {
+        if (text !== '\n') {
+
+          var _getSelectedRange = this.getSelectedRange([from, to]);
+
+          var _getSelectedRange2 = slicedToArray(_getSelectedRange, 2);
+
+          from = _getSelectedRange2[0];
+          to = _getSelectedRange2[1];
+        }if (typeof formats === 'string') {
           var _ref = [null, formats, source];
           formats = _ref[0];
           source = _ref[1];
@@ -2084,13 +2092,6 @@
         if (text === '\n') {
           change.insert('\n', formats || this.getLineFormat(from));
         } else {
-          var _getSelectedRange = this.getSelectedRange([from, to]);
-
-          var _getSelectedRange2 = slicedToArray(_getSelectedRange, 2);
-
-          from = _getSelectedRange2[0];
-          to = _getSelectedRange2[1];
-
           var lineFormat = text.indexOf('\n') === -1 ? null : this.getLineFormat(from);
           var textFormat = formats || this.getTextFormat(from);
           text.split('\n').forEach(function (line, i) {
