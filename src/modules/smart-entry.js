@@ -72,6 +72,12 @@ export default function(handlers = defaultHandlers) {
     }
 
     editor.on('text-change', onTextChange);
+
+    return {
+      destroy() {
+        editor.off('text-change', onTextChange);
+      }
+    }
   };
 }
 

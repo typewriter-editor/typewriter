@@ -3,9 +3,13 @@ import { cursor } from './view/embeds';
 import { h } from './view/vdom';
 
 const editor = new Editor();
-const view = new View(editor, { modules: defaultViewModules.concat([
-  smartQuotes, smartEntry()
-]) });
+const view = new View(editor, {
+  modules: {
+    ...defaultViewModules,
+    smartQuotes: smartQuotes(),
+    smartEntry: smartEntry()
+  }
+});
 
 window.editor = editor;
 window.view = view;
@@ -74,7 +78,9 @@ view.on('decorate', (editor, event) => {
 
 
 
-editor.setText(`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur quis sagittis libero. Etiam egestas rhoncus risus, sed accumsan nisi laoreet a. Praesent pulvinar porttitor lorem, vel tempor est vulputate nec. Duis magna justo, ultrices at ullamcorper a, sagittis quis mi. Duis id libero non augue faucibus faucibus sed nec sapien. Vivamus pulvinar justo nec metus dapibus, quis tincidunt justo fermentum. Aliquam erat volutpat. Nam hendrerit libero ut nunc rutrum pellentesque. Nulla erat eros, molestie ac nibh non, consectetur luctus lorem. Mauris vel egestas nisi.
-Mauris sed mi cursus urna pretium posuere sit amet id lorem. Maecenas tristique commodo diam at elementum. Maecenas dapibus risus at mauris consequat, ac semper justo commodo. Sed tempor mattis nisi, in accumsan felis gravida non. In dignissim pellentesque ornare. Mauris lorem sem, consectetur eu ornare at, laoreet sed dui. Nam gravida justo tempus ligula pharetra, sit amet vestibulum lorem sagittis. In mauris purus, cursus vitae tempus at, tincidunt et arcu. Etiam sed libero ac mi fermentum hendrerit. Cras vel cursus urna, sed pretium nisl. Mauris sodales tempor ex nec iaculis. Nulla ac erat ac nunc malesuada viverra. Pellentesque nec ipsum in arcu consectetur elementum a ut metus. Integer sit amet eleifend nulla. Morbi ac felis malesuada, dapibus libero eget, posuere neque. Cras porta ut metus sed vulputate.`);
+// editor.setText(`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur quis sagittis libero. Etiam egestas rhoncus risus, sed accumsan nisi laoreet a. Praesent pulvinar porttitor lorem, vel tempor est vulputate nec. Duis magna justo, ultrices at ullamcorper a, sagittis quis mi. Duis id libero non augue faucibus faucibus sed nec sapien. Vivamus pulvinar justo nec metus dapibus, quis tincidunt justo fermentum. Aliquam erat volutpat. Nam hendrerit libero ut nunc rutrum pellentesque. Nulla erat eros, molestie ac nibh non, consectetur luctus lorem. Mauris vel egestas nisi.
+// Mauris sed mi cursus urna pretium posuere sit amet id lorem. Maecenas tristique commodo diam at elementum. Maecenas dapibus risus at mauris consequat, ac semper justo commodo. Sed tempor mattis nisi, in accumsan felis gravida non. In dignissim pellentesque ornare. Mauris lorem sem, consectetur eu ornare at, laoreet sed dui. Nam gravida justo tempus ligula pharetra, sit amet vestibulum lorem sagittis. In mauris purus, cursus vitae tempus at, tincidunt et arcu. Etiam sed libero ac mi fermentum hendrerit. Cras vel cursus urna, sed pretium nisl. Mauris sodales tempor ex nec iaculis. Nulla ac erat ac nunc malesuada viverra. Pellentesque nec ipsum in arcu consectetur elementum a ut metus. Integer sit amet eleifend nulla. Morbi ac felis malesuada, dapibus libero eget, posuere neque. Cras porta ut metus sed vulputate.`);
+editor.setText(`Lorem ipsum dolor sit amet.
+Mauris sed mi cursus urna pretium posuere sit amet id lorem.`);
 
 view.mount(document.body);

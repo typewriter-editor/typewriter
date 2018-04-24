@@ -2,7 +2,7 @@ import EventDispatcher from './eventdispatcher';
 import Editor from './editor';
 import { render } from './view/vdom';
 import defaultPaper from './view/defaultPaper';
-import { getSelection, setSelection, getBrowserRange, getNodeAndOffset, getNodeIndex } from './selection';
+import { getSelection, setSelection, getBrowserRange, getNodeAndOffset } from './selection';
 import { deltaToVdom, deltaFromDom, deltaToHTML, deltaFromHTML } from './view/dom';
 import Paper from './paper';
 import shortcuts from 'shortcut-string';
@@ -28,8 +28,8 @@ export default class View extends EventDispatcher {
     this.isMac = isMac;
     this._settingEditorSelection = false;
     this._settingBrowserSelection = false;
-
-    if (options.modules) options.modules.forEach(module => module(this));
+    this.modules = {};
+    if (options.modules) Object.keys(options.modules).forEach(key => this.modules[key] = options.modules[key](this));
   }
 
   hasFocus() {
@@ -91,9 +91,8 @@ export default class View extends EventDispatcher {
     }
     const vdom = deltaToVdom(this, contents);
     if (!this.enabled) vdom.attributes.contenteditable = undefined;
-    this.pauseObserver();
-    this.root = render(vdom, this.root);
-    this.resumeObserver();
+    this.fire('updating', changeEvent);
+    render(vdom, this.root);
     this.updateBrowserSelection();
     this.fire('update', changeEvent);
   }
@@ -157,63 +156,6 @@ export default class View extends EventDispatcher {
     this.root.addEventListener('keydown', onKeyDown);
     container.ownerDocument.addEventListener('selectionchange', onSelectionChange);
 
-    const observer = new MutationObserver(list => {
-      const seen = new Set();
-      list = list.filter(m => {
-        if (seen.has(m.target)) return false;
-        seen.add(m.target);
-        return true;
-      });
-
-      const selection = this.getSelection();
-      const mutation = list[0];
-      const isTextChange = list.length === 1 && mutation.type === 'characterData' ||
-        (mutation.type === 'childList' && mutation.addedNodes.length === 1 &&
-         mutation.addedNodes[0].nodeType === Node.TEXT_NODE);
-
-      // Only one text node has been altered. Optimize for this most common case.
-      if (isTextChange) {
-        const change = this.editor.delta();
-        let index = getNodeIndex(this, mutation.target);
-        index = this.reverseDecorations.transform(index);
-        change.retain(index);
-        if (mutation.type === 'characterData') {
-          const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
-          diffs.forEach(([ action, string ]) => {
-            if (action === diff.EQUAL) change.retain(string.length);
-            else if (action === diff.DELETE) change.delete(string.length);
-            else if (action === diff.INSERT) {
-              change.insert(string, editor.activeFormats);
-            }
-          });
-          change.chop();
-        } else {
-          change.insert(mutation.addedNodes[0].nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
-        }
-
-        if (change.ops.length) {
-          // console.log('changing a little', change);
-          editor.updateContents(change, SOURCE_USER, selection);
-        }
-      } else if (list.length === 1 && mutation.type === 'childList' &&
-        addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE)
-      {
-
-      } else {
-        let contents = deltaFromDom(this, this.root);
-        contents = contents.compose(this.reverseDecorations);
-        const change = this.editor.contents.diff(contents);
-        // console.log('changing a lot (possibly)', change);
-        editor.updateContents(change, SOURCE_USER, selection);
-      }
-    });
-
-    const opts = { characterData: true, characterDataOldValue: true, subtree: true,childList: true, attributes: true };
-    this.resumeObserver = () => observer.observe(this.root, opts);
-    this.pauseObserver = () => observer.disconnect();
-    this.resumeObserver();
-
-
     // Use mutation tracking during development to catch errors
     // TODO delete mutation observer
     let checking = 0;
@@ -238,7 +180,6 @@ export default class View extends EventDispatcher {
 
     this.unmount = () => {
       devObserver.disconnect();
-      observer.disconnect();
       this.root.removeEventListener('keydown', onKeyDown);
       this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
       this.root.remove();
@@ -247,6 +188,14 @@ export default class View extends EventDispatcher {
   }
 
   unmount() {}
+
+  destroy() {
+    this.unmount();
+    Object.keys(modules).forEach(key => {
+      const api = this.module[key];
+      if (api && typeof api.destroy === 'function') api.destroy();
+    });
+  }
 
 
   _preventIncorrectFormats({ change }) {

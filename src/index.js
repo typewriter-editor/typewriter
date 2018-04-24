@@ -8,6 +8,10 @@ import placeholder from './modules/placeholder';
 import smartEntry from './modules/smart-entry';
 import smartQuotes from './modules/smart-quotes';
 
-const defaultViewModules = [ input, keyShortcuts, history ];
+const defaultViewModules = {
+  input: input(),
+  keyShortcuts: keyShortcuts(),
+  history: history()
+};
 
 export { Editor, View, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, defaultViewModules };

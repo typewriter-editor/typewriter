@@ -82,7 +82,8 @@ export default class Editor extends EventDispatcher {
     this.selection = null;
     this.activeFormats = empty;
     setContents(this, options.contents || this.delta().insert('\n'));
-    if (options.modules) options.modules.forEach(module => module(this));
+    this.modules = {};
+    if (options.modules) Object.keys(options.modules).forEach(key => this.modules[key] = options.modules[key](this));
   }
 
   /**
@@ -347,7 +348,7 @@ export default class Editor extends EventDispatcher {
     }
 
     this.contents.getOps(from, to).forEach(({ op }) => {
-      if (op.insert === '\n') return;
+      if (/^\n+$/.test(op.insert)) return;
       if (!op.attributes) formats = {};
       else if (!formats) formats = { ...op.attributes };
       else formats = combineFormats(formats, op.attributes);

@@ -9,10 +9,18 @@ export default function placeholder(placeholder) {
       vdom: children => <span class="placeholder" style={{pointerEvents: 'none'}}>{children}</span>,
     });
 
-    view.on('decorate', editor => {
+    function onDecorate(editor) {
       if (editor.length === 1) {
         editor.insertText(placeholder, { placeholder: true });
       }
-    });
+    }
+
+    view.on('decorate', onDecorate);
+
+    return {
+      destroy() {
+        view.off('decorate', onDecorate);
+      }
+    }
   }
 }
