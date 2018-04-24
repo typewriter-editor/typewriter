@@ -1,3 +1,5 @@
+import { h } from '../view/vdom'
+
 const directions = {
   Tab: 'next',
   'Shift+Tab': 'prev',
@@ -47,7 +49,10 @@ export default function tables(view) {
       let sections = [];
       let cells = [];
 
-      tableElements.reduce(([children, attributes]) => {
+      console.log(tableElements);
+
+      tableElements.forEach((line) => {
+        let [children, attr] = line;
         if (attr.table === 'cell') {
           // We will change the td to th when we know the row is a header
           // We don't have any other properties we are tracking yet, but we could add them here too
@@ -81,7 +86,7 @@ export default function tables(view) {
   function selectionInTable() {
     if (!editor.selection) return null;
     const [ from, to ] = editor.getSelectedRange();
-    const lines = editor.getLines(from, to);
+    const lines = editor.contents.getLines(from, to);
 
     // If the selection is AROUND a table we can allow the native interaction I think
     return Boolean(lines.length && (lines[0].attributes.table || !lines[lines.length - 1].attributes.table));
@@ -144,9 +149,8 @@ export default function tables(view) {
     insertTable(index, columns, rows, options = { header: true, footer: false }) {
 
       editor.transaction(() => {
-        // We will insert in reverse order as each insert at index will push everything down
         // Insert table separator
-        editor.insertText(index, '\n', { table: 'table' });
+        editor.insertText(index++, '\n', { table: 'table' });
 
         for (let i = 0; i < rows; i++) {
           let attributes;
@@ -157,11 +161,11 @@ export default function tables(view) {
           else attributes = { table: 'row' };
 
           // Insert row separators
-          editor.insertText(index, '\n', attributes);
+          editor.insertText(index++, '\n', attributes);
 
           for (let j = 0; j < columns; j++) {
             // Insert cell separators
-            editor.insertText(index, '\n', { table: 'cell' });
+            editor.insertText(index++, '\n', { table: 'cell' });
           }
         }
       });
