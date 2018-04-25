@@ -1,12 +1,14 @@
 # Typewriter reference manual
 
-* [documentation](documentation.md)
+* [Representations](representations.md)
 * [Examples](examples.md)
 
 ## API
 
 * [View](api/view.md)
 * [Editor](api/editor.md)
+* [Event Dispatcher](api/eventdispatcher.md)
+* [Paper](api/paper.md)
 
 ## Modules
 
