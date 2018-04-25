@@ -4,7 +4,7 @@
   "scripts": {
     "start": "rollup --config rollup.config.dev.js --watch",
     "build": "rollup --config",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "test": "mocha -r jsdom-global/register -r babel-register",
     "tdd": "mocha -r jsdom-global/register -r babel-register --watch"
   },
