@@ -1,5 +1,12 @@
 # Typewriter
 
+[![Maintainability](https://api.codeclimate.com/v1/badges/c1526d35a391b1267a45/maintainability)](https://codeclimate.com/github/typewriter-editor/typewriter/maintainability)
+
+[![Test Coverage](https://api.codeclimate.com/v1/badges/c1526d35a391b1267a45/test_coverage)](https://codeclimate.com/github/typewriter-editor/typewriter/test_coverage)
+
+[![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+
 Built on the same data model as Quill.js, the [Delta](https://github.com/quilljs/delta/) format, but using a tiny virtual DOM, Typewriter aims to make custom rich text editors fast, easy, and more powerful.
 
 ## Why Typewriter?
