@@ -1,9 +1,7 @@
 # Typewriter
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/c1526d35a391b1267a45/maintainability)](https://codeclimate.com/github/typewriter-editor/typewriter/maintainability)
-
 [![Test Coverage](https://api.codeclimate.com/v1/badges/c1526d35a391b1267a45/test_coverage)](https://codeclimate.com/github/typewriter-editor/typewriter/test_coverage)
-
 [![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
@@ -72,7 +70,17 @@ npm install
 npm start
 ```
 
+To run the tests:
+
+```
+npm run test
+```
+
 The [`src/dev.js`](src/dev.js) file is the current test runner for playing around with ideas. You might try checking that out to see some of what is possible.
+
+## Documentation
+
+Link to our [documentation](doc/reference.md)
 
 ### TODO
 
@@ -87,4 +95,8 @@ The [`src/dev.js`](src/dev.js) file is the current test runner for playing aroun
 
 ## Contributing
 
-Submit issues to discuss things, PRs to fix things
+Thanks for taking the time to help! We intend Typewriter to be a useful tool and always appreciate any contributions in building it, not matter how big or small.
+
+Please submit issues to discuss things, PRs to fix things.
+
+Our Contribution guidelines are available at [CONTRIBUTING.md](CONTRIBUTING.md)
