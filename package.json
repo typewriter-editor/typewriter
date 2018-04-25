@@ -11,7 +11,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jacwright/typewriter.git"
+    "url": "https://github.com/typewriter-editor/typewriter.git"
   },
   "main": "dist/index.js",
   "module": "src/index.js",
