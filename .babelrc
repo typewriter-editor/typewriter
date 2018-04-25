@@ -1,0 +1,9 @@
+{
+  "presets": [
+    "stage-2",
+    "env"
+  ],
+  "plugins": [
+    [ "transform-react-jsx", { "pragma": "h" }]
+  ]
+}
