@@ -18,6 +18,6 @@ export const italics = {
 export const link = {
   name: 'link',
   selector: 'a[href]',
-  attr: node => node.href,
+  dom: node => node.href,
   vdom: (children, attr) => <a href={attr.link} target="_blank">{children}</a>,
 };
