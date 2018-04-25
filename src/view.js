@@ -55,7 +55,10 @@ export default class View extends EventDispatcher {
   }
 
   getBounds(from, to) {
-    const range = this.editor._normalizeArguments(from, to);
+    let range = this.editor._normalizeArguments(from, to);
+    if (range && this.decorations.ops.length) {
+      range = range.map(i => this.decorations.transform(i));
+    }
     const browserRange = getBrowserRange(this, range);
     if (browserRange.endContainer.nodeType === Node.ELEMENT_NODE) {
       browserRange.setEnd(browserRange.endContainer, browserRange.endOffset + 1);
@@ -64,7 +67,10 @@ export default class View extends EventDispatcher {
   }
 
   getAllBounds(from, to) {
-    const range = this.editor._normalizeArguments(from, to);
+    let range = this.editor._normalizeArguments(from, to);
+    if (range && this.decorations.ops.length) {
+      range = range.map(i => this.decorations.transform(i));
+    }
     const browserRange = getBrowserRange(this, range);
     if (browserRange.endContainer.nodeType === Node.ELEMENT_NODE) {
       browserRange.setEnd(browserRange.endContainer, browserRange.endOffset + 1);
@@ -165,7 +171,7 @@ export default class View extends EventDispatcher {
         checking = 0;
         const diff = editor.contents.compose(this.decorations).diff(deltaFromDom(view));
         if (diff.length()) {
-          console.error('Delta out of sync with DOM:', diff);
+          console.error('Delta out of sync with DOM:', diff, deltaFromDom(view));
         }
       }, 20);
     });
