@@ -1,4 +1,4 @@
-import { getNodeIndex } from '../selection';
+import { getNodeIndex } from '../view/selection';
 import diff from 'fast-diff';
 
 const SOURCE_USER = 'user';
@@ -36,10 +36,10 @@ export default function input() {
       // Only one text node has been altered. Optimize for view most common case.
       if (isTextChange) {
         const change = editor.delta();
-        let index = getNodeIndex(view,
-          mutation.target);
-        index = view.reverseDecorations.transform(index);
+        const node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
+        const index = view.reverseDecorations.transform(getNodeIndex(view, node));
         change.retain(index);
+
         if (mutation.type === 'characterData') {
           const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
           diffs.forEach(([ action, string ]) => {
@@ -51,7 +51,7 @@ export default function input() {
           });
           change.chop();
         } else {
-          change.insert(mutation.addedNodes[0].nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
+          change.insert(node.nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
         }
 
         if (change.ops.length) {
@@ -77,29 +77,35 @@ export default function input() {
       event.preventDefault();
       let [ from, to ] = editor.getSelectedRange();
 
-      if (shortcut === 'Shift+Enter') {
-        editor.insertText(from, to, '\r', null, SOURCE_USER);
+      const line = editor.contents.getLine(from);
+      let attributes = line.attributes;
+      const block = view.paper.blocks.find(attributes);
+      const isDefault = !block;
+      const length = line.end - line.start - 1;
+      const atEnd = to === line.end - 1;
+      if (atEnd && !isDefault && block.defaultFollows) {
+        attributes = {};
+      }
+      if (!length && !isDefault && !block.defaultFollows && from === to) {
+        editor.formatLine(from, to, {}, SOURCE_USER);
       } else {
-        const line = editor.contents.getLine(from);
-        let attributes = line.attributes;
-        const block = view.paper.blocks.find(attributes);
-        const isDefault = !block;
-        const length = line.contents.length();
-        if (isDefault || block.defaultFollows) {
-          attributes = {};
+        let selection = from + 1;
+        if (from === to && atEnd) {
+          from++;
+          to++;
         }
-        if (!length && !isDefault && !block.defaultFollows && from === to) {
-          editor.formatLine(from, to, {}, SOURCE_USER);
-        } else {
-          let selection = from + 1;
-          if (from === to && from === line.endIndex - 1) {
-            from++;
-            to++;
-          }
-          editor.insertText(from, to, '\n', attributes, SOURCE_USER, selection);
-        }
+        editor.insertText(from, to, '\n', attributes, SOURCE_USER, selection);
       }
     }
+
+
+    function onShiftEnter(event) {
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+      let [ from, to ] = editor.getSelectedRange();
+      editor.insertText(from, to, '\r', null, SOURCE_USER);
+    }
+
 
     function onBackspace(event, shortcut) {
       if (event.defaultPrevented) return;
@@ -121,10 +127,10 @@ export default function input() {
             if (match) from -= match[0].length;
           } else {
             const line = editor.contents.getLine(from);
-            if (from === line.startIndex) {
+            if (from === line.start) {
               const block = view.paper.blocks.find(line.attributes);
               if (block && !block.defaultFollows) {
-                const prevLine = editor.contents.getLine(line.startIndex - 1);
+                const prevLine = editor.contents.getLine(line.start - 1);
                 const prevBlock = prevLine && view.paper.blocks.find(prevLine.attributes);
                 if (block !== prevBlock) {
                   editor.formatLine(from, {}, SOURCE_USER);
@@ -170,17 +176,17 @@ export default function input() {
         lines.forEach((line, i) => {
           if (line.attributes.list) {
             let prevLine = lines[i -1];
-            if (!prevLine && line.number > 1) prevLine = editor.contents.getLine(line.startIndex - 1);
+            if (!prevLine && line.index > 0) prevLine = editor.contents.getLine(line.start - 1);
             const prevIndent = prevLine && prevLine.attributes.list ? prevLine.attributes.indent || 0 : -1;
 
             let indent = line.attributes.indent || 0;
             indent += direction;
             if (indent > prevIndent + 1) return console.log('will not indent too much');
             if (indent < 0) {
-              editor.formatLine(line.startIndex, {});
+              editor.formatLine(line.start, {});
             } else {
               const attributes = { ...line.attributes, indent };
-              editor.formatLine(line.startIndex, attributes);
+              editor.formatLine(line.start, attributes);
             }
           }
         });
@@ -204,7 +210,7 @@ export default function input() {
     view.on('updating', onUpdating);
     view.on('update', onUpdate);
     view.on('shortcut:Enter', onEnter);
-    view.on('shortcut:Shift+Enter', onEnter);
+    view.on('shortcut:Shift+Enter', onShiftEnter);
     view.on('shortcut:Backspace', onBackspace);
     view.on('shortcut:Alt+Backspace', onBackspace);
     view.on('shortcut:Mod+Backspace', onBackspace);
@@ -219,7 +225,7 @@ export default function input() {
         view.off('updating', onUpdating);
         view.off('update', onUpdate);
         view.off('shortcut:Enter', onEnter);
-        view.off('shortcut:Shift+Enter', onEnter);
+        view.off('shortcut:Shift+Enter', onShiftEnter);
         view.off('shortcut:Backspace', onBackspace);
         view.off('shortcut:Alt+Backspace', onBackspace);
         view.off('shortcut:Mod+Backspace', onBackspace);

@@ -2,7 +2,7 @@ import EventDispatcher from './eventdispatcher';
 import Editor from './editor';
 import { render } from './view/vdom';
 import defaultPaper from './view/defaultPaper';
-import { getSelection, setSelection, getBrowserRange, getNodeAndOffset } from './selection';
+import { getSelection, setSelection, getBrowserRange, getNodeAndOffset } from './view/selection';
 import { deltaToVdom, deltaFromDom, deltaToHTML, deltaFromHTML } from './view/dom';
 import Paper from './paper';
 import shortcuts from 'shortcut-string';
@@ -55,7 +55,7 @@ export default class View extends EventDispatcher {
   }
 
   getBounds(from, to) {
-    let range = this.editor._normalizeArguments(from, to);
+    let range = this.editor._normalizeRange(from, to);
     if (range && this.decorations.ops.length) {
       range = range.map(i => this.decorations.transform(i));
     }
@@ -67,7 +67,7 @@ export default class View extends EventDispatcher {
   }
 
   getAllBounds(from, to) {
-    let range = this.editor._normalizeArguments(from, to);
+    let range = this.editor._normalizeRange(from, to);
     if (range && this.decorations.ops.length) {
       range = range.map(i => this.decorations.transform(i));
     }
@@ -110,7 +110,7 @@ export default class View extends EventDispatcher {
     setTimeout(() => this._settingBrowserSelection = false, 20);
   }
 
-  updateEditorSelection() {
+  updateEditorSelection(source = SOURCE_API) {
     if (this._settingBrowserSelection) return this._settingBrowserSelection = false;
     const range = this.getSelection();
 
@@ -118,7 +118,7 @@ export default class View extends EventDispatcher {
     if (range) this.lastSelection = range;
 
     this._settingEditorSelection = true;
-    this.editor.setSelection(range);
+    this.editor.setSelection(range, source);
     this._settingEditorSelection = false;
 
     // If the selection was adjusted when set then update the browser's selection
@@ -156,14 +156,14 @@ export default class View extends EventDispatcher {
     };
 
     const onSelectionChange = () => {
-      this.updateEditorSelection();
+      this.updateEditorSelection(SOURCE_USER);
     };
 
     this.root.addEventListener('keydown', onKeyDown);
     container.ownerDocument.addEventListener('selectionchange', onSelectionChange);
 
     // Use mutation tracking during development to catch errors
-    // TODO delete mutation observer
+    // TODO delete this mutation observer when we're confident in core (or put it behind a development flag)
     let checking = 0;
     const devObserver = new MutationObserver(list => {
       if (checking) clearTimeout(checking);
@@ -204,8 +204,8 @@ export default class View extends EventDispatcher {
   }
 
 
-  _preventIncorrectFormats({ change }) {
-    return !change.ops.some(op => {
+  _preventIncorrectFormats({ contents }) {
+    return !contents.ops.some(op => {
       if (typeof op.insert === 'object') {
         return !this.paper.embeds.find(op.insert);
       } else if (op.attributes) {

@@ -8,14 +8,12 @@ export function getSelection(view) {
   if (!root.contains(selection.anchorNode)) {
     return null;
   } else {
-    const anchorIndex = getNodeIndex(view, selection.anchorNode);
-    const focusIndex = selection.anchorNode === selection.focusNode ?
-          anchorIndex : getNodeIndex(view, selection.focusNode);
+    const anchorIndex = getNodeAndOffsetIndex(view, selection.anchorNode, selection.anchorOffset);
+    let focusIndex = selection.isCollapsed ?
+      anchorIndex :
+      getNodeAndOffsetIndex(view, selection.focusNode, selection.focusOffset);
 
-    return [
-      anchorIndex + selection.anchorOffset,
-      focusIndex + selection.focusOffset,
-    ];
+    return [ anchorIndex, focusIndex ];
   }
 }
 
@@ -89,7 +87,7 @@ export function getNodeAndOffset(view, index) {
       if (count === index && (!node.firstChild || node.firstChild.nodeType !== Node.TEXT_NODE)) {
         return [ node, 0 ];
       }
-    } else if (node.nodeName === 'BR' && node.parentNode.lastChild !== node) {
+    } else if (isBRNode(view, node)) {
       count += 1;
       // If the selection lands after this br, and the next node isn't a text node, place the selection
       if (count === index && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE)) {
@@ -98,6 +96,14 @@ export function getNodeAndOffset(view, index) {
     }
   }
   return [ null, 0 ];
+}
+
+export function getNodeAndOffsetIndex(view, node, offset) {
+  if (node.nodeType === Node.ELEMENT_NODE && offset > 0) {
+    node = node.childNodes[offset - 1];
+    offset = 0;
+  }
+  return getNodeIndex(view, node) + offset;
 }
 
 // Get the index the node starts at in the content
@@ -116,10 +122,20 @@ export function getNodeIndex(view, node) {
   let index = node.nodeType === Node.ELEMENT_NODE ? 0 : -1;
   while ((node = walker.previousNode())) {
     if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
-    else if (node.nodeName === 'BR' && node.parentNode.lastChild !== node) index++;
+    else if (isBRNode(view, node)) index++;
     else if (embeds.matches(node)) index++;
     else if (node !== root && blocks.matches(node)) index++;
   }
   return index;
 }
 
+// Determines if a node is actually a BR in our content or if is just the placeholder BR which appears in an empty block
+export function isBRNode(view, node) {
+  return node.nodeName === 'BR' && node.parentNode.lastChild !== node &&
+    ( // Check if the next node is an inline node (e.g. not another block such as a list)
+      node.nextSibling.nodeType === Node.TEXT_NODE ||
+      node.nextSibling.nodeName === 'BR' ||
+      view.paper.markups.matches(node.nextSibling) ||
+      view.paper.embeds.matches(node.nextSibling)
+    );
+}

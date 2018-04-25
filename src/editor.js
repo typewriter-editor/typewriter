@@ -1,6 +1,5 @@
 import EventDispatcher from './eventdispatcher';
-import Delta from 'quill-delta';
-import deltaOp from 'quill-delta/lib/op';
+import Delta from './delta';
 import { shallowEqual, deepEqual } from 'fast-equals';
 
 const SOURCE_API = 'api';
@@ -102,10 +101,10 @@ export default class Editor extends EventDispatcher {
    *
    * @param {Number} from The starting index
    * @param {Number} to   The ending index
-   * @return {Delta}      The contents of this editor
+   * @returns {Delta}     The contents of this editor
    */
   getContents(from = 0, to = this.length) {
-    [ from, to ] = this._normalizeArguments(from, to);
+    [ from, to ] = this._normalizeRange(from, to);
     return this.contents.slice(from, to);
   }
 
@@ -114,10 +113,10 @@ export default class Editor extends EventDispatcher {
    *
    * @param {Number} from The starting index
    * @param {Number} to   The ending index
-   * @return {String}     The text in the editor
+   * @returns {String}    The text in the editor
    */
   getText(from = 0, to = this.length) {
-    [ from, to ] = this._normalizeArguments(from, to);
+    [ from, to ] = this._normalizeRange(from, to);
     return this.text.slice(from, to);
   }
 
@@ -129,7 +128,7 @@ export default class Editor extends EventDispatcher {
    * @param {Number} from      The starting index
    * @param {Number} to        The ending index
    * @param {String} source    The source of the change, user, api, or silent
-   * @return {Boolean}         Whether the selection changed or not
+   * @returns {Boolean}        Whether the selection changed or not
    */
   setSelection(from, to, source = SOURCE_USER) {
     const oldSelection = this.selection;
@@ -139,11 +138,9 @@ export default class Editor extends EventDispatcher {
       selection = null;
       if (typeof to === 'string') source = to;
     } else {
-      [from, to, source ] = this._normalizeArguments(from, to, source);
-      selection = [ from, to ];
+      [from, to, source ] = this._normalizeSelection(from, to, source);
+      selection = [ from, to ].map(i => Math.min(i, this.length - 1));
     }
-
-    selection = this.getSelectedRange(selection);
 
     if (shallowEqual(oldSelection, selection)) return false;
 
@@ -168,7 +165,7 @@ export default class Editor extends EventDispatcher {
    * @param {Delta} change    A delta change to the document
    * @param {String} source   The source of the change, user, api, or silent
    * @param {Array} selection Optional selection after the change has been applied
-   * @return {Delta}          Returns the change when successful, or null if not
+   * @returns {Delta}         Returns the change when successful, or null if not
    */
   updateContents(change, source = SOURCE_API, selection) {
     if (!change.chop().ops.length) return null;
@@ -208,7 +205,7 @@ export default class Editor extends EventDispatcher {
    * @param {Delta} newContents The contents of the editor, as a delta object
    * @param {String} source     The source of the change, user, api, or silent
    * @param {Array} selection   Optional selection after the change has been applied
-   * @return {Delta}            Returns the change when successful, or null if not
+   * @returns {Delta}           Returns the change when successful, or null if not
    */
   setContents(newContents, source, selection) {
     const change = this.contents.diff(normalizeContents(newContents));
@@ -221,7 +218,7 @@ export default class Editor extends EventDispatcher {
    * @param {String} text     Set the contents of this editor as text
    * @param {String} source   The source of the change, user, api, or silent
    * @param {Array} selection Optional selection after the change has been applied
-   * @return {Delta}          Returns the change when successful, or null if not
+   * @returns {Delta}         Returns the change when successful, or null if not
    */
   setText(text, source, selection) {
     return this.setContents(this.delta().insert(text + '\n'), source, selection);
@@ -238,12 +235,15 @@ export default class Editor extends EventDispatcher {
    * @param {String} formats   The formats of the inserted text. If null the formats at `from` will be used.
    * @param {String} source    The source of the change, user, api, or silent
    * @param {Array}  selection Optional selection after the change has been applied
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   insertText(from, to, text, formats, source, selection) {
     [ from, to, text, formats, source, selection ] =
-      this._normalizeArguments(from, to, text, formats, source, selection);
+      this._normalizeRange(from, to, text, formats, source, selection);
+
+    // If we are not inserting a newline, make sure from and to are within the selectable range
     if (text !== '\n') [ from, to ] = this.getSelectedRange([ from, to ]);
+
     if (typeof formats === 'string') [ formats, source, selection ] = [ null, formats, source ];
     if (selection == null && this.selection !== null) selection = from + text.length;
     let change = this.delta().retain(from).delete(to - from);
@@ -273,11 +273,11 @@ export default class Editor extends EventDispatcher {
    * @param {String} formats   The formats of the inserted text. If null the formats at `from` will be used.
    * @param {String} source    The source of the change, user, api, or silent
    * @param {Array}  selection Optional selection after the change has been applied
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   insertEmbed(from, to, embed, value, formats, source, selection) {
     [ from, to, embed, value, source, selection ] =
-      this._normalizeArguments(from, to, embed, value, source, selection);
+      this._normalizeRange(from, to, embed, value, source, selection);
     if (typeof formats === 'string') [ formats, source, selection ] = [ null, formats, source ];
     if (from >= this.length) from = this.length - 1;
     if (to >= this.length) to = this.length - 1;
@@ -295,10 +295,10 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to        Will delete the text between `from` and `to`
    * @param {String} source    The source of the change, user, api, or silent
    * @param {Array}  selection Optional selection after the change has been applied
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   deleteText(from, to, source, selection) {
-    [ from, to, source, selection ] = this._normalizeArguments(from, to, source, selection);
+    [ from, to, source, selection ] = this._normalizeRange(from, to, source, selection);
     if (from === to) return null;
     if (selection == null && this.selection !== null) selection = from;
     let change = this.delta().retain(from).delete(to - from);
@@ -313,10 +313,10 @@ export default class Editor extends EventDispatcher {
    *
    * @param {Number} from Getting line formats starting at `from`
    * @param {Number} to   Getting line formats ending at `to`
-   * @return {Object}     An object with all the common formats among the lines which intersect from and to
+   * @returns {Object}    An object with all the common formats among the lines which intersect from and to
    */
   getLineFormat(from, to) {
-    [ from, to ] = this._normalizeArguments(from, to);
+    [ from, to ] = this._normalizeRange(from, to);
     let formats;
 
     this.contents.getLines(from, to).forEach(line => {
@@ -335,10 +335,10 @@ export default class Editor extends EventDispatcher {
    *
    * @param {Number} from Getting text formats starting at `from`
    * @param {Number} to   Getting text formats ending at `to`
-   * @return {Object}     An object with all the common formats among the text
+   * @returns {Object}    An object with all the common formats among the text
    */
   getTextFormat(from, to) {
-    [ from, to ] = this._normalizeArguments(from, to);
+    [ from, to ] = this._normalizeRange(from, to);
     let formats;
 
     // optimize for current selection
@@ -364,7 +364,7 @@ export default class Editor extends EventDispatcher {
    *
    * @param {Number} from Getting line and text formats starting at `from`
    * @param {Number} to   Getting line and text formats ending at `to`
-   * @return {Object}     An object with all the common formats among the lines and text which intersect from and to
+   * @returns {Object}    An object with all the common formats among the lines and text which intersect from and to
    */
   getFormat(from, to) {
     return { ...this.getTextFormat(from, to), ...this.getLineFormat(from, to) };
@@ -378,15 +378,15 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to        The ending index
    * @param {String} formats   The formats for the line
    * @param {String} source    The source of the change, user, api, or silent
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   formatLine(from, to, formats, source) {
-    [ from, to, formats, source ] = this._normalizeArguments(from, to, formats, source);
+    [ from, to, formats, source ] = this._normalizeRange(from, to, formats, source);
     const change = this.delta();
 
     this.contents.getLines(from, to).forEach(line => {
-      if (!change.ops.length) change.retain(line.endIndex - 1);
-      else change.retain(line.endIndex - line.startIndex - 1);
+      if (!change.ops.length) change.retain(line.end - 1);
+      else change.retain(line.end - line.start - 1);
       // Clear out old formats on the line
       Object.keys(line.attributes).forEach(name => !formats[name] && (formats[name] = null));
       change.retain(1, formats);
@@ -403,10 +403,10 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to        The ending index
    * @param {String} formats   The formats for the text
    * @param {String} source    The source of the change, user, api, or silent
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   formatText(from, to, formats, source) {
-    [ from, to, formats, source ] = this._normalizeArguments(from, to, formats, source);
+    [ from, to, formats, source ] = this._normalizeRange(from, to, formats, source);
     if (from === to) {
       if (this.activeFormats === empty) this.activeFormats = {};
       Object.keys(formats).forEach(key => {
@@ -434,10 +434,10 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to        The ending index
    * @param {String} formats   The formats for the line
    * @param {String} source    The source of the change, user, api, or silent
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   toggleLineFormat(from, to, format, source) {
-    [ from, to, format, source ] = this._normalizeArguments(from, to, format, source);
+    [ from, to, format, source ] = this._normalizeRange(from, to, format, source);
     const existing = this.getLineFormat(from, to);
     if (deepEqual(existing, format)) {
       Object.keys(format).forEach(key => format[key] = null);
@@ -453,10 +453,10 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to        The ending index
    * @param {String} formats   The formats for the text
    * @param {String} source    The source of the change, user, api, or silent
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   toggleTextFormat(from, to, format, source) {
-    [ from, to, format, source ] = this._normalizeArguments(from, to, format, source);
+    [ from, to, format, source ] = this._normalizeRange(from, to, format, source);
     const existing = this.getTextFormat(from, to);
     const isSame = Object.keys(format).every(key => format[key] === existing[key]);
     if (isSame) {
@@ -472,10 +472,10 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to        The ending index
    * @param {String} formats   The formats for the text
    * @param {String} source    The source of the change, user, api, or silent
-   * @return {Delta}           Returns the change when successful, or null if not
+   * @returns {Delta}          Returns the change when successful, or null if not
    */
   removeFormat(from, to, source) {
-    [ from, to, source ] = this._normalizeArguments(from, to, source);
+    [ from, to, source ] = this._normalizeRange(from, to, source);
     const formats = {};
 
     this.contents.getOps(from, to).forEach(({ op }) => {
@@ -488,7 +488,7 @@ export default class Editor extends EventDispatcher {
     this.contents.getLines(from, to).forEach(line => {
       const formats = {};
       Object.keys(line.attributes).forEach(key => formats[key] = null);
-      change = change.compose(this.delta().retain(line.endIndex - 1).retain(1, formats));
+      change = change.compose(this.delta().retain(line.end - 1).retain(1, formats));
     });
 
     return this.updateContents(change, source);
@@ -508,7 +508,7 @@ export default class Editor extends EventDispatcher {
    * ```
    *
    * @param {Function} producer A function in which to call methods on the editor to produce a change
-   * @return {Delta}            The sum of all the changes made within the producer
+   * @returns {Delta}           The sum of all the changes made within the producer
    */
   getChange(producer) {
     let change = this.delta();
@@ -533,7 +533,7 @@ export default class Editor extends EventDispatcher {
    * @param {Function} producer A function which should make changes with the editor
    * @param {String} source     The source of the change, user, api, or silent
    * @param {Array} selection   Optional selection after the change has been applied
-   * @return {Delta}            Returns the change when successful, or null if not
+   * @returns {Delta}           Returns the change when successful, or null if not
    */
   transaction(producer, source, selection) {
     const change = this.getChange(producer);
@@ -557,13 +557,19 @@ export default class Editor extends EventDispatcher {
   /**
    * Normalizes range values to a proper range if it is not already. A range is a `from` and a `to` index, e.g. 0, 4.
    * This will ensure the lower index is first. Example usage:
-   * editor._normalizeArguments(5); // [5, 5]
-   * editor._normalizeArguments(-4, 100); // for a doc with length 10, [0, 10]
-   * editor._normalizeArguments(25, 18); // [18, 25]
-   * editor._normalizeArguments([12, 13]); // [12, 13]
-   * editor._normalizeArguments(5, { bold: true }); // [5, 5, { bold: true }]
+   * editor._normalizeRange(5); // [5, 5]
+   * editor._normalizeRange(-4, 100); // for a doc with length 10, [0, 10]
+   * editor._normalizeRange(25, 18); // [18, 25]
+   * editor._normalizeRange([12, 13]); // [12, 13]
+   * editor._normalizeRange(5, { bold: true }); // [5, 5, { bold: true }]
    */
-  _normalizeArguments(from, to, ...rest) {
+  _normalizeRange(from, to, ...rest) {
+    [ from, to, ...rest ] = this._normalizeSelection(from, to, ...rest);
+    if (from > to) [from, to] = [to, from];
+    return [from, to].concat(rest);
+  }
+
+  _normalizeSelection(from, to, ...rest) {
     if (Array.isArray(from)) {
       if (to !== undefined || rest.length) rest.unshift(to);
       [from, to] = from;
@@ -578,9 +584,6 @@ export default class Editor extends EventDispatcher {
     }
     from = Math.max(0, Math.min(this.length, ~~from));
     to = Math.max(0, Math.min(this.length, ~~to));
-    if (from > to) {
-      [from, to] = [to, from];
-    }
     return [from, to].concat(rest);
   }
 }
@@ -590,7 +593,7 @@ export default class Editor extends EventDispatcher {
 function cleanDelete(editor, from, to, change) {
   if (from !== to) {
     const line = editor.contents.getLine(from);
-    if (!line.contents.length() && to === from + 1) return change;
+    if (!line.ops.length() && to === from + 1) return change;
     const lineFormat = editor.getLineFormat(from);
     if (!deepEqual(lineFormat, editor.getLineFormat(to))) {
       const lineChange = editor.getChange(() => editor.formatLine(to, lineFormat))
@@ -615,8 +618,8 @@ function deltaNoop() {
 // Sets the contents onto the editor after ensuring they end in a newline, freezes the contents from change, and
 // updates the length and text of the editor to the latest
 function setContents(editor, contents) {
-  normalizeContents(contents);
-  contents.push = deltaNoop // freeze from modification
+  contents = normalizeContents(contents);
+  contents.freeze();
   editor.contents = contents;
   editor.length = contents.length();
   editor.text = contents
@@ -641,44 +644,4 @@ function combineFormats(formats, combined) {
     }
     return merged;
   }, {});
-}
-
-// Extends Delta, get the lines from `from` to `to`.
-Delta.prototype.getLines = function(from, to) {
-  let startIndex = 0;
-  const lines = [];
-  this.eachLine((contents, attributes, number) => {
-    if (startIndex > to || (startIndex === to && from !== to)) return false;
-    const endIndex = startIndex + contents.length() + 1;
-    if (endIndex > from) {
-      lines.push({ contents, attributes, number, startIndex, endIndex });
-    }
-    startIndex = endIndex;
-  });
-  return lines;
-}
-
-// Extends Delta, get the line at `at`.
-Delta.prototype.getLine = function(at) {
-  return this.getLines(at, at)[0];
-}
-
-// Extends Delta, get the ops from `from` to `to`.
-Delta.prototype.getOps = function(from, to) {
-  let startIndex = 0;
-  const ops = [];
-  this.ops.some(op => {
-    if (startIndex >= to) return true;
-    const endIndex = startIndex + deltaOp.length(op);
-    if (endIndex > from || (from === to && endIndex === to)) {
-      ops.push({ op, startIndex, endIndex });
-    }
-    startIndex = endIndex;
-  });
-  return ops;
-}
-
-// Extends Delta, get the op at `at`.
-Delta.prototype.getOp = function(at) {
-  return this.getOps(at, at)[0];
 }

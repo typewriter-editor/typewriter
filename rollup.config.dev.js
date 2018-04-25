@@ -7,7 +7,7 @@ import livereload from 'rollup-plugin-livereload'
 export default {
   input: 'src/dev.js',
   output: {
-    file: 'dist/index.js',
+    file: 'dist/typewriter-iife.js',
     format: 'iife',
     name: 'Typewriter',
     sourcemap: true,

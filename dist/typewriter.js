@@ -123,6 +123,20 @@ var slicedToArray = function () {
   };
 }();
 
+var toArray = function (arr) {
+  return Array.isArray(arr) ? arr : Array.from(arr);
+};
+
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
+  }
+};
+
 var dispatcherEvents = new WeakMap();
 
 var EventDispatcher = function () {
@@ -911,721 +925,6 @@ function merge_tuples (diffs, start, length) {
   return diffs;
 }
 
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-
-var keys = createCommonjsModule(function (module, exports) {
-exports = module.exports = typeof Object.keys === 'function'
-  ? Object.keys : shim;
-
-exports.shim = shim;
-function shim (obj) {
-  var keys = [];
-  for (var key in obj) keys.push(key);
-  return keys;
-}
-});
-var keys_1 = keys.shim;
-
-var keys$1 = /*#__PURE__*/Object.freeze({
-  default: keys,
-  __moduleExports: keys,
-  shim: keys_1
-});
-
-var is_arguments = createCommonjsModule(function (module, exports) {
-var supportsArgumentsClass = (function(){
-  return Object.prototype.toString.call(arguments)
-})() == '[object Arguments]';
-
-exports = module.exports = supportsArgumentsClass ? supported : unsupported;
-
-exports.supported = supported;
-function supported(object) {
-  return Object.prototype.toString.call(object) == '[object Arguments]';
-}
-exports.unsupported = unsupported;
-function unsupported(object){
-  return object &&
-    typeof object == 'object' &&
-    typeof object.length == 'number' &&
-    Object.prototype.hasOwnProperty.call(object, 'callee') &&
-    !Object.prototype.propertyIsEnumerable.call(object, 'callee') ||
-    false;
-}});
-var is_arguments_1 = is_arguments.supported;
-var is_arguments_2 = is_arguments.unsupported;
-
-var is_arguments$1 = /*#__PURE__*/Object.freeze({
-  default: is_arguments,
-  __moduleExports: is_arguments,
-  supported: is_arguments_1,
-  unsupported: is_arguments_2
-});
-
-var objectKeys = ( keys$1 && keys ) || keys$1;
-
-var isArguments = ( is_arguments$1 && is_arguments ) || is_arguments$1;
-
-var deepEqual_1 = createCommonjsModule(function (module) {
-var pSlice = Array.prototype.slice;
-
-
-
-var deepEqual = module.exports = function (actual, expected, opts) {
-  if (!opts) opts = {};
-  // 7.1. All identical values are equivalent, as determined by ===.
-  if (actual === expected) {
-    return true;
-
-  } else if (actual instanceof Date && expected instanceof Date) {
-    return actual.getTime() === expected.getTime();
-
-  // 7.3. Other pairs that do not both pass typeof value == 'object',
-  // equivalence is determined by ==.
-  } else if (!actual || !expected || typeof actual != 'object' && typeof expected != 'object') {
-    return opts.strict ? actual === expected : actual == expected;
-
-  // 7.4. For all other Object pairs, including Array objects, equivalence is
-  // determined by having the same number of owned properties (as verified
-  // with Object.prototype.hasOwnProperty.call), the same set of keys
-  // (although not necessarily the same order), equivalent values for every
-  // corresponding key, and an identical 'prototype' property. Note: this
-  // accounts for both named and indexed properties on Arrays.
-  } else {
-    return objEquiv(actual, expected, opts);
-  }
-};
-
-function isUndefinedOrNull(value) {
-  return value === null || value === undefined;
-}
-
-function isBuffer (x) {
-  if (!x || typeof x !== 'object' || typeof x.length !== 'number') return false;
-  if (typeof x.copy !== 'function' || typeof x.slice !== 'function') {
-    return false;
-  }
-  if (x.length > 0 && typeof x[0] !== 'number') return false;
-  return true;
-}
-
-function objEquiv(a, b, opts) {
-  var i, key;
-  if (isUndefinedOrNull(a) || isUndefinedOrNull(b))
-    return false;
-  // an identical 'prototype' property.
-  if (a.prototype !== b.prototype) return false;
-  //~~~I've managed to break Object.keys through screwy arguments passing.
-  //   Converting to array solves the problem.
-  if (isArguments(a)) {
-    if (!isArguments(b)) {
-      return false;
-    }
-    a = pSlice.call(a);
-    b = pSlice.call(b);
-    return deepEqual(a, b, opts);
-  }
-  if (isBuffer(a)) {
-    if (!isBuffer(b)) {
-      return false;
-    }
-    if (a.length !== b.length) return false;
-    for (i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-  try {
-    var ka = objectKeys(a),
-        kb = objectKeys(b);
-  } catch (e) {//happens when one is a string literal and the other isn't
-    return false;
-  }
-  // having the same number of owned properties (keys incorporates
-  // hasOwnProperty)
-  if (ka.length != kb.length)
-    return false;
-  //the same set of keys (although not necessarily the same order),
-  ka.sort();
-  kb.sort();
-  //~~~cheap key test
-  for (i = ka.length - 1; i >= 0; i--) {
-    if (ka[i] != kb[i])
-      return false;
-  }
-  //equivalent values for every corresponding key, and
-  //~~~possibly expensive deep test
-  for (i = ka.length - 1; i >= 0; i--) {
-    key = ka[i];
-    if (!deepEqual(a[key], b[key], opts)) return false;
-  }
-  return typeof a === typeof b;
-}
-});
-
-var deepEqual = /*#__PURE__*/Object.freeze({
-  default: deepEqual_1,
-  __moduleExports: deepEqual_1
-});
-
-var hasOwn = Object.prototype.hasOwnProperty;
-var toStr = Object.prototype.toString;
-
-var isArray = function isArray(arr) {
-	if (typeof Array.isArray === 'function') {
-		return Array.isArray(arr);
-	}
-
-	return toStr.call(arr) === '[object Array]';
-};
-
-var isPlainObject = function isPlainObject(obj) {
-	if (!obj || toStr.call(obj) !== '[object Object]') {
-		return false;
-	}
-
-	var hasOwnConstructor = hasOwn.call(obj, 'constructor');
-	var hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-	// Not own constructor property must be Object
-	if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
-		return false;
-	}
-
-	// Own properties are enumerated firstly, so to speed up,
-	// if last one is own, then all properties are own.
-	var key;
-	for (key in obj) { /**/ }
-
-	return typeof key === 'undefined' || hasOwn.call(obj, key);
-};
-
-var extend = function extend() {
-	var options, name, src, copy, copyIsArray, clone;
-	var target = arguments[0];
-	var i = 1;
-	var length = arguments.length;
-	var deep = false;
-
-	// Handle a deep copy situation
-	if (typeof target === 'boolean') {
-		deep = target;
-		target = arguments[1] || {};
-		// skip the boolean and the target
-		i = 2;
-	}
-	if (target == null || (typeof target !== 'object' && typeof target !== 'function')) {
-		target = {};
-	}
-
-	for (; i < length; ++i) {
-		options = arguments[i];
-		// Only deal with non-null/undefined values
-		if (options != null) {
-			// Extend the base object
-			for (name in options) {
-				src = target[name];
-				copy = options[name];
-
-				// Prevent never-ending loop
-				if (target !== copy) {
-					// Recurse if we're merging plain objects or arrays
-					if (deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy)))) {
-						if (copyIsArray) {
-							copyIsArray = false;
-							clone = src && isArray(src) ? src : [];
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						target[name] = extend(deep, clone, copy);
-
-					// Don't bring in undefined values
-					} else if (typeof copy !== 'undefined') {
-						target[name] = copy;
-					}
-				}
-			}
-		}
-	}
-
-	// Return the modified object
-	return target;
-};
-
-var extend$1 = /*#__PURE__*/Object.freeze({
-  default: extend,
-  __moduleExports: extend
-});
-
-var equal = ( deepEqual && deepEqual_1 ) || deepEqual;
-
-var extend$2 = ( extend$1 && extend ) || extend$1;
-
-var lib = {
-  attributes: {
-    compose: function (a, b, keepNull) {
-      if (typeof a !== 'object') a = {};
-      if (typeof b !== 'object') b = {};
-      var attributes = extend$2(true, {}, b);
-      if (!keepNull) {
-        attributes = Object.keys(attributes).reduce(function (copy, key) {
-          if (attributes[key] != null) {
-            copy[key] = attributes[key];
-          }
-          return copy;
-        }, {});
-      }
-      for (var key in a) {
-        if (a[key] !== undefined && b[key] === undefined) {
-          attributes[key] = a[key];
-        }
-      }
-      return Object.keys(attributes).length > 0 ? attributes : undefined;
-    },
-
-    diff: function(a, b) {
-      if (typeof a !== 'object') a = {};
-      if (typeof b !== 'object') b = {};
-      var attributes = Object.keys(a).concat(Object.keys(b)).reduce(function (attributes, key) {
-        if (!equal(a[key], b[key])) {
-          attributes[key] = b[key] === undefined ? null : b[key];
-        }
-        return attributes;
-      }, {});
-      return Object.keys(attributes).length > 0 ? attributes : undefined;
-    },
-
-    transform: function (a, b, priority) {
-      if (typeof a !== 'object') return b;
-      if (typeof b !== 'object') return undefined;
-      if (!priority) return b;  // b simply overwrites us without priority
-      var attributes = Object.keys(b).reduce(function (attributes, key) {
-        if (a[key] === undefined) attributes[key] = b[key];  // null is a valid value
-        return attributes;
-      }, {});
-      return Object.keys(attributes).length > 0 ? attributes : undefined;
-    }
-  },
-
-  iterator: function (ops) {
-    return new Iterator(ops);
-  },
-
-  length: function (op) {
-    if (typeof op['delete'] === 'number') {
-      return op['delete'];
-    } else if (typeof op.retain === 'number') {
-      return op.retain;
-    } else {
-      return typeof op.insert === 'string' ? op.insert.length : 1;
-    }
-  }
-};
-
-
-function Iterator(ops) {
-  this.ops = ops;
-  this.index = 0;
-  this.offset = 0;
-}
-Iterator.prototype.hasNext = function () {
-  return this.peekLength() < Infinity;
-};
-
-Iterator.prototype.next = function (length) {
-  if (!length) length = Infinity;
-  var nextOp = this.ops[this.index];
-  if (nextOp) {
-    var offset = this.offset;
-    var opLength = lib.length(nextOp);
-    if (length >= opLength - offset) {
-      length = opLength - offset;
-      this.index += 1;
-      this.offset = 0;
-    } else {
-      this.offset += length;
-    }
-    if (typeof nextOp['delete'] === 'number') {
-      return { 'delete': length };
-    } else {
-      var retOp = {};
-      if (nextOp.attributes) {
-        retOp.attributes = nextOp.attributes;
-      }
-      if (typeof nextOp.retain === 'number') {
-        retOp.retain = length;
-      } else if (typeof nextOp.insert === 'string') {
-        retOp.insert = nextOp.insert.substr(offset, length);
-      } else {
-        // offset should === 0, length should === 1
-        retOp.insert = nextOp.insert;
-      }
-      return retOp;
-    }
-  } else {
-    return { retain: Infinity };
-  }
-};
-
-Iterator.prototype.peek = function () {
-  return this.ops[this.index];
-};
-
-Iterator.prototype.peekLength = function () {
-  if (this.ops[this.index]) {
-    // Should never return 0 if our index is being managed correctly
-    return lib.length(this.ops[this.index]) - this.offset;
-  } else {
-    return Infinity;
-  }
-};
-
-Iterator.prototype.peekType = function () {
-  if (this.ops[this.index]) {
-    if (typeof this.ops[this.index]['delete'] === 'number') {
-      return 'delete';
-    } else if (typeof this.ops[this.index].retain === 'number') {
-      return 'retain';
-    } else {
-      return 'insert';
-    }
-  }
-  return 'retain';
-};
-
-
-var op = lib;
-
-var op$1 = /*#__PURE__*/Object.freeze({
-  default: op,
-  __moduleExports: op
-});
-
-var op$2 = ( op$1 && op ) || op$1;
-
-var NULL_CHARACTER = String.fromCharCode(0);  // Placeholder char for embed in diff()
-
-
-var Delta = function (ops) {
-  // Assume we are given a well formed ops
-  if (Array.isArray(ops)) {
-    this.ops = ops;
-  } else if (ops != null && Array.isArray(ops.ops)) {
-    this.ops = ops.ops;
-  } else {
-    this.ops = [];
-  }
-};
-
-
-Delta.prototype.insert = function (text, attributes) {
-  var newOp = {};
-  if (text.length === 0) return this;
-  newOp.insert = text;
-  if (attributes != null && typeof attributes === 'object' && Object.keys(attributes).length > 0) {
-    newOp.attributes = attributes;
-  }
-  return this.push(newOp);
-};
-
-Delta.prototype['delete'] = function (length) {
-  if (length <= 0) return this;
-  return this.push({ 'delete': length });
-};
-
-Delta.prototype.retain = function (length, attributes) {
-  if (length <= 0) return this;
-  var newOp = { retain: length };
-  if (attributes != null && typeof attributes === 'object' && Object.keys(attributes).length > 0) {
-    newOp.attributes = attributes;
-  }
-  return this.push(newOp);
-};
-
-Delta.prototype.push = function (newOp) {
-  var index = this.ops.length;
-  var lastOp = this.ops[index - 1];
-  newOp = extend$2(true, {}, newOp);
-  if (typeof lastOp === 'object') {
-    if (typeof newOp['delete'] === 'number' && typeof lastOp['delete'] === 'number') {
-      this.ops[index - 1] = { 'delete': lastOp['delete'] + newOp['delete'] };
-      return this;
-    }
-    // Since it does not matter if we insert before or after deleting at the same index,
-    // always prefer to insert first
-    if (typeof lastOp['delete'] === 'number' && newOp.insert != null) {
-      index -= 1;
-      lastOp = this.ops[index - 1];
-      if (typeof lastOp !== 'object') {
-        this.ops.unshift(newOp);
-        return this;
-      }
-    }
-    if (equal(newOp.attributes, lastOp.attributes)) {
-      if (typeof newOp.insert === 'string' && typeof lastOp.insert === 'string') {
-        this.ops[index - 1] = { insert: lastOp.insert + newOp.insert };
-        if (typeof newOp.attributes === 'object') this.ops[index - 1].attributes = newOp.attributes;
-        return this;
-      } else if (typeof newOp.retain === 'number' && typeof lastOp.retain === 'number') {
-        this.ops[index - 1] = { retain: lastOp.retain + newOp.retain };
-        if (typeof newOp.attributes === 'object') this.ops[index - 1].attributes = newOp.attributes;
-        return this;
-      }
-    }
-  }
-  if (index === this.ops.length) {
-    this.ops.push(newOp);
-  } else {
-    this.ops.splice(index, 0, newOp);
-  }
-  return this;
-};
-
-Delta.prototype.chop = function () {
-  var lastOp = this.ops[this.ops.length - 1];
-  if (lastOp && lastOp.retain && !lastOp.attributes) {
-    this.ops.pop();
-  }
-  return this;
-};
-
-Delta.prototype.filter = function (predicate) {
-  return this.ops.filter(predicate);
-};
-
-Delta.prototype.forEach = function (predicate) {
-  this.ops.forEach(predicate);
-};
-
-Delta.prototype.map = function (predicate) {
-  return this.ops.map(predicate);
-};
-
-Delta.prototype.partition = function (predicate) {
-  var passed = [], failed = [];
-  this.forEach(function(op) {
-    var target = predicate(op) ? passed : failed;
-    target.push(op);
-  });
-  return [passed, failed];
-};
-
-Delta.prototype.reduce = function (predicate, initial) {
-  return this.ops.reduce(predicate, initial);
-};
-
-Delta.prototype.changeLength = function () {
-  return this.reduce(function (length, elem) {
-    if (elem.insert) {
-      return length + op$2.length(elem);
-    } else if (elem.delete) {
-      return length - elem.delete;
-    }
-    return length;
-  }, 0);
-};
-
-Delta.prototype.length = function () {
-  return this.reduce(function (length, elem) {
-    return length + op$2.length(elem);
-  }, 0);
-};
-
-Delta.prototype.slice = function (start, end) {
-  start = start || 0;
-  if (typeof end !== 'number') end = Infinity;
-  var ops = [];
-  var iter = op$2.iterator(this.ops);
-  var index = 0;
-  while (index < end && iter.hasNext()) {
-    var nextOp;
-    if (index < start) {
-      nextOp = iter.next(start - index);
-    } else {
-      nextOp = iter.next(end - index);
-      ops.push(nextOp);
-    }
-    index += op$2.length(nextOp);
-  }
-  return new Delta(ops);
-};
-
-
-Delta.prototype.compose = function (other) {
-  var thisIter = op$2.iterator(this.ops);
-  var otherIter = op$2.iterator(other.ops);
-  var delta = new Delta();
-  while (thisIter.hasNext() || otherIter.hasNext()) {
-    if (otherIter.peekType() === 'insert') {
-      delta.push(otherIter.next());
-    } else if (thisIter.peekType() === 'delete') {
-      delta.push(thisIter.next());
-    } else {
-      var length = Math.min(thisIter.peekLength(), otherIter.peekLength());
-      var thisOp = thisIter.next(length);
-      var otherOp = otherIter.next(length);
-      if (typeof otherOp.retain === 'number') {
-        var newOp = {};
-        if (typeof thisOp.retain === 'number') {
-          newOp.retain = length;
-        } else {
-          newOp.insert = thisOp.insert;
-        }
-        // Preserve null when composing with a retain, otherwise remove it for inserts
-        var attributes = op$2.attributes.compose(thisOp.attributes, otherOp.attributes, typeof thisOp.retain === 'number');
-        if (attributes) newOp.attributes = attributes;
-        delta.push(newOp);
-      // Other op should be delete, we could be an insert or retain
-      // Insert + delete cancels out
-      } else if (typeof otherOp['delete'] === 'number' && typeof thisOp.retain === 'number') {
-        delta.push(otherOp);
-      }
-    }
-  }
-  return delta.chop();
-};
-
-Delta.prototype.concat = function (other) {
-  var delta = new Delta(this.ops.slice());
-  if (other.ops.length > 0) {
-    delta.push(other.ops[0]);
-    delta.ops = delta.ops.concat(other.ops.slice(1));
-  }
-  return delta;
-};
-
-Delta.prototype.diff = function (other, index) {
-  if (this.ops === other.ops) {
-    return new Delta();
-  }
-  var strings = [this, other].map(function (delta) {
-    return delta.map(function (op) {
-      if (op.insert != null) {
-        return typeof op.insert === 'string' ? op.insert : NULL_CHARACTER;
-      }
-      var prep = (delta === other) ? 'on' : 'with';
-      throw new Error('diff() called ' + prep + ' non-document');
-    }).join('');
-  });
-  var delta = new Delta();
-  var diffResult = diff_1(strings[0], strings[1], index);
-  var thisIter = op$2.iterator(this.ops);
-  var otherIter = op$2.iterator(other.ops);
-  diffResult.forEach(function (component) {
-    var length = component[1].length;
-    while (length > 0) {
-      var opLength = 0;
-      switch (component[0]) {
-        case diff_1.INSERT:
-          opLength = Math.min(otherIter.peekLength(), length);
-          delta.push(otherIter.next(opLength));
-          break;
-        case diff_1.DELETE:
-          opLength = Math.min(length, thisIter.peekLength());
-          thisIter.next(opLength);
-          delta['delete'](opLength);
-          break;
-        case diff_1.EQUAL:
-          opLength = Math.min(thisIter.peekLength(), otherIter.peekLength(), length);
-          var thisOp = thisIter.next(opLength);
-          var otherOp = otherIter.next(opLength);
-          if (equal(thisOp.insert, otherOp.insert)) {
-            delta.retain(opLength, op$2.attributes.diff(thisOp.attributes, otherOp.attributes));
-          } else {
-            delta.push(otherOp)['delete'](opLength);
-          }
-          break;
-      }
-      length -= opLength;
-    }
-  });
-  return delta.chop();
-};
-
-Delta.prototype.eachLine = function (predicate, newline) {
-  newline = newline || '\n';
-  var iter = op$2.iterator(this.ops);
-  var line = new Delta();
-  var i = 0;
-  while (iter.hasNext()) {
-    if (iter.peekType() !== 'insert') return;
-    var thisOp = iter.peek();
-    var start = op$2.length(thisOp) - iter.peekLength();
-    var index = typeof thisOp.insert === 'string' ?
-      thisOp.insert.indexOf(newline, start) - start : -1;
-    if (index < 0) {
-      line.push(iter.next());
-    } else if (index > 0) {
-      line.push(iter.next(index));
-    } else {
-      if (predicate(line, iter.next(1).attributes || {}, i) === false) {
-        return;
-      }
-      i += 1;
-      line = new Delta();
-    }
-  }
-  if (line.length() > 0) {
-    predicate(line, {}, i);
-  }
-};
-
-Delta.prototype.transform = function (other, priority) {
-  priority = !!priority;
-  if (typeof other === 'number') {
-    return this.transformPosition(other, priority);
-  }
-  var thisIter = op$2.iterator(this.ops);
-  var otherIter = op$2.iterator(other.ops);
-  var delta = new Delta();
-  while (thisIter.hasNext() || otherIter.hasNext()) {
-    if (thisIter.peekType() === 'insert' && (priority || otherIter.peekType() !== 'insert')) {
-      delta.retain(op$2.length(thisIter.next()));
-    } else if (otherIter.peekType() === 'insert') {
-      delta.push(otherIter.next());
-    } else {
-      var length = Math.min(thisIter.peekLength(), otherIter.peekLength());
-      var thisOp = thisIter.next(length);
-      var otherOp = otherIter.next(length);
-      if (thisOp['delete']) {
-        // Our delete either makes their delete redundant or removes their retain
-        continue;
-      } else if (otherOp['delete']) {
-        delta.push(otherOp);
-      } else {
-        // We retain either their retain or insert
-        delta.retain(length, op$2.attributes.transform(thisOp.attributes, otherOp.attributes, priority));
-      }
-    }
-  }
-  return delta.chop();
-};
-
-Delta.prototype.transformPosition = function (index, priority) {
-  priority = !!priority;
-  var thisIter = op$2.iterator(this.ops);
-  var offset = 0;
-  while (thisIter.hasNext() && offset <= index) {
-    var length = thisIter.peekLength();
-    var nextType = thisIter.peekType();
-    thisIter.next();
-    if (nextType === 'delete') {
-      index -= Math.min(length, index - offset);
-      continue;
-    } else if (nextType === 'insert' && (offset < index || !priority)) {
-      index += length;
-    }
-    offset += length;
-  }
-  return index;
-};
-
-
-var delta = Delta;
-
 var createIsSameValueZero = function createIsSameValueZero() {
   return (
     /**
@@ -1818,8 +1117,790 @@ var createComparator = function createComparator(createIsEqual) {
 
 // comparator
 
-var deepEqual$1 = createComparator();
+var deepEqual = createComparator();
 var shallowEqual = createComparator(createIsSameValueZero);
+
+var NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in diff()
+
+var Delta = function () {
+  function Delta() {
+    classCallCheck(this, Delta);
+
+    this.ops = [];
+  }
+
+  /**
+   * Appends an insert operation. Returns this for chainability.
+   *
+   * @param {String|Object} text Represents text or embed to insert
+   * @param {Object} attributes Optional attributes to apply
+   */
+
+
+  createClass(Delta, [{
+    key: 'insert',
+    value: function insert(text, attributes) {
+      var newOp = {};
+      if (text.length === 0) return this;
+      newOp.insert = text;
+      if (attributes != null && (typeof attributes === 'undefined' ? 'undefined' : _typeof(attributes)) === 'object' && Object.keys(attributes).length > 0) {
+        newOp.attributes = attributes;
+      }
+      return this._push(newOp);
+    }
+
+    /**
+     * Appends a delete operation. Returns this for chainability.
+     *
+     * @param {Number} length Number of characters to delete
+     */
+
+  }, {
+    key: 'delete',
+    value: function _delete(length) {
+      if (length <= 0) return this;
+      return this._push({ delete: length });
+    }
+
+    /**
+     * Appends a retain operation. Returns this for chainability.
+     *
+     * @param {Number} length Number of characters to retain
+     * @param {Object} attributes Optional attributes to apply
+     * @returns {Delta} This delta
+     */
+
+  }, {
+    key: 'retain',
+    value: function retain(length, attributes) {
+      if (length <= 0) return this;
+      var newOp = { retain: length };
+      if (attributes != null && (typeof attributes === 'undefined' ? 'undefined' : _typeof(attributes)) === 'object' && Object.keys(attributes).length > 0) {
+        newOp.attributes = attributes;
+      }
+      return this._push(newOp);
+    }
+
+    /**
+     * Freezes delta from future modifications. Returns this for chainability.
+     *
+     * @returns {Delta} This delta
+     */
+
+  }, {
+    key: 'freeze',
+    value: function freeze() {
+      var _this = this;
+
+      this._push = function () {
+        return _this;
+      };
+      return this;
+    }
+
+    /**
+     * Adds a new operation. Returns this for chainability.
+     *
+     * @param {Object} newOp A new operation
+     * @returns {Delta} This delta
+     */
+
+  }, {
+    key: '_push',
+    value: function _push(newOp) {
+      var index$$1 = this.ops.length;
+      var lastOp = this.ops[index$$1 - 1];
+      if ((typeof lastOp === 'undefined' ? 'undefined' : _typeof(lastOp)) === 'object') {
+        if (typeof newOp.delete === 'number' && typeof lastOp.delete === 'number') {
+          this.ops[index$$1 - 1] = { delete: lastOp.delete + newOp.delete };
+          return this;
+        }
+        // Since it does not matter if we insert before or after deleting at the same index,
+        // always prefer to insert first
+        if (typeof lastOp.delete === 'number' && newOp.insert != null) {
+          index$$1 -= 1;
+          lastOp = this.ops[index$$1 - 1];
+          if ((typeof lastOp === 'undefined' ? 'undefined' : _typeof(lastOp)) !== 'object') {
+            this.ops.unshift(newOp);
+            return this;
+          }
+        }
+        if (deepEqual(newOp.attributes, lastOp.attributes)) {
+          if (typeof newOp.insert === 'string' && typeof lastOp.insert === 'string') {
+            this.ops[index$$1 - 1] = { insert: lastOp.insert + newOp.insert };
+            if (_typeof(newOp.attributes) === 'object') this.ops[index$$1 - 1].attributes = newOp.attributes;
+            return this;
+          } else if (typeof newOp.retain === 'number' && typeof lastOp.retain === 'number') {
+            this.ops[index$$1 - 1] = { retain: lastOp.retain + newOp.retain };
+            if (_typeof(newOp.attributes) === 'object') this.ops[index$$1 - 1].attributes = newOp.attributes;
+            return this;
+          }
+        }
+      }
+      if (index$$1 === this.ops.length) {
+        this.ops.push(newOp);
+      } else {
+        this.ops.splice(index$$1, 0, newOp);
+      }
+      return this;
+    }
+
+    /**
+     * Chops off trailing retain instructions to make the delta concise.
+     *
+     * @returns {Delta} This delta
+     */
+
+  }, {
+    key: 'chop',
+    value: function chop() {
+      var lastOp = this.ops[this.ops.length - 1];
+      if (lastOp && lastOp.retain && !lastOp.attributes) {
+        this.ops.pop();
+      }
+      return this;
+    }
+
+    /**
+     * Returns an iterator to iterate over the operations of this delta.
+     *
+     * @returns {Iterator} An operation iterator with methods hasNext, next, peek, peekLength, & peekType
+     */
+
+  }, {
+    key: 'iterator',
+    value: function iterator() {
+      return new Iterator(this.ops);
+    }
+
+    /**
+     * Returns an array of operations that passes a given function.
+     *
+     * @param {Function} predicate Function to test each operation against. Return true to keep the operation, false
+     *                             otherwise
+     * @returns {Array} Filtered resulting array
+     */
+
+  }, {
+    key: 'filter',
+    value: function filter(predicate) {
+      return this.ops.filter(predicate);
+    }
+
+    /**
+     * Iterates through operations, calling the provided function for each operation.
+     *
+     * @param {Function} predicate Function to call during iteration, passing in the current operation
+     */
+
+  }, {
+    key: 'forEach',
+    value: function forEach(predicate) {
+      this.ops.forEach(predicate);
+    }
+
+    /**
+     * Returns a new array with the results of calling provided function on each operation.
+     *
+     * @param {Function} predicate Function to call, passing in the current operation, returning an element of the new
+     *                             array to be returned
+     * @returns {Array} A new array with each element being the result of the given function
+     */
+
+  }, {
+    key: 'map',
+    value: function map(predicate) {
+      return this.ops.map(predicate);
+    }
+
+    /**
+     * Create an array of two arrays, the first with operations that pass the given function, the other that failed.
+     *
+     * @param {Function} predicate Function to call, passing in the current operation, returning whether that operation
+     *                             passed
+     * @returns {Array} A new array of two Arrays, the first with passed operations, the other with failed operations
+     */
+
+  }, {
+    key: 'partition',
+    value: function partition(predicate) {
+      var passed = [],
+          failed = [];
+      this.forEach(function (op) {
+        var target = predicate(op) ? passed : failed;
+        target.push(op);
+      });
+      return [passed, failed];
+    }
+
+    /**
+     * Applies given function against an accumulator and each operation to reduce to a single value.
+     *
+     * @param {Function} predicate Function to call per iteration, returning an accumulated value
+     * @param {*} initial Initial value to pass to first call to predicate
+     * @returns {*} The accumulated value
+     */
+
+  }, {
+    key: 'reduce',
+    value: function reduce(predicate, initial) {
+      return this.ops.reduce(predicate, initial);
+    }
+  }, {
+    key: 'changeLength',
+    value: function changeLength() {
+      return this.reduce(function (length, entry) {
+        if (entry.insert) {
+          return length + getOpLength(entry);
+        } else if (entry.delete) {
+          return length - entry.delete;
+        }
+        return length;
+      }, 0);
+    }
+
+    /**
+     * Returns length of a Delta, which is the sum of the lengths of its operations.
+     *
+     * @returns {Number} The length of this delta
+     */
+
+  }, {
+    key: 'length',
+    value: function length() {
+      return this.reduce(function (length, entry) {
+        return length + getOpLength(entry);
+      }, 0);
+    }
+
+    /**
+     * Returns copy of delta with subset of operations.
+     *
+     * @param {Number} start Start index of subset, defaults to 0
+     * @param {Number} end End index of subset, defaults to rest of operations
+     * @returns {Array} An array slice of the operations
+     */
+
+  }, {
+    key: 'slice',
+    value: function slice() {
+      var start = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      var end = arguments[1];
+
+      if (typeof end !== 'number') end = Infinity;
+      var ops = [];
+      var iter = this.iterator();
+      var index$$1 = 0;
+      while (index$$1 < end && iter.hasNext()) {
+        var nextOp;
+        if (index$$1 < start) {
+          nextOp = iter.next(start - index$$1);
+        } else {
+          nextOp = iter.next(end - index$$1);
+          ops.push(nextOp);
+        }
+        index$$1 += getOpLength(nextOp);
+      }
+      return new Delta(ops);
+    }
+
+    /**
+     * Returns a Delta that is equivalent to applying the operations of own Delta, followed by another Delta.
+     *
+     * @param {Delta} other Delta to compose
+     */
+
+  }, {
+    key: 'compose',
+    value: function compose(other) {
+      var thisIter = this.iterator();
+      var otherIter = other.iterator();
+      var delta = new Delta();
+      while (thisIter.hasNext() || otherIter.hasNext()) {
+        if (otherIter.peekType() === 'insert') {
+          delta._push(otherIter.next());
+        } else if (thisIter.peekType() === 'delete') {
+          delta._push(thisIter.next());
+        } else {
+          var length = Math.min(thisIter.peekLength(), otherIter.peekLength());
+          var thisOp = thisIter.next(length);
+          var otherOp = otherIter.next(length);
+          if (typeof otherOp.retain === 'number') {
+            var newOp = {};
+            if (typeof thisOp.retain === 'number') {
+              newOp.retain = length;
+            } else {
+              newOp.insert = thisOp.insert;
+            }
+            // Preserve null when composing with a retain, otherwise remove it for inserts
+            var attributes = composeAttributes(thisOp.attributes, otherOp.attributes, typeof thisOp.retain === 'number');
+            if (attributes) newOp.attributes = attributes;
+            delta._push(newOp);
+            // Other op should be delete, we could be an insert or retain
+            // Insert + delete cancels out
+          } else if (typeof otherOp.delete === 'number' && typeof thisOp.retain === 'number') {
+            delta._push(otherOp);
+          }
+        }
+      }
+      return delta.chop();
+    }
+
+    /**
+     * Returns a new Delta representing the concatenation of this and another document Delta's operations.
+     *
+     * @param {Delta} other Document Delta to concatenate
+     * @returns {Delta} Concatenated document Delta
+     */
+
+  }, {
+    key: 'concat',
+    value: function concat(other) {
+      var delta = new Delta(this.ops.slice());
+      if (other.ops.length > 0) {
+        delta._push(other.ops[0]);
+        delta.ops = delta.ops.concat(other.ops.slice(1));
+      }
+      return delta;
+    }
+
+    /**
+     * Returns a Delta representing the difference between two documents. Optionally, accepts a suggested index where
+     * change took place, often representing a cursor position before change.
+     *
+     * @param {Delta} other Document Delta to diff against
+     * @param {Number} index Suggested index where change took place
+     * @returns {Delta} Difference between the two documents
+     */
+
+  }, {
+    key: 'diff',
+    value: function diff(other, index$$1) {
+      if (this.ops === other.ops) {
+        return new Delta();
+      }
+      var strings = [this, other].map(function (delta) {
+        return delta.map(function (op) {
+          if (op.insert != null) {
+            return typeof op.insert === 'string' ? op.insert : NULL_CHARACTER;
+          }
+          var prep = delta === other ? 'on' : 'with';
+          throw new Error('diff() called ' + prep + ' non-document');
+        }).join('');
+      });
+      var delta = new Delta();
+      var diffResult = diff_1(strings[0], strings[1], index$$1);
+      var thisIter = this.iterator();
+      var otherIter = other.iterator();
+      diffResult.forEach(function (component) {
+        var length = component[1].length;
+        while (length > 0) {
+          var opLength = 0;
+          switch (component[0]) {
+            case diff_1.INSERT:
+              opLength = Math.min(otherIter.peekLength(), length);
+              delta._push(otherIter.next(opLength));
+              break;
+            case diff_1.DELETE:
+              opLength = Math.min(length, thisIter.peekLength());
+              thisIter.next(opLength);
+              delta.delete(opLength);
+              break;
+            case diff_1.EQUAL:
+              opLength = Math.min(thisIter.peekLength(), otherIter.peekLength(), length);
+              var thisOp = thisIter.next(opLength);
+              var otherOp = otherIter.next(opLength);
+              if (deepEqual(thisOp.insert, otherOp.insert)) {
+                delta.retain(opLength, diffAttributes(thisOp.attributes, otherOp.attributes));
+              } else {
+                delta._push(otherOp).delete(opLength);
+              }
+              break;
+          }
+          length -= opLength;
+        }
+      });
+      return delta.chop();
+    }
+
+    /**
+     * Iterates through document Delta, calling a given function with a Delta and attributes object, representing the line
+     * segment.
+     *
+     * @param {Function} predicate Function to call on each line group
+     * @param {String} newline Newline character, defaults to \n
+     */
+
+  }, {
+    key: 'eachLine',
+    value: function eachLine(predicate) {
+      var newline = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '\n';
+
+      var iter = this.iterator();
+      var ops = new Delta();
+      var index$$1 = 0;
+      var lineStart = 0;
+      var currentIndex = 0;
+
+      while (iter.hasNext()) {
+        if (iter.peekType() !== 'insert') return;
+
+        var op = iter.peek();
+        var nextLength = iter.peekLength();
+        var start = getOpLength(op) - nextLength;
+        var newlineIndex = typeof op.insert === 'string' ? op.insert.indexOf(newline, start) - start : -1;
+
+        if (newlineIndex < 0) {
+          currentIndex += nextLength;
+          ops._push(iter.next());
+        } else if (newlineIndex > 0) {
+          currentIndex += newlineIndex;
+          ops._push(iter.next(newlineIndex));
+        } else {
+          currentIndex += 1;
+          var attributes = iter.next(1).attributes || {};
+          var line = { ops: ops, attributes: attributes, start: lineStart, end: currentIndex, index: index$$1 };
+          if (predicate(line, index$$1) === false) {
+            return;
+          }
+          index$$1 += 1;
+          lineStart = currentIndex;
+          ops = new Delta();
+        }
+      }
+      if (ops.length() > 0) {
+        var line = { ops: ops, attributes: {}, start: lineStart, end: currentIndex, index: index$$1 };
+        predicate(line, index$$1);
+      }
+    }
+
+    // Extends Delta, get the lines from `from` to `to`.
+
+  }, {
+    key: 'getLines',
+    value: function getLines() {
+      var from = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      var to = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Infinity;
+      var newline = arguments[2];
+
+      var lines = [];
+      this.eachLine(function (line) {
+        if (line.start > to || line.start === to && from !== to) return false;
+        if (line.end > from) {
+          lines.push(line);
+        }
+      }, newline);
+      return lines;
+    }
+
+    // Extends Delta, get the line at `at`.
+
+  }, {
+    key: 'getLine',
+    value: function getLine(at, newline) {
+      return this.getLines(at, at, newline)[0];
+    }
+
+    // Extends Delta, get the ops from `from` to `to`.
+
+  }, {
+    key: 'getOps',
+    value: function getOps(from, to) {
+      var start = 0;
+      var ops = [];
+      this.ops.some(function (op) {
+        if (start >= to) return true;
+        var end = start + getOpLength(op);
+        if (end > from || from === to && end === to) {
+          ops.push({ op: op, start: start, end: end });
+        }
+        start = end;
+      });
+      return ops;
+    }
+
+    // Extends Delta, get the op at `at`.
+
+  }, {
+    key: 'getOp',
+    value: function getOp(at) {
+      return this.getOps(at, at)[0];
+    }
+
+    /**
+     * Transform given Delta against own operations. Used as an alias for transformPosition when called with a number.
+     *
+     * @param {Delta} other Delta to transform
+     * @param {Boolean} priority Boolean used to break ties. If true, then this takes priority over other, that is, its
+     *                           actions are considered to happen "first."
+     * @returns {Delta} Transformed Delta
+     */
+
+  }, {
+    key: 'transform',
+    value: function transform(other) {
+      var priority = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (typeof other === 'number') {
+        return this.transformPosition(other, priority);
+      }
+      var thisIter = this.iterator();
+      var otherIter = other.iterator();
+      var delta = new Delta();
+      while (thisIter.hasNext() || otherIter.hasNext()) {
+        if (thisIter.peekType() === 'insert' && (priority || otherIter.peekType() !== 'insert')) {
+          delta.retain(length(thisIter.next()));
+        } else if (otherIter.peekType() === 'insert') {
+          delta._push(otherIter.next());
+        } else {
+          var length = Math.min(thisIter.peekLength(), otherIter.peekLength());
+          var thisOp = thisIter.next(length);
+          var otherOp = otherIter.next(length);
+          if (thisOp.delete) {
+            // Our delete either makes their delete redundant or removes their retain
+            continue;
+          } else if (otherOp.delete) {
+            delta._push(otherOp);
+          } else {
+            // We retain either their retain or insert
+            delta.retain(length, transformAttributes(thisOp.attributes, otherOp.attributes, priority));
+          }
+        }
+      }
+      return delta.chop();
+    }
+
+    /**
+     * Transform an index against the delta. Useful for representing cursor/selection positions.
+     *
+     * @param {Number} index Index to transform
+     * @param {Boolean} priority Boolean used to break ties. If true, then this takes priority over other, that is, its
+     *                           actions are considered to happen "first."
+     * @returns {Number} Transformed index
+     */
+
+  }, {
+    key: 'transformPosition',
+    value: function transformPosition(index$$1) {
+      var priority = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      var thisIter = this.iterator();
+      var offset = 0;
+      while (thisIter.hasNext() && offset <= index$$1) {
+        var length = thisIter.peekLength();
+        var nextType = thisIter.peekType();
+        thisIter.next();
+        if (nextType === 'delete') {
+          index$$1 -= Math.min(length, index$$1 - offset);
+          continue;
+        } else if (nextType === 'insert' && (offset < index$$1 || !priority)) {
+          index$$1 += length;
+        }
+        offset += length;
+      }
+      return index$$1;
+    }
+  }]);
+  return Delta;
+}();
+function composeAttributes() {
+  var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var source = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var keepNull = arguments[2];
+
+  var attributes = _extends({}, target, source);
+
+  if (!keepNull) Object.keys(attributes).forEach(function (key) {
+    if (attributes[key] == null) delete attributes[key];
+  });
+
+  return Object.keys(attributes).length > 0 ? attributes : undefined;
+}
+
+/**
+ * Finds the difference between two attributes objects. Returns the source attributes that are different from the
+ * target attributes.
+ *
+ * @param {Object} target An attributes object
+ * @param {Object} source An attributes object
+ * @returns {Object} The difference between the two attribute objects or undefined if there is none
+ */
+function diffAttributes() {
+  var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var source = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  var attributes = Object.keys(target).concat(Object.keys(source)).reduce(function (attributes, key) {
+    if (!deepEqual(target[key], source[key])) {
+      attributes[key] = source[key] === undefined ? null : source[key];
+    }
+    return attributes;
+  }, {});
+
+  return Object.keys(attributes).length > 0 ? attributes : undefined;
+}
+
+/**
+ * Transforms the attributes of source over target (or the other way around if priority is set). Will return an
+ * attributes object which has all the values from source if priority if false or will have the values from source that
+ * are set on target.
+ *
+ * @param {Object} target An attributes object
+ * @param {Object} source An attributes object
+ * @param {Boolean} priority If target has priority over source
+ */
+function transformAttributes(target, source, priority) {
+  if ((typeof target === 'undefined' ? 'undefined' : _typeof(target)) !== 'object') return source;
+  if ((typeof source === 'undefined' ? 'undefined' : _typeof(source)) !== 'object') return undefined;
+  if (!priority) return source; // b simply overwrites us without priority
+
+  var attributes = Object.keys(source).reduce(function (attributes, key) {
+    if (target[key] === undefined) attributes[key] = source[key]; // null is a valid value
+    return attributes;
+  }, {});
+
+  return Object.keys(attributes).length > 0 ? attributes : undefined;
+}
+
+/**
+ * Determines the length of a Delta operation.
+ *
+ * @param {Object} op An operation entry from a Delta object
+ * @returns {Number} The length of the op
+ */
+function getOpLength(op) {
+  if (typeof op.delete === 'number') {
+    return op.delete;
+  } else if (typeof op.retain === 'number') {
+    return op.retain;
+  } else {
+    return typeof op.insert === 'string' ? op.insert.length : 1;
+  }
+}
+
+/**
+ * An iterator to handle iterating over a list of Delta operations efficiently.
+ */
+var Iterator = function () {
+  function Iterator(ops) {
+    classCallCheck(this, Iterator);
+
+    this.ops = ops;
+    this.index = 0;
+    this.offset = 0;
+  }
+
+  /**
+   * Determine if there will be another operation returned by `next`.
+   *
+   * @returns {Boolean} Whether there are more operations to iterate over
+   */
+
+
+  createClass(Iterator, [{
+    key: 'hasNext',
+    value: function hasNext() {
+      return this.peekLength() < Infinity;
+    }
+
+    /**
+     * Get the next operation, optionally limited/sliced by length. If an operation is sliced by length, the next call to
+     * `next` will return more of that operation until it is returned in full.
+     *
+     * @param {Number} length Optionally limit the returned operation by length, slicing it down as needed
+     */
+
+  }, {
+    key: 'next',
+    value: function next() {
+      var length = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Infinity;
+
+      var nextOp = this.ops[this.index];
+      if (!nextOp) return { retain: Infinity };
+
+      var offset = this.offset;
+      var opLength = getOpLength(nextOp);
+
+      // Update index and offset
+      if (length >= opLength - offset) {
+        length = opLength - offset;
+        this.index += 1;
+        this.offset = 0;
+      } else {
+        this.offset += length;
+      }
+
+      if (typeof nextOp.delete === 'number') {
+        return { delete: length };
+      } else {
+        var retOp = {};
+        if (nextOp.attributes) {
+          retOp.attributes = nextOp.attributes;
+        }
+
+        if (typeof nextOp.retain === 'number') {
+          retOp.retain = length;
+        } else if (typeof nextOp.insert === 'string') {
+          retOp.insert = nextOp.insert.substr(offset, length);
+        } else {
+          // offset should === 0, length should === 1
+          retOp.insert = nextOp.insert;
+        }
+        return retOp;
+      }
+    }
+
+    /**
+     * Return the next entry.
+     *
+     * @returns {Object} The next entry in the ops array.
+     */
+
+  }, {
+    key: 'peek',
+    value: function peek() {
+      return this.ops[this.index];
+    }
+
+    /**
+     * Check the length of the next entry.
+     *
+     * @returns {Number} The length of the next entry or Infinity if there is no next entry
+     */
+
+  }, {
+    key: 'peekLength',
+    value: function peekLength() {
+      if (this.ops[this.index]) {
+        // Should never return 0 if our index is being managed correctly
+        return getOpLength(this.ops[this.index]) - this.offset;
+      } else {
+        return Infinity;
+      }
+    }
+
+    /**
+     * Check the type of the next entry, delete, retain, or insert.
+     *
+     * @returns {String} The type of the next entry
+     */
+
+  }, {
+    key: 'peekType',
+    value: function peekType() {
+      if (this.ops[this.index]) {
+        if (typeof this.ops[this.index].delete === 'number') {
+          return 'delete';
+        } else if (typeof this.ops[this.index].retain === 'number') {
+          return 'retain';
+        } else {
+          return 'insert';
+        }
+      }
+      return 'retain';
+    }
+  }]);
+  return Iterator;
+}();
 
 var SOURCE_API = 'api';
 var SOURCE_USER = 'user';
@@ -1924,8 +2005,8 @@ var Editor = function (_EventDispatcher) {
 
   createClass(Editor, [{
     key: 'delta',
-    value: function delta$$1(ops) {
-      return new delta(ops);
+    value: function delta(ops) {
+      return new Delta(ops);
     }
 
     /**
@@ -1933,7 +2014,7 @@ var Editor = function (_EventDispatcher) {
      *
      * @param {Number} from The starting index
      * @param {Number} to   The ending index
-     * @return {Delta}      The contents of this editor
+     * @returns {Delta}     The contents of this editor
      */
 
   }, {
@@ -1942,12 +2023,12 @@ var Editor = function (_EventDispatcher) {
       var from = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
       var to = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.length;
 
-      var _normalizeArguments2 = this._normalizeArguments(from, to);
+      var _normalizeRange2 = this._normalizeRange(from, to);
 
-      var _normalizeArguments3 = slicedToArray(_normalizeArguments2, 2);
+      var _normalizeRange3 = slicedToArray(_normalizeRange2, 2);
 
-      from = _normalizeArguments3[0];
-      to = _normalizeArguments3[1];
+      from = _normalizeRange3[0];
+      to = _normalizeRange3[1];
 
       return this.contents.slice(from, to);
     }
@@ -1957,7 +2038,7 @@ var Editor = function (_EventDispatcher) {
      *
      * @param {Number} from The starting index
      * @param {Number} to   The ending index
-     * @return {String}     The text in the editor
+     * @returns {String}    The text in the editor
      */
 
   }, {
@@ -1966,12 +2047,12 @@ var Editor = function (_EventDispatcher) {
       var from = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
       var to = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.length;
 
-      var _normalizeArguments4 = this._normalizeArguments(from, to);
+      var _normalizeRange4 = this._normalizeRange(from, to);
 
-      var _normalizeArguments5 = slicedToArray(_normalizeArguments4, 2);
+      var _normalizeRange5 = slicedToArray(_normalizeRange4, 2);
 
-      from = _normalizeArguments5[0];
-      to = _normalizeArguments5[1];
+      from = _normalizeRange5[0];
+      to = _normalizeRange5[1];
 
       return this.text.slice(from, to);
     }
@@ -1984,7 +2065,7 @@ var Editor = function (_EventDispatcher) {
      * @param {Number} from      The starting index
      * @param {Number} to        The ending index
      * @param {String} source    The source of the change, user, api, or silent
-     * @return {Boolean}         Whether the selection changed or not
+     * @returns {Boolean}        Whether the selection changed or not
      */
 
   }, {
@@ -1999,18 +2080,16 @@ var Editor = function (_EventDispatcher) {
         selection = null;
         if (typeof to === 'string') source = to;
       } else {
-        var _normalizeArguments6 = this._normalizeArguments(from, to, source);
+        var _normalizeSelection2 = this._normalizeSelection(from, to, source);
 
-        var _normalizeArguments7 = slicedToArray(_normalizeArguments6, 3);
+        var _normalizeSelection3 = slicedToArray(_normalizeSelection2, 3);
 
-        from = _normalizeArguments7[0];
-        to = _normalizeArguments7[1];
-        source = _normalizeArguments7[2];
+        from = _normalizeSelection3[0];
+        to = _normalizeSelection3[1];
+        source = _normalizeSelection3[2];
 
         selection = [from, to];
       }
-
-      selection = this.getSelectedRange(selection);
 
       if (shallowEqual(oldSelection, selection)) return false;
 
@@ -2035,7 +2114,7 @@ var Editor = function (_EventDispatcher) {
      * @param {Delta} change    A delta change to the document
      * @param {String} source   The source of the change, user, api, or silent
      * @param {Array} selection Optional selection after the change has been applied
-     * @return {Delta}          Returns the change when successful, or null if not
+     * @returns {Delta}         Returns the change when successful, or null if not
      */
 
   }, {
@@ -2083,7 +2162,7 @@ var Editor = function (_EventDispatcher) {
      * @param {Delta} newContents The contents of the editor, as a delta object
      * @param {String} source     The source of the change, user, api, or silent
      * @param {Array} selection   Optional selection after the change has been applied
-     * @return {Delta}            Returns the change when successful, or null if not
+     * @returns {Delta}           Returns the change when successful, or null if not
      */
 
   }, {
@@ -2099,7 +2178,7 @@ var Editor = function (_EventDispatcher) {
      * @param {String} text     Set the contents of this editor as text
      * @param {String} source   The source of the change, user, api, or silent
      * @param {Array} selection Optional selection after the change has been applied
-     * @return {Delta}          Returns the change when successful, or null if not
+     * @returns {Delta}         Returns the change when successful, or null if not
      */
 
   }, {
@@ -2119,23 +2198,24 @@ var Editor = function (_EventDispatcher) {
      * @param {String} formats   The formats of the inserted text. If null the formats at `from` will be used.
      * @param {String} source    The source of the change, user, api, or silent
      * @param {Array}  selection Optional selection after the change has been applied
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
     key: 'insertText',
     value: function insertText(from, to, text, formats, source, selection) {
-      var _normalizeArguments8 = this._normalizeArguments(from, to, text, formats, source, selection);
 
-      var _normalizeArguments9 = slicedToArray(_normalizeArguments8, 6);
+      // If we are not inserting a newline, make sure from and to are within the selectable range
+      var _normalizeRange6 = this._normalizeRange(from, to, text, formats, source, selection);
 
-      from = _normalizeArguments9[0];
-      to = _normalizeArguments9[1];
-      text = _normalizeArguments9[2];
-      formats = _normalizeArguments9[3];
-      source = _normalizeArguments9[4];
-      selection = _normalizeArguments9[5];
+      var _normalizeRange7 = slicedToArray(_normalizeRange6, 6);
 
+      from = _normalizeRange7[0];
+      to = _normalizeRange7[1];
+      text = _normalizeRange7[2];
+      formats = _normalizeRange7[3];
+      source = _normalizeRange7[4];
+      selection = _normalizeRange7[5];
       if (text !== '\n') {
 
         var _getSelectedRange = this.getSelectedRange([from, to]);
@@ -2177,22 +2257,22 @@ var Editor = function (_EventDispatcher) {
      * @param {String} formats   The formats of the inserted text. If null the formats at `from` will be used.
      * @param {String} source    The source of the change, user, api, or silent
      * @param {Array}  selection Optional selection after the change has been applied
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
     key: 'insertEmbed',
     value: function insertEmbed(from, to, embed, value, formats, source, selection) {
-      var _normalizeArguments10 = this._normalizeArguments(from, to, embed, value, source, selection);
+      var _normalizeRange8 = this._normalizeRange(from, to, embed, value, source, selection);
 
-      var _normalizeArguments11 = slicedToArray(_normalizeArguments10, 6);
+      var _normalizeRange9 = slicedToArray(_normalizeRange8, 6);
 
-      from = _normalizeArguments11[0];
-      to = _normalizeArguments11[1];
-      embed = _normalizeArguments11[2];
-      value = _normalizeArguments11[3];
-      source = _normalizeArguments11[4];
-      selection = _normalizeArguments11[5];
+      from = _normalizeRange9[0];
+      to = _normalizeRange9[1];
+      embed = _normalizeRange9[2];
+      value = _normalizeRange9[3];
+      source = _normalizeRange9[4];
+      selection = _normalizeRange9[5];
 
       if (typeof formats === 'string') {
         var _ref2 = [null, formats, source];
@@ -2215,20 +2295,20 @@ var Editor = function (_EventDispatcher) {
      * @param {Number} to        Will delete the text between `from` and `to`
      * @param {String} source    The source of the change, user, api, or silent
      * @param {Array}  selection Optional selection after the change has been applied
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
     key: 'deleteText',
     value: function deleteText(from, to, source, selection) {
-      var _normalizeArguments12 = this._normalizeArguments(from, to, source, selection);
+      var _normalizeRange10 = this._normalizeRange(from, to, source, selection);
 
-      var _normalizeArguments13 = slicedToArray(_normalizeArguments12, 4);
+      var _normalizeRange11 = slicedToArray(_normalizeRange10, 4);
 
-      from = _normalizeArguments13[0];
-      to = _normalizeArguments13[1];
-      source = _normalizeArguments13[2];
-      selection = _normalizeArguments13[3];
+      from = _normalizeRange11[0];
+      to = _normalizeRange11[1];
+      source = _normalizeRange11[2];
+      selection = _normalizeRange11[3];
 
       if (from === to) return null;
       if (selection == null && this.selection !== null) selection = from;
@@ -2244,18 +2324,18 @@ var Editor = function (_EventDispatcher) {
      *
      * @param {Number} from Getting line formats starting at `from`
      * @param {Number} to   Getting line formats ending at `to`
-     * @return {Object}     An object with all the common formats among the lines which intersect from and to
+     * @returns {Object}    An object with all the common formats among the lines which intersect from and to
      */
 
   }, {
     key: 'getLineFormat',
     value: function getLineFormat(from, to) {
-      var _normalizeArguments14 = this._normalizeArguments(from, to);
+      var _normalizeRange12 = this._normalizeRange(from, to);
 
-      var _normalizeArguments15 = slicedToArray(_normalizeArguments14, 2);
+      var _normalizeRange13 = slicedToArray(_normalizeRange12, 2);
 
-      from = _normalizeArguments15[0];
-      to = _normalizeArguments15[1];
+      from = _normalizeRange13[0];
+      to = _normalizeRange13[1];
 
       var formats = void 0;
 
@@ -2273,18 +2353,18 @@ var Editor = function (_EventDispatcher) {
      *
      * @param {Number} from Getting text formats starting at `from`
      * @param {Number} to   Getting text formats ending at `to`
-     * @return {Object}     An object with all the common formats among the text
+     * @returns {Object}    An object with all the common formats among the text
      */
 
   }, {
     key: 'getTextFormat',
     value: function getTextFormat(from, to) {
-      var _normalizeArguments16 = this._normalizeArguments(from, to);
+      var _normalizeRange14 = this._normalizeRange(from, to);
 
-      var _normalizeArguments17 = slicedToArray(_normalizeArguments16, 2);
+      var _normalizeRange15 = slicedToArray(_normalizeRange14, 2);
 
-      from = _normalizeArguments17[0];
-      to = _normalizeArguments17[1];
+      from = _normalizeRange15[0];
+      to = _normalizeRange15[1];
 
       var formats = void 0;
 
@@ -2295,10 +2375,10 @@ var Editor = function (_EventDispatcher) {
       }
 
       this.contents.getOps(from, to).forEach(function (_ref3) {
-        var op$$1 = _ref3.op;
+        var op = _ref3.op;
 
-        if (/^\n+$/.test(op$$1.insert)) return;
-        if (!op$$1.attributes) formats = {};else if (!formats) formats = _extends({}, op$$1.attributes);else formats = combineFormats(formats, op$$1.attributes);
+        if (/^\n+$/.test(op.insert)) return;
+        if (!op.attributes) formats = {};else if (!formats) formats = _extends({}, op.attributes);else formats = combineFormats(formats, op.attributes);
       });
 
       if (!formats) formats = {};
@@ -2311,7 +2391,7 @@ var Editor = function (_EventDispatcher) {
      *
      * @param {Number} from Getting line and text formats starting at `from`
      * @param {Number} to   Getting line and text formats ending at `to`
-     * @return {Object}     An object with all the common formats among the lines and text which intersect from and to
+     * @returns {Object}    An object with all the common formats among the lines and text which intersect from and to
      */
 
   }, {
@@ -2328,25 +2408,25 @@ var Editor = function (_EventDispatcher) {
      * @param {Number} to        The ending index
      * @param {String} formats   The formats for the line
      * @param {String} source    The source of the change, user, api, or silent
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
     key: 'formatLine',
     value: function formatLine(from, to, formats, source) {
-      var _normalizeArguments18 = this._normalizeArguments(from, to, formats, source);
+      var _normalizeRange16 = this._normalizeRange(from, to, formats, source);
 
-      var _normalizeArguments19 = slicedToArray(_normalizeArguments18, 4);
+      var _normalizeRange17 = slicedToArray(_normalizeRange16, 4);
 
-      from = _normalizeArguments19[0];
-      to = _normalizeArguments19[1];
-      formats = _normalizeArguments19[2];
-      source = _normalizeArguments19[3];
+      from = _normalizeRange17[0];
+      to = _normalizeRange17[1];
+      formats = _normalizeRange17[2];
+      source = _normalizeRange17[3];
 
       var change = this.delta();
 
       this.contents.getLines(from, to).forEach(function (line) {
-        if (!change.ops.length) change.retain(line.endIndex - 1);else change.retain(line.endIndex - line.startIndex - 1);
+        if (!change.ops.length) change.retain(line.end - 1);else change.retain(line.end - line.start - 1);
         // Clear out old formats on the line
         Object.keys(line.attributes).forEach(function (name) {
           return !formats[name] && (formats[name] = null);
@@ -2365,7 +2445,7 @@ var Editor = function (_EventDispatcher) {
      * @param {Number} to        The ending index
      * @param {String} formats   The formats for the text
      * @param {String} source    The source of the change, user, api, or silent
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
@@ -2373,14 +2453,14 @@ var Editor = function (_EventDispatcher) {
     value: function formatText(from, to, formats, source) {
       var _this2 = this;
 
-      var _normalizeArguments20 = this._normalizeArguments(from, to, formats, source);
+      var _normalizeRange18 = this._normalizeRange(from, to, formats, source);
 
-      var _normalizeArguments21 = slicedToArray(_normalizeArguments20, 4);
+      var _normalizeRange19 = slicedToArray(_normalizeRange18, 4);
 
-      from = _normalizeArguments21[0];
-      to = _normalizeArguments21[1];
-      formats = _normalizeArguments21[2];
-      source = _normalizeArguments21[3];
+      from = _normalizeRange19[0];
+      to = _normalizeRange19[1];
+      formats = _normalizeRange19[2];
+      source = _normalizeRange19[3];
 
       if (from === to) {
         if (this.activeFormats === empty) this.activeFormats = {};
@@ -2410,23 +2490,23 @@ var Editor = function (_EventDispatcher) {
      * @param {Number} to        The ending index
      * @param {String} formats   The formats for the line
      * @param {String} source    The source of the change, user, api, or silent
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
     key: 'toggleLineFormat',
     value: function toggleLineFormat(from, to, format, source) {
-      var _normalizeArguments22 = this._normalizeArguments(from, to, format, source);
+      var _normalizeRange20 = this._normalizeRange(from, to, format, source);
 
-      var _normalizeArguments23 = slicedToArray(_normalizeArguments22, 4);
+      var _normalizeRange21 = slicedToArray(_normalizeRange20, 4);
 
-      from = _normalizeArguments23[0];
-      to = _normalizeArguments23[1];
-      format = _normalizeArguments23[2];
-      source = _normalizeArguments23[3];
+      from = _normalizeRange21[0];
+      to = _normalizeRange21[1];
+      format = _normalizeRange21[2];
+      source = _normalizeRange21[3];
 
       var existing = this.getLineFormat(from, to);
-      if (deepEqual$1(existing, format)) {
+      if (deepEqual(existing, format)) {
         Object.keys(format).forEach(function (key) {
           return format[key] = null;
         });
@@ -2442,20 +2522,20 @@ var Editor = function (_EventDispatcher) {
      * @param {Number} to        The ending index
      * @param {String} formats   The formats for the text
      * @param {String} source    The source of the change, user, api, or silent
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
     key: 'toggleTextFormat',
     value: function toggleTextFormat(from, to, format, source) {
-      var _normalizeArguments24 = this._normalizeArguments(from, to, format, source);
+      var _normalizeRange22 = this._normalizeRange(from, to, format, source);
 
-      var _normalizeArguments25 = slicedToArray(_normalizeArguments24, 4);
+      var _normalizeRange23 = slicedToArray(_normalizeRange22, 4);
 
-      from = _normalizeArguments25[0];
-      to = _normalizeArguments25[1];
-      format = _normalizeArguments25[2];
-      source = _normalizeArguments25[3];
+      from = _normalizeRange23[0];
+      to = _normalizeRange23[1];
+      format = _normalizeRange23[2];
+      source = _normalizeRange23[3];
 
       var existing = this.getTextFormat(from, to);
       var isSame = Object.keys(format).every(function (key) {
@@ -2476,7 +2556,7 @@ var Editor = function (_EventDispatcher) {
      * @param {Number} to        The ending index
      * @param {String} formats   The formats for the text
      * @param {String} source    The source of the change, user, api, or silent
-     * @return {Delta}           Returns the change when successful, or null if not
+     * @returns {Delta}          Returns the change when successful, or null if not
      */
 
   }, {
@@ -2484,20 +2564,20 @@ var Editor = function (_EventDispatcher) {
     value: function removeFormat(from, to, source) {
       var _this3 = this;
 
-      var _normalizeArguments26 = this._normalizeArguments(from, to, source);
+      var _normalizeRange24 = this._normalizeRange(from, to, source);
 
-      var _normalizeArguments27 = slicedToArray(_normalizeArguments26, 3);
+      var _normalizeRange25 = slicedToArray(_normalizeRange24, 3);
 
-      from = _normalizeArguments27[0];
-      to = _normalizeArguments27[1];
-      source = _normalizeArguments27[2];
+      from = _normalizeRange25[0];
+      to = _normalizeRange25[1];
+      source = _normalizeRange25[2];
 
       var formats = {};
 
       this.contents.getOps(from, to).forEach(function (_ref4) {
-        var op$$1 = _ref4.op;
+        var op = _ref4.op;
 
-        op$$1.attributes && Object.keys(op$$1.attributes).forEach(function (key) {
+        op.attributes && Object.keys(op.attributes).forEach(function (key) {
           return formats[key] = null;
         });
       });
@@ -2510,7 +2590,7 @@ var Editor = function (_EventDispatcher) {
         Object.keys(line.attributes).forEach(function (key) {
           return formats[key] = null;
         });
-        change = change.compose(_this3.delta().retain(line.endIndex - 1).retain(1, formats));
+        change = change.compose(_this3.delta().retain(line.end - 1).retain(1, formats));
       });
 
       return this.updateContents(change, source);
@@ -2530,7 +2610,7 @@ var Editor = function (_EventDispatcher) {
      * ```
      *
      * @param {Function} producer A function in which to call methods on the editor to produce a change
-     * @return {Delta}            The sum of all the changes made within the producer
+     * @returns {Delta}           The sum of all the changes made within the producer
      */
 
   }, {
@@ -2558,7 +2638,7 @@ var Editor = function (_EventDispatcher) {
      * @param {Function} producer A function which should make changes with the editor
      * @param {String} source     The source of the change, user, api, or silent
      * @param {Array} selection   Optional selection after the change has been applied
-     * @return {Delta}            Returns the change when successful, or null if not
+     * @returns {Delta}           Returns the change when successful, or null if not
      */
 
   }, {
@@ -2596,18 +2676,39 @@ var Editor = function (_EventDispatcher) {
     /**
      * Normalizes range values to a proper range if it is not already. A range is a `from` and a `to` index, e.g. 0, 4.
      * This will ensure the lower index is first. Example usage:
-     * editor._normalizeArguments(5); // [5, 5]
-     * editor._normalizeArguments(-4, 100); // for a doc with length 10, [0, 10]
-     * editor._normalizeArguments(25, 18); // [18, 25]
-     * editor._normalizeArguments([12, 13]); // [12, 13]
-     * editor._normalizeArguments(5, { bold: true }); // [5, 5, { bold: true }]
+     * editor._normalizeRange(5); // [5, 5]
+     * editor._normalizeRange(-4, 100); // for a doc with length 10, [0, 10]
+     * editor._normalizeRange(25, 18); // [18, 25]
+     * editor._normalizeRange([12, 13]); // [12, 13]
+     * editor._normalizeRange(5, { bold: true }); // [5, 5, { bold: true }]
      */
 
   }, {
-    key: '_normalizeArguments',
-    value: function _normalizeArguments(from, to) {
+    key: '_normalizeRange',
+    value: function _normalizeRange(from, to) {
       for (var _len = arguments.length, rest = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
         rest[_key - 2] = arguments[_key];
+      }
+
+      var _normalizeSelection4 = this._normalizeSelection.apply(this, [from, to].concat(toConsumableArray(rest)));
+
+      var _normalizeSelection5 = toArray(_normalizeSelection4);
+
+      from = _normalizeSelection5[0];
+      to = _normalizeSelection5[1];
+      rest = _normalizeSelection5.slice(2);
+
+      if (from > to) {
+        var _ref6 = [to, from];
+        from = _ref6[0];
+        to = _ref6[1];
+      }return [from, to].concat(rest);
+    }
+  }, {
+    key: '_normalizeSelection',
+    value: function _normalizeSelection(from, to) {
+      for (var _len2 = arguments.length, rest = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+        rest[_key2 - 2] = arguments[_key2];
       }
 
       if (Array.isArray(from)) {
@@ -2630,11 +2731,6 @@ var Editor = function (_EventDispatcher) {
       }
       from = Math.max(0, Math.min(this.length, ~~from));
       to = Math.max(0, Math.min(this.length, ~~to));
-      if (from > to) {
-        var _ref6 = [to, from];
-        from = _ref6[0];
-        to = _ref6[1];
-      }
       return [from, to].concat(rest);
     }
   }]);
@@ -2643,9 +2739,9 @@ var Editor = function (_EventDispatcher) {
 function cleanDelete(editor, from, to, change) {
   if (from !== to) {
     var line = editor.contents.getLine(from);
-    if (!line.contents.length() && to === from + 1) return change;
+    if (!line.ops.length() && to === from + 1) return change;
     var lineFormat = editor.getLineFormat(from);
-    if (!deepEqual$1(lineFormat, editor.getLineFormat(to))) {
+    if (!deepEqual(lineFormat, editor.getLineFormat(to))) {
       var lineChange = editor.getChange(function () {
         return editor.formatLine(to, lineFormat);
       });
@@ -2662,22 +2758,17 @@ function normalizeContents(contents) {
   return contents;
 }
 
-// Delta no operation method
-function deltaNoop() {
-  return this;
-}
-
 // Sets the contents onto the editor after ensuring they end in a newline, freezes the contents from change, and
 // updates the length and text of the editor to the latest
 function setContents(editor, contents) {
-  normalizeContents(contents);
-  contents.push = deltaNoop; // freeze from modification
+  contents = normalizeContents(contents);
+  contents.freeze();
   editor.contents = contents;
   editor.length = contents.length();
-  editor.text = contents.filter(function (op$$1) {
-    return typeof op$$1.insert === 'string';
-  }).map(function (op$$1) {
-    return op$$1.insert;
+  editor.text = contents.filter(function (op) {
+    return typeof op.insert === 'string';
+  }).map(function (op) {
+    return op.insert;
   }).join('').slice(0, -1); // remove the trailing newline
 }
 
@@ -2697,46 +2788,6 @@ function combineFormats(formats, combined) {
     return merged;
   }, {});
 }
-
-// Extends Delta, get the lines from `from` to `to`.
-delta.prototype.getLines = function (from, to) {
-  var startIndex = 0;
-  var lines = [];
-  this.eachLine(function (contents, attributes, number) {
-    if (startIndex > to || startIndex === to && from !== to) return false;
-    var endIndex = startIndex + contents.length() + 1;
-    if (endIndex > from) {
-      lines.push({ contents: contents, attributes: attributes, number: number, startIndex: startIndex, endIndex: endIndex });
-    }
-    startIndex = endIndex;
-  });
-  return lines;
-};
-
-// Extends Delta, get the line at `at`.
-delta.prototype.getLine = function (at) {
-  return this.getLines(at, at)[0];
-};
-
-// Extends Delta, get the ops from `from` to `to`.
-delta.prototype.getOps = function (from, to) {
-  var startIndex = 0;
-  var ops = [];
-  this.ops.some(function (op$$1) {
-    if (startIndex >= to) return true;
-    var endIndex = startIndex + op.length(op$$1);
-    if (endIndex > from || from === to && endIndex === to) {
-      ops.push({ op: op$$1, startIndex: startIndex, endIndex: endIndex });
-    }
-    startIndex = endIndex;
-  });
-  return ops;
-};
-
-// Extends Delta, get the op at `at`.
-delta.prototype.getOp = function (at) {
-  return this.getOps(at, at)[0];
-};
 
 function h(name, attributes) {
   var rest = [];
@@ -3042,10 +3093,10 @@ function getSelection(view) {
   if (!root.contains(selection.anchorNode)) {
     return null;
   } else {
-    var anchorIndex = getNodeIndex(view, selection.anchorNode);
-    var focusIndex = selection.anchorNode === selection.focusNode ? anchorIndex : getNodeIndex(view, selection.focusNode);
+    var anchorIndex = getNodeAndOffsetIndex(view, selection.anchorNode, selection.anchorOffset);
+    var focusIndex = selection.isCollapsed ? anchorIndex : getNodeAndOffsetIndex(view, selection.focusNode, selection.focusOffset);
 
-    return [anchorIndex + selection.anchorOffset, focusIndex + selection.focusOffset];
+    return [anchorIndex, focusIndex];
   }
 }
 
@@ -3139,7 +3190,7 @@ function getNodeAndOffset(view, index) {
       if (count === index && (!node.firstChild || node.firstChild.nodeType !== Node.TEXT_NODE)) {
         return [node, 0];
       }
-    } else if (node.nodeName === 'BR' && node.parentNode.lastChild !== node) {
+    } else if (isBRNode(view, node)) {
       count += 1;
       // If the selection lands after this br, and the next node isn't a text node, place the selection
       if (count === index && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE)) {
@@ -3148,6 +3199,14 @@ function getNodeAndOffset(view, index) {
     }
   }
   return [null, 0];
+}
+
+function getNodeAndOffsetIndex(view, node, offset) {
+  if (node.nodeType === Node.ELEMENT_NODE && offset > 0) {
+    node = node.childNodes[offset - 1];
+    offset = 0;
+  }
+  return getNodeIndex(view, node) + offset;
 }
 
 // Get the index the node starts at in the content
@@ -3166,9 +3225,15 @@ function getNodeIndex(view, node) {
   walker.currentNode = node;
   var index = node.nodeType === Node.ELEMENT_NODE ? 0 : -1;
   while (node = walker.previousNode()) {
-    if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;else if (node.nodeName === 'BR' && node.parentNode.lastChild !== node) index++;else if (embeds.matches(node)) index++;else if (node !== root && blocks.matches(node)) index++;
+    if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;else if (isBRNode(view, node)) index++;else if (embeds.matches(node)) index++;else if (node !== root && blocks.matches(node)) index++;
   }
   return index;
+}
+
+// Determines if a node is actually a BR in our content or if is just the placeholder BR which appears in an empty block
+function isBRNode(view, node) {
+  return node.nodeName === 'BR' && node.parentNode.lastChild !== node && ( // Check if the next node is an inline node (e.g. not another block such as a list)
+  node.nextSibling.nodeType === Node.TEXT_NODE || node.nextSibling.nodeName === 'BR' || view.paper.markups.matches(node.nextSibling) || view.paper.embeds.matches(node.nextSibling));
 }
 
 /*!
@@ -3256,7 +3321,7 @@ var voidElements = {
   link: true, meta: true, param: true, source: true, track: true, wbr: true
 };
 
-function deltaToVdom(view, delta$$1) {
+function deltaToVdom(view, delta) {
   var paper = view.paper;
   var blocks = paper.blocks,
       markups = paper.markups,
@@ -3264,11 +3329,14 @@ function deltaToVdom(view, delta$$1) {
 
   var blockData = [];
 
-  delta$$1.eachLine(function (line, attr) {
+  delta.eachLine(function (_ref) {
+    var ops = _ref.ops,
+        attributes = _ref.attributes;
+
     var inlineChildren = [];
 
     // Collect block children
-    line.forEach(function (op) {
+    ops.forEach(function (op) {
       if (op.insert) {
         var children = [];
         if (typeof op.insert === 'string') {
@@ -3307,10 +3375,10 @@ function deltaToVdom(view, delta$$1) {
       inlineChildren.push(br);
     }
 
-    var block = blocks.find(attr);
+    var block = blocks.find(attributes);
     if (!block) block = blocks.getDefault();
 
-    blockData.push([block, inlineChildren, attr]);
+    blockData.push([block, inlineChildren, attributes]);
   });
 
   // If a block has optimize=true on it, vdom will be called with all sibling nodes of the same block
@@ -3357,7 +3425,7 @@ function deltaFromDom$1(view) {
       return (node.nodeType === Node.TEXT_NODE || notInDOM || node.offsetParent) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
     }
   });
-  var delta$$1 = new delta();
+  var delta = new Delta();
   var currentBlock = void 0,
       firstBlockSeen = false,
       node = void 0;
@@ -3365,11 +3433,12 @@ function deltaFromDom$1(view) {
   walker.currentNode = root;
 
   while (node = walker.nextNode()) {
-    var isBr = node.nodeName === 'BR' && node.parentNode.lastChild !== node;
+    var isBr = isBRNode(view, node);
 
     if (node.nodeType === Node.TEXT_NODE || isBr) {
       // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
       var text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
+      if (!text) continue;
       var parent = node.parentNode,
           attr = {};
 
@@ -3383,15 +3452,15 @@ function deltaFromDom$1(view) {
 
       // If the text was not inside a block, ignore it (space between block perhaps)
       if (parent !== root) {
-        delta$$1.insert(text, attr);
+        delta.insert(text, attr);
       }
     } else if (embeds.matches(node)) {
       var embed = embeds.find(node);
       if (embed) {
-        delta$$1.insert(defineProperty({}, embed.name, embed.dom.call(paper, node)));
+        delta.insert(defineProperty({}, embed.name, embed.dom.call(paper, node)));
       }
     } else if (blocks.matches(node)) {
-      if (firstBlockSeen) delta$$1.insert('\n', currentBlock);else firstBlockSeen = true;
+      if (firstBlockSeen) delta.insert('\n', currentBlock);else firstBlockSeen = true;
       var block = blocks.find(node);
       if (block !== blocks.getDefault()) {
         currentBlock = block.dom ? block.dom.call(paper, node) : defineProperty({}, block.name, true);
@@ -3400,15 +3469,15 @@ function deltaFromDom$1(view) {
       }
     }
   }
-  delta$$1.insert('\n', currentBlock);
-  return delta$$1;
+  delta.insert('\n', currentBlock);
+  return delta;
 }
 
 /**
  * Converts a delta object into an HTML string based off of the supplied Paper definition.
  */
-function deltaToHTML(view, delta$$1) {
-  return childrenToHTML(deltaToVdom(view, delta$$1).children);
+function deltaToHTML(view, delta) {
+  return childrenToHTML(deltaToVdom(view, delta).children);
 }
 
 /**
@@ -3426,7 +3495,7 @@ function mergeChildren(oldChildren) {
   oldChildren.forEach(function (next, i) {
     var prev = children[children.length - 1];
 
-    if (prev && typeof prev !== 'string' && typeof next !== 'string' && nodeMarkup.get(prev) && nodeMarkup.get(prev) === nodeMarkup.get(next) && deepEqual$1(prev.attributes, next.attributes)) {
+    if (prev && typeof prev !== 'string' && typeof next !== 'string' && nodeMarkup.get(prev) && nodeMarkup.get(prev) === nodeMarkup.get(next) && deepEqual(prev.attributes, next.attributes)) {
       prev.children = prev.children.concat(next.children);
     } else {
       children.push(next);
@@ -3566,6 +3635,10 @@ var Types = function () {
   }]);
   return Types;
 }();
+
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
+}
 
 var keyboardeventKeyPolyfill = createCommonjsModule(function (module, exports) {
 /* global define, KeyboardEvent, module */
@@ -3740,6 +3813,8 @@ var shortcutString = {
 	fromEvent: fromEvent
 };
 
+var SOURCE_API$1 = 'api';
+var SOURCE_USER$1 = 'user';
 var isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
 var modExpr = /Ctrl|Cmd/;
 
@@ -3800,7 +3875,7 @@ var View = function (_EventDispatcher) {
     value: function getBounds(from, to) {
       var _this2 = this;
 
-      var range = this.editor._normalizeArguments(from, to);
+      var range = this.editor._normalizeRange(from, to);
       if (range && this.decorations.ops.length) {
         range = range.map(function (i) {
           return _this2.decorations.transform(i);
@@ -3817,7 +3892,7 @@ var View = function (_EventDispatcher) {
     value: function getAllBounds(from, to) {
       var _this3 = this;
 
-      var range = this.editor._normalizeArguments(from, to);
+      var range = this.editor._normalizeRange(from, to);
       if (range && this.decorations.ops.length) {
         range = range.map(function (i) {
           return _this3.decorations.transform(i);
@@ -3876,6 +3951,8 @@ var View = function (_EventDispatcher) {
   }, {
     key: 'updateEditorSelection',
     value: function updateEditorSelection() {
+      var source = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : SOURCE_API$1;
+
       if (this._settingBrowserSelection) return this._settingBrowserSelection = false;
       var range = this.getSelection();
 
@@ -3883,7 +3960,7 @@ var View = function (_EventDispatcher) {
       if (range) this.lastSelection = range;
 
       this._settingEditorSelection = true;
-      this.editor.setSelection(range);
+      this.editor.setSelection(range, source);
       this._settingEditorSelection = false;
 
       // If the selection was adjusted when set then update the browser's selection
@@ -3934,14 +4011,14 @@ var View = function (_EventDispatcher) {
       };
 
       var onSelectionChange = function onSelectionChange() {
-        _this8.updateEditorSelection();
+        _this8.updateEditorSelection(SOURCE_USER$1);
       };
 
       this.root.addEventListener('keydown', onKeyDown);
       container.ownerDocument.addEventListener('selectionchange', onSelectionChange);
 
       // Use mutation tracking during development to catch errors
-      // TODO delete mutation observer
+      // TODO delete this mutation observer when we're confident in core (or put it behind a development flag)
       var checking = 0;
       var devObserver = new MutationObserver(function (list) {
         if (checking) clearTimeout(checking);
@@ -4037,9 +4114,10 @@ function input() {
       // Only one text node has been altered. Optimize for view most common case.
       if (isTextChange) {
         var change = editor.delta();
-        var index = getNodeIndex(view, mutation.target);
-        index = view.reverseDecorations.transform(index);
+        var node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
+        var index = view.reverseDecorations.transform(getNodeIndex(view, node));
         change.retain(index);
+
         if (mutation.type === 'characterData') {
           var diffs = diff_1(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
           diffs.forEach(function (_ref) {
@@ -4053,7 +4131,7 @@ function input() {
           });
           change.chop();
         } else {
-          change.insert(mutation.addedNodes[0].nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
+          change.insert(node.nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
         }
 
         if (change.ops.length) {
@@ -4078,31 +4156,28 @@ function input() {
           from = _editor$getSelectedRa2[0],
           to = _editor$getSelectedRa2[1];
 
-      if (shortcut === 'Shift+Enter') {
-        editor.insertText(from, to, '\r', null, SOURCE_USER$2);
+      var line = editor.contents.getLine(from);
+      var attributes = line.attributes;
+      var block = view.paper.blocks.find(attributes);
+      var isDefault = !block;
+      var length = line.end - line.start - 1;
+      var atEnd = to === line.end - 1;
+      if (atEnd && !isDefault && block.defaultFollows) {
+        attributes = {};
+      }
+      if (!length && !isDefault && !block.defaultFollows && from === to) {
+        editor.formatLine(from, to, {}, SOURCE_USER$2);
       } else {
-        var line = editor.contents.getLine(from);
-        var attributes = line.attributes;
-        var block = view.paper.blocks.find(attributes);
-        var isDefault = !block;
-        var length = line.contents.length();
-        if (isDefault || block.defaultFollows) {
-          attributes = {};
+        var selection = from + 1;
+        if (from === to && atEnd) {
+          from++;
+          to++;
         }
-        if (!length && !isDefault && !block.defaultFollows && from === to) {
-          editor.formatLine(from, to, {}, SOURCE_USER$2);
-        } else {
-          var selection = from + 1;
-          if (from === to && from === line.endIndex - 1) {
-            from++;
-            to++;
-          }
-          editor.insertText(from, to, '\n', attributes, SOURCE_USER$2, selection);
-        }
+        editor.insertText(from, to, '\n', attributes, SOURCE_USER$2, selection);
       }
     }
 
-    function onBackspace(event, shortcut) {
+    function onShiftEnter(event) {
       if (event.defaultPrevented) return;
       event.preventDefault();
 
@@ -4110,6 +4185,18 @@ function input() {
           _editor$getSelectedRa4 = slicedToArray(_editor$getSelectedRa3, 2),
           from = _editor$getSelectedRa4[0],
           to = _editor$getSelectedRa4[1];
+
+      editor.insertText(from, to, '\r', null, SOURCE_USER$2);
+    }
+
+    function onBackspace(event, shortcut) {
+      if (event.defaultPrevented) return;
+      event.preventDefault();
+
+      var _editor$getSelectedRa5 = editor.getSelectedRange(),
+          _editor$getSelectedRa6 = slicedToArray(_editor$getSelectedRa5, 2),
+          from = _editor$getSelectedRa6[0],
+          to = _editor$getSelectedRa6[1];
 
       if (from + to === 0) {
         var line = editor.contents.getLine(from);
@@ -4126,10 +4213,10 @@ function input() {
             if (_match) from -= _match[0].length;
           } else {
             var _line = editor.contents.getLine(from);
-            if (from === _line.startIndex) {
+            if (from === _line.start) {
               var _block = view.paper.blocks.find(_line.attributes);
               if (_block && !_block.defaultFollows) {
-                var prevLine = editor.contents.getLine(_line.startIndex - 1);
+                var prevLine = editor.contents.getLine(_line.start - 1);
                 var prevBlock = prevLine && view.paper.blocks.find(prevLine.attributes);
                 if (_block !== prevBlock) {
                   editor.formatLine(from, {}, SOURCE_USER$2);
@@ -4149,10 +4236,10 @@ function input() {
       if (event.defaultPrevented) return;
       event.preventDefault();
 
-      var _editor$getSelectedRa5 = editor.getSelectedRange(),
-          _editor$getSelectedRa6 = slicedToArray(_editor$getSelectedRa5, 2),
-          from = _editor$getSelectedRa6[0],
-          to = _editor$getSelectedRa6[1];
+      var _editor$getSelectedRa7 = editor.getSelectedRange(),
+          _editor$getSelectedRa8 = slicedToArray(_editor$getSelectedRa7, 2),
+          from = _editor$getSelectedRa8[0],
+          to = _editor$getSelectedRa8[1];
 
       if (from === to && from === editor.length) return;
 
@@ -4173,10 +4260,10 @@ function input() {
 
       var direction = shortcut === 'Tab' || shortcut === 'Mod+]' ? 1 : -1;
 
-      var _editor$getSelectedRa7 = editor.getSelectedRange(),
-          _editor$getSelectedRa8 = slicedToArray(_editor$getSelectedRa7, 2),
-          from = _editor$getSelectedRa8[0],
-          to = _editor$getSelectedRa8[1];
+      var _editor$getSelectedRa9 = editor.getSelectedRange(),
+          _editor$getSelectedRa10 = slicedToArray(_editor$getSelectedRa9, 2),
+          from = _editor$getSelectedRa10[0],
+          to = _editor$getSelectedRa10[1];
 
       var lines = editor.contents.getLines(from, to);
 
@@ -4184,17 +4271,17 @@ function input() {
         lines.forEach(function (line, i) {
           if (line.attributes.list) {
             var prevLine = lines[i - 1];
-            if (!prevLine && line.number > 1) prevLine = editor.contents.getLine(line.startIndex - 1);
+            if (!prevLine && line.index > 0) prevLine = editor.contents.getLine(line.start - 1);
             var prevIndent = prevLine && prevLine.attributes.list ? prevLine.attributes.indent || 0 : -1;
 
             var indent = line.attributes.indent || 0;
             indent += direction;
             if (indent > prevIndent + 1) return console.log('will not indent too much');
             if (indent < 0) {
-              editor.formatLine(line.startIndex, {});
+              editor.formatLine(line.start, {});
             } else {
               var attributes = _extends({}, line.attributes, { indent: indent });
-              editor.formatLine(line.startIndex, attributes);
+              editor.formatLine(line.start, attributes);
             }
           }
         });
@@ -4218,7 +4305,7 @@ function input() {
     view.on('updating', onUpdating);
     view.on('update', onUpdate);
     view.on('shortcut:Enter', onEnter);
-    view.on('shortcut:Shift+Enter', onEnter);
+    view.on('shortcut:Shift+Enter', onShiftEnter);
     view.on('shortcut:Backspace', onBackspace);
     view.on('shortcut:Alt+Backspace', onBackspace);
     view.on('shortcut:Mod+Backspace', onBackspace);
@@ -4233,7 +4320,7 @@ function input() {
         view.off('updating', onUpdating);
         view.off('update', onUpdate);
         view.off('shortcut:Enter', onEnter);
-        view.off('shortcut:Shift+Enter', onEnter);
+        view.off('shortcut:Shift+Enter', onShiftEnter);
         view.off('shortcut:Backspace', onBackspace);
         view.off('shortcut:Alt+Backspace', onBackspace);
         view.off('shortcut:Mod+Backspace', onBackspace);

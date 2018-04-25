@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { deltaToVdom, deltaFromDom, deltaToHTML, deltaFromHTML } from '../src/view/dom';
 import Paper from '../src/paper';
 import defaultPaper from '../src/view/defaultPaper';
-import Delta from 'quill-delta';
+import Delta from '../src/delta';
 
 // Doesn't get altered, so we can mock the view once
 const view = {

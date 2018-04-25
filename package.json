@@ -13,15 +13,15 @@
     "type": "git",
     "url": "https://github.com/typewriter-editor/typewriter.git"
   },
-  "main": "dist/index.js",
+  "main": "dist/typewriter.js",
   "module": "src/index.js",
   "engines": {
     "node": ">=4"
   },
   "dependencies": {
     "escape-html": "^1.0.3",
+    "fast-diff": "^1.1.2",
     "fast-equals": "^1.2.1",
-    "quill-delta": "^3.6.2",
     "shortcut-string": "^1.1.0"
   },
   "devDependencies": {

@@ -1,7 +1,8 @@
-import Delta from 'quill-delta';
+import Delta from '../delta';
 import { deepEqual } from 'fast-equals';
 import escape from 'escape-html';
 import { h } from './vdom';
+import { isBRNode } from './selection';
 const nodeMarkup = new WeakMap();
 
 const br = <br/>;
@@ -16,11 +17,11 @@ export function deltaToVdom(view, delta) {
   const { blocks, markups, embeds } = paper;
   const blockData = [];
 
-  delta.eachLine((line, attr) => {
+  delta.eachLine(({ ops, attributes }) => {
     let inlineChildren = [];
 
     // Collect block children
-    line.forEach(op => {
+    ops.forEach(op => {
       if (op.insert) {
         let children = [];
         if (typeof op.insert === 'string') {
@@ -57,10 +58,10 @@ export function deltaToVdom(view, delta) {
       inlineChildren.push(br);
     }
 
-    let block = blocks.find(attr);
+    let block = blocks.find(attributes);
     if (!block) block = blocks.getDefault();
 
-    blockData.push([ block, inlineChildren, attr ]);
+    blockData.push([ block, inlineChildren, attributes ]);
   });
 
   // If a block has optimize=true on it, vdom will be called with all sibling nodes of the same block
@@ -104,11 +105,12 @@ export function deltaFromDom(view, root = view.root, notInDOM) {
   walker.currentNode = root;
 
   while ((node = walker.nextNode())) {
-    const isBr = node.nodeName === 'BR' && node.parentNode.lastChild !== node;
+    const isBr = isBRNode(view, node);
 
     if (node.nodeType === Node.TEXT_NODE || isBr) {
       // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
       const text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
+      if (!text) continue;
       let parent = node.parentNode, attr = {};
 
       while (parent && !blocks.matches(parent) && parent !== root) {
