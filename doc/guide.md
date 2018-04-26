@@ -18,17 +18,17 @@ The main pieces that make up Typewriter are:
 
 ## Data Model
 
-The mental model for thinking about your data is just text. This makes it very easy to reason about. For example, say you have the text:
+The mental model for thinking about your data is to think in plain text. This makes it very easy to reason about. For example, say you have the content:
 
 ```
 What did the cheerleaders say to the ghost?
 ```
 
-and you want to add the answer to your joke on the next line. You will insert the text `"\nShow your spirit!"` at index `43` (the index directly after the existing content).
+If you want to add the answer to your joke on the next line, you will insert the text `"\nShow your spirit!"` at the end of the existing content.
 
 ### Indexes and Ranges
 
-Because the contents of your editor is just text, any location in your editor can be described with a single number, an **index**.
+Because the content of your editor is plain text, any location in your editor can be described with a single number, an **index**.
 
 ```
 |H|o|w| |d|o| you get a baby alien to sleep|?|
@@ -36,19 +36,30 @@ Because the contents of your editor is just text, any location in your editor ca
 0 1 2 3 4 5 6...                       ...35 36
 ```
 
-If you need to describe everything between two indexes, you can use a **range**, which is just an array with two indexes. The range `[ 0, 3 ]` would reference the word `"You"` in this example:
+If you need to select a portion of content, you can use a **range**—an array with two indexes. The range `[ 0, 3 ]` would select the word `"You"` in this example:
 
 ```
 |You| rocket.
 ^   ^
-0   3
+0...3
 ```
 
-Any time we talk about a range with Typewriter we are talking about an array of two numbers. The Editor's `selection` property is a range.
+Any time we talk about ranges with Typewriter we are talking about an array with two numbers. The Editor's `selection` property is a range.
 
-Although a range is two indexes, sometimes those two indexes can be the same. This will happen with `editor.selection` when the cursor is displayed and no text is selected.
+Although a range is always two indexes, those two indexes can be the same. This happens when the selection is collapsed (i.e. no text is selected but the cursor appears at an index).
 
-Ranges are usualy "normalized" to place the lower number first for text operations. However, the Editor's `selection` property places the beginning of the selection first (the start of the selection is called the **anchor** in browser APIs), even if the beginning of the selection comes after the ending (the ending is called the **focus** in browser APIs). This could happen if you click on the end of a word and drag to the beginning of the word to select it.
+Ranges may be "normalized" internally, placing the lower index before the higher. This helps when running text operations.
+
+A range isn't always "normalized" however. The Editor's `selection` property will allow the lower index to be second. This will happen when the selection **anchor** comes after its **focus**. The start of the browser selection is called the **anchor** and the end is called the **focus**, but the anchor doesn't always come before the focus on the page. The anchor could come after when you click on the end of a word and drag the selection to the beginning of the word to select it. The selection could be `[ 26, 20 ]` in a situation like that.
+
+All of the methods on Editor to modify content can either be passed 1 or 2 indexes or a range. In the following example, these instructions are the same, given the `editor.selection` is `[ 20, 10 ]`:
+
+```js
+editor.deleteText(10, 20);
+editor.deleteText([ 10, 20 ]);
+editor.deleteText(editor.selection);
+editor.deleteText(20, 10);
+```
 
 ### Delta Format
 
