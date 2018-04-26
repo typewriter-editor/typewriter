@@ -24,7 +24,7 @@ The mental model for thinking about your data is just text. This makes it very e
 What did the cheerleaders say to the ghost?
 ```
 
-and you want to add the answer to your joke on the next line. You will insert the text `"\nShow your spirit!"` at index `43` (the length of the string).
+and you want to add the answer to your joke on the next line. You will insert the text `"\nShow your spirit!"` at index `43` (the index directly after the existing content).
 
 ### Indexes and Ranges
 
