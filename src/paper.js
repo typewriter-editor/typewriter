@@ -58,15 +58,19 @@ class Types {
 
   matches(node) {
     if (node instanceof Node) {
-      return node.matches(this.selector);
+      return this.selector ? node.matches(this.selector) : false;
     } else {
-      return nodeMatches(node, this.selector);
+      throw new Error('Cannot match against ' + node);
     }
   }
 
   find(nodeOrAttr) {
     if (nodeOrAttr instanceof Node) {
-      return this.array.find(domType => nodeOrAttr.matches(domType.selector));
+      let i = this.array.length;
+      while (i--) {
+        let domType = this.array[i];
+        if (nodeOrAttr.matches(domType.selector)) return domType;
+      }
     } else if (nodeOrAttr && typeof nodeOrAttr === 'object') {
       let domType;
       Object.keys(nodeOrAttr).some(name => domType = this.get(name));
