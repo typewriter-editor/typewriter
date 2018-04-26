@@ -258,8 +258,8 @@ view.paper.blocks.add({
   selector: 'h3.author',
   vdom: children => {
     return h('h3', { class: 'author' }, children);
-    // If we have JSX enabled in our app we can use this instead:
-    // return <p class="author">By {children}</p>
+    // If we have JSX enabled in our app we can do this instead:
+    // return <h3 class="author">By {children}</h3>
   }
 });
 
