@@ -49,7 +49,7 @@ document.body.appendChild(searchDisplay);
 view.on('update', () => {
   searchDisplay.innerHTML = '';
   if (!searchString) return;
-  const text = editor.getText().toLowerCase();
+  const text = editor.getExactText().toLowerCase();
   let lastIndex = 0, index;
   while ((index = text.indexOf(searchString, lastIndex)) !== -1) {
     lastIndex = index + searchString.length;

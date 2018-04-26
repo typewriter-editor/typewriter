@@ -63,8 +63,9 @@ export default function(handlers = defaultHandlers) {
     function onTextChange({ change, source }) {
       if (ignore || source !== 'user' || !editor.selection || !isTextEntry(change)) return;
       const index = editor.selection[1];
-      const lineStart = editor.text.lastIndexOf('\n', index - 1) + 1;
-      const prefix = editor.text.slice(lineStart, index);
+      const text = editor.getExactText();
+      const lineStart = text.lastIndexOf('\n', index - 1) + 1;
+      const prefix = text.slice(lineStart, index);
 
       ignore = true;
       handlers.some(handler => handler(index, prefix));

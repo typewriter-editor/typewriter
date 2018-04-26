@@ -77,7 +77,6 @@ export default class Editor extends EventDispatcher {
     super();
     this.contents = null;
     this.length = 0;
-    this.text = '';
     this.selection = null;
     this.activeFormats = empty;
     setContents(this, options.contents || this.delta().insert('\n'));
@@ -115,9 +114,27 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to   The ending index
    * @returns {String}    The text in the editor
    */
-  getText(from = 0, to = this.length) {
+  getText(from = 0, to = this.length - 1) {
     [ from, to ] = this._normalizeRange(from, to);
-    return this.text.slice(from, to);
+    return this.getContents(from, to)
+      .filter(op => typeof op.insert === 'string')
+      .map(op => op.insert)
+      .join('');
+  }
+
+  /**
+   * Returns the text for the editor with spaces in place of embeds. This can be used to determine the index of given
+   * words or lines of text within the contents.
+   *
+   * @param {Number} from The starting index
+   * @param {Number} to   The ending index
+   * @returns {String}    The text in the editor with embed spaces
+   */
+  getExactText(from = 0, to = this.length - 1) {
+    [ from, to ] = this._normalizeRange(from, to);
+    return this.getContents(from, to)
+      .map(op => typeof op.insert === 'string' ? op.insert : ' ')
+      .join('');
   }
 
   /**
@@ -622,11 +639,6 @@ function setContents(editor, contents) {
   contents.freeze();
   editor.contents = contents;
   editor.length = contents.length();
-  editor.text = contents
-    .filter(op => typeof op.insert === 'string')
-    .map(op => op.insert)
-    .join('')
-    .slice(0, -1); // remove the trailing newline
 }
 
 // Combine formats removing ones that don't exist in both and creating an array for those with multiple values

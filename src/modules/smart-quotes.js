@@ -14,7 +14,7 @@ export default function smartQuotes() {
 
       const index = editor.selection[1];
       const lastOp = change.ops[change.ops.length - 1];
-      const lastChars = editor.text.slice(index - 1, index) + lastOp.insert.slice(-1);
+      const lastChars = editor.getText(index - 1, index) + lastOp.insert.slice(-1);
 
       const replaced = lastChars.replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, '“')
               .replace(/"$/, '”')
