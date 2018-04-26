@@ -1,5 +1,6 @@
 import Editor from './editor';
 import View from './view';
+import { h } from './view/vdom';
 
 import input from './modules/input';
 import keyShortcuts from './modules/key-shortcuts';
@@ -14,4 +15,4 @@ const defaultViewModules = {
   history: history()
 };
 
-export { Editor, View, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, defaultViewModules };
+export { Editor, View, h, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, defaultViewModules };
