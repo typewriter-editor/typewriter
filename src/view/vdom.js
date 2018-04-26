@@ -1,3 +1,4 @@
+// Based off of https://github.com/jorgebucaran/ultradom/ MIT licensed
 
 export function h(name, attributes) {
   var rest = [];
@@ -152,4 +153,3 @@ function patch(parent, element, node, isSvg) {
   }
   return element;
 }
-
