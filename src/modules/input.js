@@ -1,4 +1,5 @@
 import { getNodeIndex } from '../view/selection';
+import { deltaFromDom } from '../view/dom';
 import diff from 'fast-diff';
 
 const SOURCE_USER = 'user';
