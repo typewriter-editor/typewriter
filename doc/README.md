@@ -1,6 +1,6 @@
 # Typewriter reference manual
 
-* [Representations](representations.md)
+* [Typewriter Guide](guide.md)
 * [Examples](examples.md)
 
 ## API

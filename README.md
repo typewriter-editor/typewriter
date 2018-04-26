@@ -80,7 +80,7 @@ The [`src/dev.js`](src/dev.js) file is the current test runner for playing aroun
 
 ## Documentation
 
-Link to our [documentation](doc/reference.md)
+Link to our [documentation](doc/README.md)
 
 ### TODO
 
