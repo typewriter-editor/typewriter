@@ -142,7 +142,7 @@ export default class View extends EventDispatcher {
 
   mount(container) {
     container.appendChild(this.root);
-    this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, 'p');
+    this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, this.paper.blocks.getDefault().selector);
 
     const onKeyDown = event => {
       let shortcut = shortcuts.fromEvent(event);
