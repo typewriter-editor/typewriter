@@ -44,8 +44,26 @@ function clone(target, source) {
   return obj;
 }
 
+function eventListener(event) {
+  return event.currentTarget.events[event.type](event);
+}
+
 function updateAttribute(element, name, value, isSvg) {
-  if (name in element && name !== "list" && !isSvg) {
+  if (name[0] === "o" && name[1] === "n") {
+    if (!element.events) {
+      element.events = {};
+    }
+    name = name.slice(2);
+    const oldValue = element.events[name];
+    element.events[name] = value;
+    if (value) {
+      if (!oldValue) {
+        element.addEventListener(name, eventListener);
+      }
+    } else {
+      element.removeEventListener(name, eventListener);
+    }
+  } else if (name in element && name !== "list" && !isSvg) {
     element[name] = value == null ? "" : value;
   } else if (value != null && value !== false) {
     element.setAttribute(name, value === true ? '' : value);
