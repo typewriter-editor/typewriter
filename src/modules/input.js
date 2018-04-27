@@ -38,7 +38,7 @@ export default function input() {
       if (isTextChange) {
         const change = editor.delta();
         const node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
-        const index = view.reverseDecorations.transform(getNodeIndex(view, node));
+        const index = view.reverseDecorators.transform(getNodeIndex(view, node));
         change.retain(index);
 
         if (mutation.type === 'characterData') {
@@ -65,7 +65,7 @@ export default function input() {
 
       } else {
         let contents = deltaFromDom(view, view.root);
-        contents = contents.compose(view.reverseDecorations);
+        contents = contents.compose(view.reverseDecorators);
         const change = editor.contents.diff(contents);
         // console.log('changing a lot (possibly)', change);
         editor.updateContents(change, SOURCE_USER, selection);
@@ -199,17 +199,17 @@ export default function input() {
 
     // Don't observe the changes that occur when the view updates, we only want to respond to changes that happen
     // outside of our API to read them back in
-    function onUpdating() {
+    function onRendering() {
       observer.disconnect();
     }
 
     // Once the view update is complete, continue observing for changes
-    function onUpdate() {
+    function onRender() {
       observer.observe(view.root, mutationOptions);
     }
 
-    view.on('updating', onUpdating);
-    view.on('update', onUpdate);
+    view.on('rendering', onRendering);
+    view.on('render', onRender);
     view.on('shortcut:Enter', onEnter);
     view.on('shortcut:Shift+Enter', onShiftEnter);
     view.on('shortcut:Backspace', onBackspace);
@@ -223,8 +223,8 @@ export default function input() {
     return {
       destroy() {
         observer.disconnect();
-        view.off('updating', onUpdating);
-        view.off('update', onUpdate);
+        view.off('rendering', onRendering);
+        view.off('render', onRender);
         view.off('shortcut:Enter', onEnter);
         view.off('shortcut:Shift+Enter', onShiftEnter);
         view.off('shortcut:Backspace', onBackspace);

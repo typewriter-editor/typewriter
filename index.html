@@ -9,7 +9,7 @@
     body {
       font-family: sans-serif;
     }
-    .typewriter-editor,
+    .editor,
     .search-input {
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -17,33 +17,32 @@
       font-family: sans-serif;
       font-size: 1rem;
     }
-    .typewriter-editor:focus,
+    .editor:focus,
     .search-input:focus {
       border-color: #9bd;
       box-shadow: 0 0 6px rgba(153, 204, 255, .8);
       outline: none;
     }
-    .typewriter-editor {
+    .editor {
       min-height: 300px;
     }
     .search-input {
       border-radius: 20px;
       margin-bottom: 10px;
     }
-    .typewriter-editor blockquote {
+    .editor blockquote {
       border-left: 6px solid #ccc;
       margin: 1em;
       padding: 0.5em 10px;
     }
-    .typewriter-editor blockquote p:first-child{
+    .editor blockquote p:first-child{
       margin-top: 0;
     }
-    .typewriter-editor blockquote p:last-child{
+    .editor blockquote p:last-child{
       margin-bottom: 0;
     }
-    ul, ol {
-      margin: 1em;
-      padding: 0 10px;
+    p {
+      margin: 1em 0;
     }
 
     span.search {
@@ -88,7 +87,6 @@
 </head>
 <body>
 <input type="search" class="search-input" placeholder="Search...">
-<script src="dist/typewriter-iife.js"></script>
 <div class="editor"></div>
 <div class="instructions">
   <p>To format your text you can do the following. Note, quotes are auto-formatted for you.</p>
@@ -110,5 +108,6 @@
     <li><code>></code> Blockquote</li>
   </ul>
 </div>
+<script src="dist/typewriter-iife.js"></script>
 </body>
 </html>

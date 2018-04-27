@@ -34,6 +34,10 @@ export function render(node, element) {
   return element;
 }
 
+export function renderChildren(node, element) {
+  patchChildren(element, node.children);
+}
+
 
 function clone(target, source) {
   var obj = {};
@@ -135,6 +139,19 @@ function removeElement(parent, element) {
   parent.removeChild(element);
 }
 
+function patchChildren(element, children, isSvg) {
+  var i = 0;
+
+  while (i < children.length) {
+    patch(element, element.childNodes[i], children[i], isSvg);
+    i++;
+  }
+
+  while (i < element.childNodes.length) {
+    removeElement(element, element.childNodes[i]);
+  }
+}
+
 function patch(parent, element, node, isSvg) {
   var name = element && element.nodeName !== '#text' ? element.nodeName.toLowerCase() : undefined;
   if (element == null || name !== node.name) {
@@ -157,17 +174,7 @@ function patch(parent, element, node, isSvg) {
       (isSvg = isSvg || node.name === "svg")
     );
 
-    var children = node.children;
-    var i = 0;
-
-    while (i < children.length) {
-      patch(element, element.childNodes[i], children[i], isSvg);
-      i++;
-    }
-
-    while (i < element.childNodes.length) {
-      removeElement(element, element.childNodes[i]);
-    }
+    patchChildren(element, node.children, isSvg);
   }
   return element;
 }
