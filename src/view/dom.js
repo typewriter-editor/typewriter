@@ -14,7 +14,7 @@ const voidElements = {
 
 export function deltaToVdom(view, delta) {
   const paper = view.paper;
-  const { blocks, markups, embeds } = paper;
+  const { blocks, markups, embeds, container } = paper;
   const blockData = [];
 
   delta.eachLine(({ ops, attributes }) => {
@@ -84,7 +84,7 @@ export function deltaToVdom(view, delta) {
     }
   });
 
-  return blocks.get('container').vdom.call(paper, blockChildren);
+  return container.call(paper, blockChildren, view);
 }
 
 

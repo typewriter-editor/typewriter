@@ -8,6 +8,7 @@ import Delta from '../src/delta';
 const view = {
   root: document.createElement('div'),
   paper: new Paper(defaultPaper),
+  enabled: true,
 };
 
 
@@ -25,7 +26,7 @@ describe('======== dom ========', () => {
 
       expect(vdom).to.deep.equal({
         name: 'div',
-        attributes: { contenteditable: "true" },
+        attributes: { contentEditable: true, class: "typewriter-editor" },
         children: [
           { name: 'p', attributes: {}, children: ['There‘s too many kids in this tub.'] },
           { name: 'p', attributes: {}, children: ['There‘s too many elbows to scrub.'] },
@@ -53,7 +54,7 @@ describe('======== dom ========', () => {
 
       expect(vdom).to.deep.equal({
         name: 'div',
-        attributes: { contenteditable: "true" },
+        attributes: { contentEditable: true, class: "typewriter-editor" },
         children: [
           {
             name: 'h1',

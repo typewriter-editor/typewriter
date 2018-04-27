@@ -1,14 +1,22 @@
-
+import { h } from './view/vdom';
 
 export default class Paper {
   constructor(types) {
     this.blocks = new Types();
     this.markups = new Types();
     this.embeds = new Types();
+    this.container = types.container || container;
     if (types && types.blocks) types.blocks.forEach(block => this.blocks.add(block));
     if (types && types.markups) types.markups.forEach(markup => this.markups.add(markup));
     if (types && types.embeds) types.embeds.forEach(embed => this.embeds.add(embed));
   }
+}
+
+
+export function container(children, view) {
+  return <div class="typewriter-editor" contentEditable={view.enabled}>
+    {children && children.length ? children : this.blocks.getDefault().vdom()}
+  </div>;
 }
 
 
