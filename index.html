@@ -6,7 +6,49 @@
   <title>Page Title</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    span.search { background: yellow }
+    body {
+      font-family: sans-serif;
+    }
+    .typewriter-editor,
+    .search-input {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-family: sans-serif;
+      font-size: 1rem;
+    }
+    .typewriter-editor:focus,
+    .search-input:focus {
+      border-color: #9bd;
+      box-shadow: 0 0 6px rgba(153, 204, 255, .8);
+      outline: none;
+    }
+    .typewriter-editor {
+      min-height: 300px;
+    }
+    .search-input {
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .typewriter-editor blockquote {
+      border-left: 6px solid #ccc;
+      margin: 1em;
+      padding: 0.5em 10px;
+    }
+    .typewriter-editor blockquote p:first-child{
+      margin-top: 0;
+    }
+    .typewriter-editor blockquote p:last-child{
+      margin-bottom: 0;
+    }
+    ul, ol {
+      margin: 1em;
+      padding: 0 10px;
+    }
+
+    span.search {
+      background: yellow;
+    }
     span.cursor::before {
       content: attr(data-name);
       position: absolute;
@@ -29,9 +71,44 @@
       width: 2px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
     }
+    .instructions {
+      margin: 10px;
+      padding: 10px;
+      background: #f3f3f3;
+      font-size: .8rem;
+    }
+    .instructions code {
+      display: inline-block;
+      width: 80px;
+      font-family: monospace;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
+<input type="search" class="search-input" placeholder="Search...">
 <script src="dist/typewriter-iife.js"></script>
+<div class="editor"></div>
+<div class="instructions">
+  <p>To format your text you can do the following. Note, quotes are auto-formatted for you.</p>
+  <p>Shortcuts:</p>
+  <ul>
+    <li><code>Cmd+B</code> Bold</li>
+    <li><code>Cmd+I</code> Italic</li>
+    <li><code>Cmd+1-6</code> Header 1-6</li>
+    <li><code>Cmd+0</code> Paragraph</li>
+  </ul>
+  <p>Text Substitutions (followed by a space):</p>
+  <ul>
+    <li><code>1.</code> Ordered List</li>
+    <li><code>*</code> Unordered List</li>
+    <li><code>-</code> Unordered List</li>
+    <li><code>#</code> Header 1</li>
+    <li><code>##</code> Header 2</li>
+    <li><code>###</code> Header 3, etc.</li>
+    <li><code>></code> Blockquote</li>
+  </ul>
+</div>
 </body>
 </html>
