@@ -74,7 +74,6 @@ export function deltaToVdom(view, delta) {
       const next = blockData[i + 1];
       if (!next || next[0] !== block) {
         const children = block.vdom.call(paper, collect);
-        children.forEach(child => child.key = Math.random());
         blockChildren = blockChildren.concat(children);
         collect = [];
       }

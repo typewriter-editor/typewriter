@@ -64,15 +64,9 @@ export const list = {
 
 export const blockquote = {
   name: 'blockquote',
-  selector: 'blockquote',
-  vdom: children => <blockquote>{children}</blockquote>,
-};
-
-
-export const container = {
-  name: 'container',
-  selector: 'div',
-  vdom: (children, attr) => <div contenteditable="true">
-    {children && children.length && children || paragraph.vdom()}
-  </div>,
+  selector: 'blockquote p',
+  optimize: true,
+  vdom: quotes => {
+    return <blockquote>{quotes.map(([children]) => <p>{children}</p>)}</blockquote>;
+  },
 };

@@ -79,18 +79,24 @@ describe('======== dom ========', () => {
             attributes: {},
             children: [
               {
-                name: 'em',
+                name: 'p',
                 attributes: {},
                 children: [
-                  'The whole problem with the world'
-                ]
-              },
-              '\xA0is that fools and fanatics are always so certain of themselves, and\xA0', // &nbsp;
-              {
-                name: 'strong',
-                attributes: {},
-                children: [
-                  'wiser people so full of doubts.'
+                  {
+                    name: 'em',
+                    attributes: {},
+                    children: [
+                      'The whole problem with the world'
+                    ]
+                  },
+                  '\xA0is that fools and fanatics are always so certain of themselves, and\xA0', // &nbsp;
+                  {
+                    name: 'strong',
+                    attributes: {},
+                    children: [
+                      'wiser people so full of doubts.'
+                    ]
+                  },
                 ]
               },
             ]
@@ -132,9 +138,11 @@ describe('======== dom ========', () => {
       root.innerHTML = `<h1>Quotes:</h1>` +
         `<p><img src="https://www.example.com/images/bertrand-russle.png"></p>` +
         `<blockquote>` +
-          `<em>The whole problem with the world</em>` +
-          ` is that fools and fanatics are always so certain of themselves, and&nbsp;` +
-          `<strong>wiser people so full of doubts.</strong>` +
+          `<p>` +
+            `<em>The whole problem with the world</em>` +
+            ` is that fools and fanatics are always so certain of themselves, and&nbsp;` +
+            `<strong>wiser people so full of doubts.</strong>` +
+          `</p>` +
         `</blockquote>` +
         `<p>&nbsp; &nbsp; —Bertrand Russell</p>`;
 
@@ -176,9 +184,11 @@ describe('======== dom ========', () => {
       expect(html).to.equal(`<h1>&lt;Quotes&gt;</h1>` +
         `<p><img src="https://www.example.com/images/bertrand-russle.png"></p>` +
         `<blockquote>` +
-          `<em>The whole problem with the world</em>` +
-          `&nbsp;is that fools and fanatics are always so certain of themselves, and&nbsp;` +
-          `<strong>wiser people so full of doubts.</strong>` +
+          `<p>` +
+            `<em>The whole problem with the world</em>` +
+            `&nbsp;is that fools and fanatics are always so certain of themselves, and&nbsp;` +
+            `<strong>wiser people so full of doubts.</strong>` +
+          `</p>` +
         `</blockquote>` +
         `<p>&nbsp; &nbsp; —Bertrand Russell</p>`
       );
@@ -193,9 +203,11 @@ describe('======== dom ========', () => {
       const html = `<h1>&lt;Quotes&gt;</h1>` +
         `<p><img src="https://www.example.com/images/bertrand-russle.png"></p>` +
         `<blockquote>` +
-          `<em>The whole problem with the world</em>` +
-          `&nbsp;is that fools and fanatics are always so certain of themselves, and&nbsp;` +
-          `<strong>wiser people so full of doubts.</strong>` +
+          `<p>` +
+            `<em>The whole problem with the world</em>` +
+            `&nbsp;is that fools and fanatics are always so certain of themselves, and&nbsp;` +
+            `<strong>wiser people so full of doubts.</strong>` +
+          `</p>` +
         `</blockquote>` +
         `<p>&nbsp; &nbsp; —Bertrand Russell</p>`;
 
