@@ -1,6 +1,7 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
+import svelte from 'rollup-plugin-svelte';
 
 export default {
   input: 'src/index.js',
@@ -12,6 +13,11 @@ export default {
     resolve(),
     commonjs({
       include: 'node_modules/**'
+    }),
+    svelte({
+      css: function (css) {
+        css.write('dist/ui.css');
+      }
     }),
     babel({
       exclude: 'node_modules/**',

@@ -1,8 +1,9 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
-import serve from 'rollup-plugin-serve'
-import livereload from 'rollup-plugin-livereload'
+import svelte from 'rollup-plugin-svelte';
+import serve from 'rollup-plugin-serve';
+import livereload from 'rollup-plugin-livereload';
 
 export default {
   input: 'src/dev.js',
@@ -16,6 +17,11 @@ export default {
     resolve(),
     commonjs({
       include: 'node_modules/**'
+    }),
+    svelte({
+      css: function (css) {
+        css.write('dist/ui.css');
+      }
     }),
     babel({
       exclude: 'node_modules/**',

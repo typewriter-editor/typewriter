@@ -1,4 +1,4 @@
-import { Editor, View, defaultViewModules, placeholder, smartEntry, smartQuotes } from './index';
+import { Editor, View, defaultViewModules, placeholder, smartEntry, smartQuotes, hoverMenu } from './index';
 import { cursor } from './view/embeds';
 import { h } from './view/vdom';
 
@@ -8,7 +8,8 @@ const view = new View(editor, {
   modules: {
     ...defaultViewModules,
     smartQuotes: smartQuotes(),
-    smartEntry: smartEntry()
+    smartEntry: smartEntry(),
+    hoverMenu: hoverMenu(),
   }
 });
 

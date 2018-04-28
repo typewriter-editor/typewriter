@@ -1124,9 +1124,10 @@ var NULL_CHARACTER = String.fromCharCode(0); // Placeholder char for embed in di
 
 var Delta = function () {
   function Delta() {
+    var ops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     classCallCheck(this, Delta);
 
-    this.ops = [];
+    this.ops = ops;
   }
 
   /**
@@ -1983,7 +1984,6 @@ var Editor = function (_EventDispatcher) {
 
     _this.contents = null;
     _this.length = 0;
-    _this.text = '';
     _this.selection = null;
     _this.activeFormats = empty;
     setContents(_this, options.contents || _this.delta().insert('\n'));
@@ -2045,7 +2045,7 @@ var Editor = function (_EventDispatcher) {
     key: 'getText',
     value: function getText() {
       var from = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-      var to = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.length;
+      var to = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.length - 1;
 
       var _normalizeRange4 = this._normalizeRange(from, to);
 
@@ -2054,7 +2054,38 @@ var Editor = function (_EventDispatcher) {
       from = _normalizeRange5[0];
       to = _normalizeRange5[1];
 
-      return this.text.slice(from, to);
+      return this.getContents(from, to).filter(function (op) {
+        return typeof op.insert === 'string';
+      }).map(function (op) {
+        return op.insert;
+      }).join('');
+    }
+
+    /**
+     * Returns the text for the editor with spaces in place of embeds. This can be used to determine the index of given
+     * words or lines of text within the contents.
+     *
+     * @param {Number} from The starting index
+     * @param {Number} to   The ending index
+     * @returns {String}    The text in the editor with embed spaces
+     */
+
+  }, {
+    key: 'getExactText',
+    value: function getExactText() {
+      var from = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      var to = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.length - 1;
+
+      var _normalizeRange6 = this._normalizeRange(from, to);
+
+      var _normalizeRange7 = slicedToArray(_normalizeRange6, 2);
+
+      from = _normalizeRange7[0];
+      to = _normalizeRange7[1];
+
+      return this.getContents(from, to).map(function (op) {
+        return typeof op.insert === 'string' ? op.insert : ' ';
+      }).join('');
     }
 
     /**
@@ -2071,6 +2102,8 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'setSelection',
     value: function setSelection(from, to) {
+      var _this2 = this;
+
       var source = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : SOURCE_USER;
 
       var oldSelection = this.selection;
@@ -2088,7 +2121,9 @@ var Editor = function (_EventDispatcher) {
         to = _normalizeSelection3[1];
         source = _normalizeSelection3[2];
 
-        selection = [from, to];
+        selection = [from, to].map(function (i) {
+          return Math.min(i, _this2.length - 1);
+        });
       }
 
       if (shallowEqual(oldSelection, selection)) return false;
@@ -2206,16 +2241,16 @@ var Editor = function (_EventDispatcher) {
     value: function insertText(from, to, text, formats, source, selection) {
 
       // If we are not inserting a newline, make sure from and to are within the selectable range
-      var _normalizeRange6 = this._normalizeRange(from, to, text, formats, source, selection);
+      var _normalizeRange8 = this._normalizeRange(from, to, text, formats, source, selection);
 
-      var _normalizeRange7 = slicedToArray(_normalizeRange6, 6);
+      var _normalizeRange9 = slicedToArray(_normalizeRange8, 6);
 
-      from = _normalizeRange7[0];
-      to = _normalizeRange7[1];
-      text = _normalizeRange7[2];
-      formats = _normalizeRange7[3];
-      source = _normalizeRange7[4];
-      selection = _normalizeRange7[5];
+      from = _normalizeRange9[0];
+      to = _normalizeRange9[1];
+      text = _normalizeRange9[2];
+      formats = _normalizeRange9[3];
+      source = _normalizeRange9[4];
+      selection = _normalizeRange9[5];
       if (text !== '\n') {
 
         var _getSelectedRange = this.getSelectedRange([from, to]);
@@ -2263,16 +2298,16 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'insertEmbed',
     value: function insertEmbed(from, to, embed, value, formats, source, selection) {
-      var _normalizeRange8 = this._normalizeRange(from, to, embed, value, source, selection);
+      var _normalizeRange10 = this._normalizeRange(from, to, embed, value, source, selection);
 
-      var _normalizeRange9 = slicedToArray(_normalizeRange8, 6);
+      var _normalizeRange11 = slicedToArray(_normalizeRange10, 6);
 
-      from = _normalizeRange9[0];
-      to = _normalizeRange9[1];
-      embed = _normalizeRange9[2];
-      value = _normalizeRange9[3];
-      source = _normalizeRange9[4];
-      selection = _normalizeRange9[5];
+      from = _normalizeRange11[0];
+      to = _normalizeRange11[1];
+      embed = _normalizeRange11[2];
+      value = _normalizeRange11[3];
+      source = _normalizeRange11[4];
+      selection = _normalizeRange11[5];
 
       if (typeof formats === 'string') {
         var _ref2 = [null, formats, source];
@@ -2301,14 +2336,14 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'deleteText',
     value: function deleteText(from, to, source, selection) {
-      var _normalizeRange10 = this._normalizeRange(from, to, source, selection);
+      var _normalizeRange12 = this._normalizeRange(from, to, source, selection);
 
-      var _normalizeRange11 = slicedToArray(_normalizeRange10, 4);
+      var _normalizeRange13 = slicedToArray(_normalizeRange12, 4);
 
-      from = _normalizeRange11[0];
-      to = _normalizeRange11[1];
-      source = _normalizeRange11[2];
-      selection = _normalizeRange11[3];
+      from = _normalizeRange13[0];
+      to = _normalizeRange13[1];
+      source = _normalizeRange13[2];
+      selection = _normalizeRange13[3];
 
       if (from === to) return null;
       if (selection == null && this.selection !== null) selection = from;
@@ -2330,12 +2365,12 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'getLineFormat',
     value: function getLineFormat(from, to) {
-      var _normalizeRange12 = this._normalizeRange(from, to);
+      var _normalizeRange14 = this._normalizeRange(from, to);
 
-      var _normalizeRange13 = slicedToArray(_normalizeRange12, 2);
+      var _normalizeRange15 = slicedToArray(_normalizeRange14, 2);
 
-      from = _normalizeRange13[0];
-      to = _normalizeRange13[1];
+      from = _normalizeRange15[0];
+      to = _normalizeRange15[1];
 
       var formats = void 0;
 
@@ -2359,12 +2394,12 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'getTextFormat',
     value: function getTextFormat(from, to) {
-      var _normalizeRange14 = this._normalizeRange(from, to);
+      var _normalizeRange16 = this._normalizeRange(from, to);
 
-      var _normalizeRange15 = slicedToArray(_normalizeRange14, 2);
+      var _normalizeRange17 = slicedToArray(_normalizeRange16, 2);
 
-      from = _normalizeRange15[0];
-      to = _normalizeRange15[1];
+      from = _normalizeRange17[0];
+      to = _normalizeRange17[1];
 
       var formats = void 0;
 
@@ -2414,14 +2449,14 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'formatLine',
     value: function formatLine(from, to, formats, source) {
-      var _normalizeRange16 = this._normalizeRange(from, to, formats, source);
+      var _normalizeRange18 = this._normalizeRange(from, to, formats, source);
 
-      var _normalizeRange17 = slicedToArray(_normalizeRange16, 4);
+      var _normalizeRange19 = slicedToArray(_normalizeRange18, 4);
 
-      from = _normalizeRange17[0];
-      to = _normalizeRange17[1];
-      formats = _normalizeRange17[2];
-      source = _normalizeRange17[3];
+      from = _normalizeRange19[0];
+      to = _normalizeRange19[1];
+      formats = _normalizeRange19[2];
+      source = _normalizeRange19[3];
 
       var change = this.delta();
 
@@ -2451,22 +2486,22 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'formatText',
     value: function formatText(from, to, formats, source) {
-      var _this2 = this;
+      var _this3 = this;
 
-      var _normalizeRange18 = this._normalizeRange(from, to, formats, source);
+      var _normalizeRange20 = this._normalizeRange(from, to, formats, source);
 
-      var _normalizeRange19 = slicedToArray(_normalizeRange18, 4);
+      var _normalizeRange21 = slicedToArray(_normalizeRange20, 4);
 
-      from = _normalizeRange19[0];
-      to = _normalizeRange19[1];
-      formats = _normalizeRange19[2];
-      source = _normalizeRange19[3];
+      from = _normalizeRange21[0];
+      to = _normalizeRange21[1];
+      formats = _normalizeRange21[2];
+      source = _normalizeRange21[3];
 
       if (from === to) {
         if (this.activeFormats === empty) this.activeFormats = {};
         Object.keys(formats).forEach(function (key) {
           var value = formats[key];
-          if (value == null || value === false) delete _this2.activeFormats[key];else _this2.activeFormats[key] = value;
+          if (value == null || value === false) delete _this3.activeFormats[key];else _this3.activeFormats[key] = value;
         });
         return;
       }
@@ -2496,14 +2531,14 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'toggleLineFormat',
     value: function toggleLineFormat(from, to, format, source) {
-      var _normalizeRange20 = this._normalizeRange(from, to, format, source);
+      var _normalizeRange22 = this._normalizeRange(from, to, format, source);
 
-      var _normalizeRange21 = slicedToArray(_normalizeRange20, 4);
+      var _normalizeRange23 = slicedToArray(_normalizeRange22, 4);
 
-      from = _normalizeRange21[0];
-      to = _normalizeRange21[1];
-      format = _normalizeRange21[2];
-      source = _normalizeRange21[3];
+      from = _normalizeRange23[0];
+      to = _normalizeRange23[1];
+      format = _normalizeRange23[2];
+      source = _normalizeRange23[3];
 
       var existing = this.getLineFormat(from, to);
       if (deepEqual(existing, format)) {
@@ -2528,14 +2563,14 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'toggleTextFormat',
     value: function toggleTextFormat(from, to, format, source) {
-      var _normalizeRange22 = this._normalizeRange(from, to, format, source);
+      var _normalizeRange24 = this._normalizeRange(from, to, format, source);
 
-      var _normalizeRange23 = slicedToArray(_normalizeRange22, 4);
+      var _normalizeRange25 = slicedToArray(_normalizeRange24, 4);
 
-      from = _normalizeRange23[0];
-      to = _normalizeRange23[1];
-      format = _normalizeRange23[2];
-      source = _normalizeRange23[3];
+      from = _normalizeRange25[0];
+      to = _normalizeRange25[1];
+      format = _normalizeRange25[2];
+      source = _normalizeRange25[3];
 
       var existing = this.getTextFormat(from, to);
       var isSame = Object.keys(format).every(function (key) {
@@ -2562,15 +2597,15 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'removeFormat',
     value: function removeFormat(from, to, source) {
-      var _this3 = this;
+      var _this4 = this;
 
-      var _normalizeRange24 = this._normalizeRange(from, to, source);
+      var _normalizeRange26 = this._normalizeRange(from, to, source);
 
-      var _normalizeRange25 = slicedToArray(_normalizeRange24, 3);
+      var _normalizeRange27 = slicedToArray(_normalizeRange26, 3);
 
-      from = _normalizeRange25[0];
-      to = _normalizeRange25[1];
-      source = _normalizeRange25[2];
+      from = _normalizeRange27[0];
+      to = _normalizeRange27[1];
+      source = _normalizeRange27[2];
 
       var formats = {};
 
@@ -2590,7 +2625,7 @@ var Editor = function (_EventDispatcher) {
         Object.keys(line.attributes).forEach(function (key) {
           return formats[key] = null;
         });
-        change = change.compose(_this3.delta().retain(line.end - 1).retain(1, formats));
+        change = change.compose(_this4.delta().retain(line.end - 1).retain(1, formats));
       });
 
       return this.updateContents(change, source);
@@ -2765,11 +2800,6 @@ function setContents(editor, contents) {
   contents.freeze();
   editor.contents = contents;
   editor.length = contents.length();
-  editor.text = contents.filter(function (op) {
-    return typeof op.insert === 'string';
-  }).map(function (op) {
-    return op.insert;
-  }).join('').slice(0, -1); // remove the trailing newline
 }
 
 // Combine formats removing ones that don't exist in both and creating an array for those with multiple values
@@ -2788,6 +2818,8 @@ function combineFormats(formats, combined) {
     return merged;
   }, {});
 }
+
+// Based off of https://github.com/jorgebucaran/ultradom/ MIT licensed
 
 function h(name, attributes) {
   var rest = [];
@@ -2814,9 +2846,8 @@ function h(name, attributes) {
   };
 }
 
-function render(node, element) {
-  element = element ? patch(element.parentNode, element, node) : patch(null, null, node);
-  return element;
+function renderChildren(node, element) {
+  patchChildren(element, node.children);
 }
 
 function clone(target, source) {
@@ -2829,8 +2860,26 @@ function clone(target, source) {
   }return obj;
 }
 
+function eventListener(event) {
+  return event.currentTarget.events[event.type](event);
+}
+
 function updateAttribute(element, name, value, isSvg) {
-  if (name in element && name !== "list" && !isSvg) {
+  if (name[0] === "o" && name[1] === "n") {
+    if (!element.events) {
+      element.events = {};
+    }
+    name = name.slice(2);
+    var oldValue = element.events[name];
+    element.events[name] = value;
+    if (value) {
+      if (!oldValue) {
+        element.addEventListener(name, eventListener);
+      }
+    } else {
+      element.removeEventListener(name, eventListener);
+    }
+  } else if (name in element && name !== "list" && !isSvg) {
     element[name] = value == null ? "" : value;
   } else if (value != null && value !== false) {
     element.setAttribute(name, value === true ? '' : value);
@@ -2887,6 +2936,19 @@ function removeElement(parent, element) {
   parent.removeChild(element);
 }
 
+function patchChildren(element, children, isSvg) {
+  var i = 0;
+
+  while (i < children.length) {
+    patch(element, element.childNodes[i], children[i], isSvg);
+    i++;
+  }
+
+  while (i < element.childNodes.length) {
+    removeElement(element, element.childNodes[i]);
+  }
+}
+
 function patch(parent, element, node, isSvg) {
   var name = element && element.nodeName !== '#text' ? element.nodeName.toLowerCase() : undefined;
   if (element == null || name !== node.name) {
@@ -2905,17 +2967,7 @@ function patch(parent, element, node, isSvg) {
   } else {
     updateElement(element, node.attributes, isSvg = isSvg || node.name === "svg");
 
-    var children = node.children;
-    var i = 0;
-
-    while (i < children.length) {
-      patch(element, element.childNodes[i], children[i], isSvg);
-      i++;
-    }
-
-    while (i < element.childNodes.length) {
-      removeElement(element, element.childNodes[i]);
-    }
+    patchChildren(element, node.children, isSvg);
   }
   return element;
 }
@@ -3005,24 +3057,22 @@ var list = {
 
 var blockquote = {
   name: 'blockquote',
-  selector: 'blockquote',
-  vdom: function vdom(children) {
+  selector: 'blockquote p',
+  optimize: true,
+  vdom: function vdom(quotes) {
     return h(
       'blockquote',
       null,
-      children
-    );
-  }
-};
+      quotes.map(function (_ref3) {
+        var _ref4 = slicedToArray(_ref3, 1),
+            children = _ref4[0];
 
-var container = {
-  name: 'container',
-  selector: 'div',
-  vdom: function vdom(children, attr) {
-    return h(
-      'div',
-      { contenteditable: 'true' },
-      children && children.length && children || paragraph.vdom()
+        return h(
+          'p',
+          null,
+          children
+        );
+      })
     );
   }
 };
@@ -3078,7 +3128,7 @@ var image = {
 };
 
 var defaultPaper = {
-  blocks: [paragraph, header, list, blockquote, container],
+  blocks: [paragraph, header, list, blockquote],
   markups: [bold, italics, link],
   embeds: [image]
 };
@@ -3325,7 +3375,8 @@ function deltaToVdom(view, delta) {
   var paper = view.paper;
   var blocks = paper.blocks,
       markups = paper.markups,
-      embeds = paper.embeds;
+      embeds = paper.embeds,
+      container = paper.container;
 
   var blockData = [];
 
@@ -3395,9 +3446,6 @@ function deltaToVdom(view, delta) {
       var next = blockData[i + 1];
       if (!next || next[0] !== block) {
         var _children = block.vdom.call(paper, collect);
-        _children.forEach(function (child) {
-          return child.key = Math.random();
-        });
         blockChildren = blockChildren.concat(_children);
         collect = [];
       }
@@ -3407,10 +3455,10 @@ function deltaToVdom(view, delta) {
     }
   });
 
-  return blocks.get('container').vdom.call(paper, blockChildren);
+  return container.call(paper, blockChildren, view);
 }
 
-function deltaFromDom$1(view) {
+function deltaFromDom(view) {
   var root = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : view.root;
   var notInDOM = arguments[2];
 
@@ -3486,7 +3534,7 @@ function deltaToHTML(view, delta) {
 function deltaFromHTML(view, html) {
   var template = document.createElement('template');
   template.innerHTML = '<div>' + html + '</div>';
-  return deltaFromDom$1(view, template.content.firstChild, true);
+  return deltaFromDom(view, template.content.firstChild, true);
 }
 
 // Joins adjacent markup nodes
@@ -3530,6 +3578,7 @@ var Paper = function Paper(types) {
   this.blocks = new Types();
   this.markups = new Types();
   this.embeds = new Types();
+  this.container = types.container || container;
   if (types && types.blocks) types.blocks.forEach(function (block) {
     return _this.blocks.add(block);
   });
@@ -3540,6 +3589,15 @@ var Paper = function Paper(types) {
     return _this.embeds.add(embed);
   });
 };
+
+
+function container(children, view) {
+  return h(
+    'div',
+    { 'class': 'typewriter-editor', contentEditable: view.enabled },
+    children && children.length ? children : this.blocks.getDefault().vdom()
+  );
+}
 
 var Types = function () {
   function Types() {
@@ -3610,9 +3668,9 @@ var Types = function () {
     key: 'matches',
     value: function matches(node) {
       if (node instanceof Node) {
-        return node.matches(this.selector);
+        return this.selector ? node.matches(this.selector) : false;
       } else {
-        return nodeMatches(node, this.selector);
+        throw new Error('Cannot match against ' + node);
       }
     }
   }, {
@@ -3621,15 +3679,17 @@ var Types = function () {
       var _this4 = this;
 
       if (nodeOrAttr instanceof Node) {
-        return this.array.find(function (domType) {
-          return nodeOrAttr.matches(domType.selector);
-        });
+        var _i = this.array.length;
+        while (_i--) {
+          var domType = this.array[_i];
+          if (nodeOrAttr.matches(domType.selector)) return domType;
+        }
       } else if (nodeOrAttr && (typeof nodeOrAttr === 'undefined' ? 'undefined' : _typeof(nodeOrAttr)) === 'object') {
-        var domType = void 0;
+        var _domType = void 0;
         Object.keys(nodeOrAttr).some(function (name) {
-          return domType = _this4.get(name);
+          return _domType = _this4.get(name);
         });
-        return domType;
+        return _domType;
       }
     }
   }]);
@@ -3816,11 +3876,67 @@ var shortcutString = {
 var SOURCE_API$1 = 'api';
 var SOURCE_USER$1 = 'user';
 var isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
-var modExpr = /Ctrl|Cmd/;
+var modExpr = isMac ? /Cmd/ : /Ctrl/;
+
+/**
+ * Triggers before each render inside an editor transaction. Use this event to alter the contents of the editor with
+ * decorators which will only be visible in the view and will not save to the editor. To add decorators, simply use the
+ * editor APIs to format text, insert embeds, etc.
+ *
+ * @event View#decorate
+ */
+
+/**
+ * Triggers right before the view renders the latest contents to the DOM. May pass a change event if the render is
+ * triggered by an editor change.
+ *
+ * @event View#rendering
+ */
+
+/**
+ * Triggers when the view renders the latest contents to the DOM. May pass a change event if the render is
+ * triggered by an editor change.
+ *
+ * @event View#render
+ */
+
+/**
+ * Triggers on a keydown event, calling listeners with the keydown event and a shortcut string. These shortcut strings
+ * will contain all the modifiers being pressed along with the key. Examples are:
+ * Ctrl+B, Ctrl+Shift+Tab, Alt+A, Enter, Shift+Enter, Cmd+Enter, Cmd+Backspace, Space, Tab, Ctrl+Shift+Alt+F11, Ctrl++
+ *
+ * In addition to the normal modifiers, Cmd, Ctrl, Alt, and Shift, a special modifier called Mod can be used to match
+ * Cmd on Mac and Ctrl on other OSes. This allows Mod+B to be used for bold and work correctly on all systems.
+ *
+ * You can listen for all shortcuts using the "shortcut" event, or you can listen for a specific shortcut using
+ * "shortcut:{shortcut}".
+ *
+ * @event View#shortcut
+ * @event View#shortcut:{shortcut} E.g. "shortcut:Mod+Bold"
+ */
+
+/**
+ * The Typewriter View displays and Editor's contents and selection. The contents are displayed as HTML using a tiny
+ * virtual dom implementation and Paper to describe the HTML. The selection is displayed with the native browser
+ * selection.
+ *
+ * View also sends changes to the editor using contenteditable and a mutation observer to capture text entry, keyboard
+ * shortcuts to capture other types of edits, and the native selectionchange event to update selection.
+ */
 
 var View = function (_EventDispatcher) {
   inherits(View, _EventDispatcher);
 
+  /**
+   * Create a new View to display an Editor's contents.
+   *
+   * @param {Editor} editor  A Typewriter editor this View will display the contents for
+   * @param {Object} options Options include:
+   *   @param {HTMLElement} root   The root HTML element of this view. If not provided, you must append view.root to the
+   *                               DOM yourself
+   *   @param {Object} paper       The blocks, markups, embeds, and/or container to be used in this editor
+   *   @param {Object} modules     Modules which can be used with this view
+   */
   function View(editor) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     classCallCheck(this, View);
@@ -3829,12 +3945,14 @@ var View = function (_EventDispatcher) {
 
     if (!editor) throw new Error('Editor view requires an editor');
     _this.editor = editor;
-    _this.root = document.createElement('div');
-    _this.paper = new Paper(options.paper || defaultPaper);
-    _this.enabled = true;
+    _this.root = options.root || document.createElement('div');
+    if (!options.root) _this.root.className = 'typewriter-editor';
+    _this.paper = new Paper(_extends({}, defaultPaper, options.paper));
+    _this.enable();
     _this.isMac = isMac;
     _this._settingEditorSelection = false;
     _this._settingBrowserSelection = false;
+    _this.init();
     _this.modules = {};
     if (options.modules) Object.keys(options.modules).forEach(function (key) {
       return _this.modules[key] = options.modules[key](_this);
@@ -3842,43 +3960,83 @@ var View = function (_EventDispatcher) {
     return _this;
   }
 
+  /**
+   * Returns whether or not the view has browser focus.
+   *
+   * @returns {Boolean} Whether the view has focus
+   */
+
+
   createClass(View, [{
     key: 'hasFocus',
     value: function hasFocus() {
       return this.root.contains(this.root.ownerDocument.activeElement);
     }
+
+    /**
+     * Focuses the view using the last known selection.
+     */
+
   }, {
     key: 'focus',
     value: function focus() {
       if (this.lastSelection) this.editor.setSelection(this.lastSelection);else this.root.focus();
     }
+
+    /**
+     * Removes focus from the view.
+     */
+
   }, {
     key: 'blur',
     value: function blur() {
       this.root.blur();
     }
+
+    /**
+     * Disables view text entry and key shortcuts.
+     */
+
   }, {
     key: 'disable',
     value: function disable() {
       this.enable(false);
     }
+
+    /**
+     * Enables (or disables) view text entry and key shortcuts.
+     *
+     * @param {Boolean} enabled Whether to make it enabled or disabled, default being true
+     */
+
   }, {
     key: 'enable',
     value: function enable() {
       var enabled = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
       this.enabled = enabled;
-      this.update();
+      this.root.contentEditable = enabled;
     }
+
+    /**
+     * Get the position and size of a range as it is displayed in the DOM relative to the top left of visible document.
+     * You can use `getBounds(editor.selection)` to find the coordinates of the current selection and display a popup at
+     * that location.
+     *
+     * @param {Number} from The start of the range
+     * @param {Number} to   The end of the range
+     * @returns {DOMRect}   A native DOMRect object with the bounds of the range
+     */
+
   }, {
     key: 'getBounds',
     value: function getBounds(from, to) {
       var _this2 = this;
 
       var range = this.editor._normalizeRange(from, to);
-      if (range && this.decorations.ops.length) {
+      if (range && this.decorators.ops.length) {
         range = range.map(function (i) {
-          return _this2.decorations.transform(i);
+          return _this2.decorators.transform(i);
         });
       }
       var browserRange = getBrowserRange(this, range);
@@ -3887,15 +4045,27 @@ var View = function (_EventDispatcher) {
       }
       return browserRange.getBoundingClientRect();
     }
+
+    /**
+     * Get all positions and sizes of a range as it is displayed in the DOM relative to the top left of visible document.
+     * This is different from `getBounds` because instead of a single bounding box you may get multiple rects such as when
+     * the selection is split across lines. You can use `getAllBounds` to draw a highlight behind the text within this
+     * range.
+     *
+     * @param {Number} from The start of the range
+     * @param {Number} to   The end of the range
+     * @returns {DOMRectList}   A native DOMRect object with the bounds of the range
+     */
+
   }, {
     key: 'getAllBounds',
     value: function getAllBounds(from, to) {
       var _this3 = this;
 
       var range = this.editor._normalizeRange(from, to);
-      if (range && this.decorations.ops.length) {
+      if (range && this.decorators.ops.length) {
         range = range.map(function (i) {
-          return _this3.decorations.transform(i);
+          return _this3.decorators.transform(i);
         });
       }
       var browserRange = getBrowserRange(this, range);
@@ -3904,38 +4074,65 @@ var View = function (_EventDispatcher) {
       }
       return browserRange.getClientRects();
     }
+
+    /**
+     * Get the HTML text of the View (minus any decorators). You could use this to store the HTML contents rather than
+     * storing the editor contents. If you don't care about collaborative editing this may be easier than storing Deltas.
+     *
+     * @returns {String} A string of HTML
+     */
+
   }, {
     key: 'getHTML',
     value: function getHTML() {
       return deltaToHTML(this, this.editor.contents);
     }
+
+    /**
+     * Set a string of HTML to be the contents of the editor. It will be parsed using Paper so incorrectly formatted HTML
+     * cannot be set in Typewriter.
+     *
+     * @param {String} html A string of HTML to set in the editor
+     * @param {*} source    The source of the change being made, api, user, or silent
+     */
+
   }, {
     key: 'setHTML',
     value: function setHTML(html, source) {
       this.editor.setContents(deltaFromHTML(this, html), source);
     }
+
+    /**
+     * Re-render the current editor state to the DOM.
+     */
+
   }, {
-    key: 'update',
-    value: function update(changeEvent) {
+    key: 'render',
+    value: function render$$1(changeEvent) {
       var _this4 = this;
 
       var contents = this.editor.contents;
-      this.decorations = this.editor.getChange(function () {
+      this.decorators = this.editor.getChange(function () {
         return _this4.fire('decorate', _this4.editor, changeEvent);
       });
-      if (this.decorations.ops.length) {
-        contents = contents.compose(this.decorations);
-        this.reverseDecorations = contents.diff(this.editor.contents);
+      if (this.decorators.ops.length) {
+        contents = contents.compose(this.decorators);
+        this.reverseDecorators = contents.diff(this.editor.contents);
       } else {
-        this.reverseDecorations = this.decorations;
+        this.reverseDecorators = this.decorators;
       }
       var vdom = deltaToVdom(this, contents);
       if (!this.enabled) vdom.attributes.contenteditable = undefined;
-      this.fire('updating', changeEvent);
-      render(vdom, this.root);
+      this.fire('rendering', changeEvent);
+      renderChildren(vdom, this.root);
       this.updateBrowserSelection();
-      this.fire('update', changeEvent);
+      this.fire('render', changeEvent);
     }
+
+    /**
+     * Update the browser's selection to match the editor's selection.
+     */
+
   }, {
     key: 'updateBrowserSelection',
     value: function updateBrowserSelection() {
@@ -3946,8 +4143,15 @@ var View = function (_EventDispatcher) {
       this.setSelection(this.editor.selection);
       setTimeout(function () {
         return _this5._settingBrowserSelection = false;
-      }, 20);
+      }, 20); // sad hack :(
     }
+
+    /**
+     * Update the editor's selection to match the browser's selection.
+     *
+     * @param {String} source The source of the selection change, api, user, or silent
+     */
+
   }, {
     key: 'updateEditorSelection',
     value: function updateEditorSelection() {
@@ -3966,38 +4170,56 @@ var View = function (_EventDispatcher) {
       // If the selection was adjusted when set then update the browser's selection
       if (!shallowEqual(range, this.editor.selection)) this.updateBrowserSelection();
     }
+
+    /**
+     * Get the mapped editor range from the current browser selection.
+     *
+     * @returns {Array} A range (or null) that represents the current browser selection
+     */
+
   }, {
     key: 'getSelection',
     value: function getSelection$$1() {
       var _this6 = this;
 
       var range = getSelection(this);
-      if (range && this.reverseDecorations.ops.length) {
+      if (range && this.reverseDecorators.ops.length) {
         range = range.map(function (i) {
-          return _this6.reverseDecorations.transform(i);
+          return _this6.reverseDecorators.transform(i);
         });
       }
       return range;
     }
+
+    /**
+     * Set's the browser selection to the given range.
+     *
+     * @param {Array} range The range to set selection to
+     */
+
   }, {
     key: 'setSelection',
     value: function setSelection$$1(range) {
       var _this7 = this;
 
-      if (range && this.decorations.ops.length) {
+      if (range && this.decorators.ops.length) {
         range = range.map(function (i) {
-          return _this7.decorations.transform(i);
+          return _this7.decorators.transform(i);
         });
       }
       setSelection(this, range);
     }
+
+    /**
+     * Initializes the view, setting up listeners in the DOM and on the editor.
+     */
+
   }, {
-    key: 'mount',
-    value: function mount(container) {
+    key: 'init',
+    value: function init() {
       var _this8 = this;
 
-      container.appendChild(this.root);
-      this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, 'p');
+      this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, this.paper.blocks.getDefault().selector);
 
       var onKeyDown = function onKeyDown(event) {
         var shortcut = shortcutString.fromEvent(event);
@@ -4014,8 +4236,23 @@ var View = function (_EventDispatcher) {
         _this8.updateEditorSelection(SOURCE_USER$1);
       };
 
-      this.root.addEventListener('keydown', onKeyDown);
-      container.ownerDocument.addEventListener('selectionchange', onSelectionChange);
+      var onTextChanging = function onTextChanging(_ref) {
+        var contents = _ref.contents;
+
+        // Prevent incorrect formats
+        return !contents.ops.some(function (op) {
+          if (_typeof(op.insert) === 'object') {
+            return !_this8.paper.embeds.find(op.insert);
+          } else if (op.attributes) {
+            return !(_this8.paper.blocks.find(op.attributes) || _this8.paper.markups.find(op.attributes));
+          }
+        });
+      };
+
+      var onEditorChange = function onEditorChange(event) {
+        if (event.change) _this8.render(event);
+        _this8.updateBrowserSelection();
+      };
 
       // Use mutation tracking during development to catch errors
       // TODO delete this mutation observer when we're confident in core (or put it behind a development flag)
@@ -4024,58 +4261,53 @@ var View = function (_EventDispatcher) {
         if (checking) clearTimeout(checking);
         checking = setTimeout(function () {
           checking = 0;
-          var diff = editor.contents.compose(_this8.decorations).diff(deltaFromDom$1(view));
+          var diff = editor.contents.compose(_this8.decorators).diff(deltaFromDom(view));
           if (diff.length()) {
-            console.error('Delta out of sync with DOM:', diff, deltaFromDom$1(view));
+            console.error('Delta out of sync with DOM:', diff, deltaFromDom(view));
           }
         }, 20);
       });
       devObserver.observe(this.root, { characterData: true, characterDataOldValue: true, childList: true, attributes: true, subtree: true });
 
-      this.editor.on('text-changing', function (event) {
-        return _this8._preventIncorrectFormats(event);
-      });
-      this.editor.on('editor-change', function (event) {
-        if (event.change) _this8.update(event);
-        _this8.updateBrowserSelection();
-      });
-      this.update();
+      this.root.addEventListener('keydown', onKeyDown);
+      this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
+      this.editor.on('text-changing', onTextChanging);
+      this.editor.on('editor-change', onEditorChange);
+      this.render();
 
-      this.unmount = function () {
+      this.uninit = function () {
         devObserver.disconnect();
         _this8.root.removeEventListener('keydown', onKeyDown);
         _this8.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
-        _this8.root.remove();
-        _this8.unmount = function () {};
+        _this8.editor.off('text-changing', onTextChanging);
+        _this8.editor.off('editor-change', onEditorChange);
+        delete _this8.uninit;
       };
     }
+
+    /**
+     * Cleans up the listeners on the DOM and editor after they have been added.
+     */
+
   }, {
-    key: 'unmount',
-    value: function unmount() {}
+    key: 'uninit',
+    value: function uninit() {}
+    // This is overwritten inside `init`
+
+
+    /**
+     * Clean up and allow modules to clean up before the editor is removed from the DOM.
+     */
+
   }, {
     key: 'destroy',
     value: function destroy() {
       var _this9 = this;
 
-      this.unmount();
+      this.uninit();
       Object.keys(modules).forEach(function (key) {
         var api = _this9.module[key];
         if (api && typeof api.destroy === 'function') api.destroy();
-      });
-    }
-  }, {
-    key: '_preventIncorrectFormats',
-    value: function _preventIncorrectFormats(_ref) {
-      var _this10 = this;
-
-      var change = _ref.change;
-
-      return !change.ops.some(function (op) {
-        if (_typeof(op.insert) === 'object') {
-          return !_this10.paper.embeds.find(op.insert);
-        } else if (op.attributes) {
-          return !(_this10.paper.blocks.find(op.attributes) || _this10.paper.markups.find(op.attributes));
-        }
       });
     }
   }]);
@@ -4115,7 +4347,7 @@ function input() {
       if (isTextChange) {
         var change = editor.delta();
         var node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
-        var index = view.reverseDecorations.transform(getNodeIndex(view, node));
+        var index = view.reverseDecorators.transform(getNodeIndex(view, node));
         change.retain(index);
 
         if (mutation.type === 'characterData') {
@@ -4140,7 +4372,7 @@ function input() {
         }
       } else if (list.length === 1 && mutation.type === 'childList' && addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE) ; else {
         var contents = deltaFromDom(view, view.root);
-        contents = contents.compose(view.reverseDecorations);
+        contents = contents.compose(view.reverseDecorators);
         var _change = editor.contents.diff(contents);
         // console.log('changing a lot (possibly)', change);
         editor.updateContents(_change, SOURCE_USER$2, selection);
@@ -4293,17 +4525,17 @@ function input() {
 
     // Don't observe the changes that occur when the view updates, we only want to respond to changes that happen
     // outside of our API to read them back in
-    function onUpdating() {
+    function onRendering() {
       observer.disconnect();
     }
 
     // Once the view update is complete, continue observing for changes
-    function onUpdate() {
+    function onRender() {
       observer.observe(view.root, mutationOptions);
     }
 
-    view.on('updating', onUpdating);
-    view.on('update', onUpdate);
+    view.on('rendering', onRendering);
+    view.on('render', onRender);
     view.on('shortcut:Enter', onEnter);
     view.on('shortcut:Shift+Enter', onShiftEnter);
     view.on('shortcut:Backspace', onBackspace);
@@ -4317,8 +4549,8 @@ function input() {
     return {
       destroy: function destroy() {
         observer.disconnect();
-        view.off('updating', onUpdating);
-        view.off('update', onUpdate);
+        view.off('rendering', onRendering);
+        view.off('render', onRender);
         view.off('shortcut:Enter', onEnter);
         view.off('shortcut:Shift+Enter', onShiftEnter);
         view.off('shortcut:Backspace', onBackspace);
@@ -4678,8 +4910,9 @@ function smartEntry () {
 
       if (ignore || source !== 'user' || !editor.selection || !isTextEntry(change)) return;
       var index = editor.selection[1];
-      var lineStart = editor.text.lastIndexOf('\n', index - 1) + 1;
-      var prefix = editor.text.slice(lineStart, index);
+      var text = editor.getExactText();
+      var lineStart = text.lastIndexOf('\n', index - 1) + 1;
+      var prefix = text.slice(lineStart, index);
 
       ignore = true;
       handlers.some(function (handler) {
@@ -4721,7 +4954,7 @@ function smartQuotes() {
 
       var index = editor.selection[1];
       var lastOp = change.ops[change.ops.length - 1];
-      var lastChars = editor.text.slice(index - 1, index) + lastOp.insert.slice(-1);
+      var lastChars = editor.getText(index - 1, index) + lastOp.insert.slice(-1);
 
       var replaced = lastChars.replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, '“').replace(/"$/, '”').replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(')$/, '‘').replace(/'$/, '’');
 
@@ -4747,6 +4980,741 @@ function isTextEntry$1(change) {
   return (change.ops.length === 1 || change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes) && change.ops[change.ops.length - 1].insert && change.ops[change.ops.length - 1].insert !== '\n';
 }
 
+function noop() {}
+
+function assign(tar, src) {
+	for (var k in src) tar[k] = src[k];
+	return tar;
+}
+
+function appendNode(node, target) {
+	target.appendChild(node);
+}
+
+function insertNode(node, target, anchor) {
+	target.insertBefore(node, anchor);
+}
+
+function detachNode(node) {
+	node.parentNode.removeChild(node);
+}
+
+function destroyEach(iterations) {
+	for (var i = 0; i < iterations.length; i += 1) {
+		if (iterations[i]) iterations[i].d();
+	}
+}
+
+function createElement$1(name) {
+	return document.createElement(name);
+}
+
+function createText(data) {
+	return document.createTextNode(data);
+}
+
+function createComment() {
+	return document.createComment('');
+}
+
+function addListener(node, event, handler) {
+	node.addEventListener(event, handler, false);
+}
+
+function removeListener(node, event, handler) {
+	node.removeEventListener(event, handler, false);
+}
+
+function setStyle(node, key, value) {
+	node.style.setProperty(key, value);
+}
+
+function blankObject() {
+	return Object.create(null);
+}
+
+function destroy(detach) {
+	this.destroy = noop;
+	this.fire('destroy');
+	this.set = noop;
+
+	if (detach !== false) this._fragment.u();
+	this._fragment.d();
+	this._fragment = null;
+	this._state = {};
+}
+
+function _differs(a, b) {
+	return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+}
+
+function fire(eventName, data) {
+	var handlers =
+		eventName in this._handlers && this._handlers[eventName].slice();
+	if (!handlers) return;
+
+	for (var i = 0; i < handlers.length; i += 1) {
+		var handler = handlers[i];
+
+		if (!handler.__calling) {
+			handler.__calling = true;
+			handler.call(this, data);
+			handler.__calling = false;
+		}
+	}
+}
+
+function get$1() {
+	return this._state;
+}
+
+function init(component, options) {
+	component._handlers = blankObject();
+	component._bind = options._bind;
+
+	component.options = options;
+	component.root = options.root || component;
+	component.store = component.root.store || options.store;
+}
+
+function on(eventName, handler) {
+	var handlers = this._handlers[eventName] || (this._handlers[eventName] = []);
+	handlers.push(handler);
+
+	return {
+		cancel: function() {
+			var index = handlers.indexOf(handler);
+			if (~index) handlers.splice(index, 1);
+		}
+	};
+}
+
+function set$1(newState) {
+	this._set(assign({}, newState));
+	if (this.root._lock) return;
+	this.root._lock = true;
+	callAll(this.root._beforecreate);
+	callAll(this.root._oncreate);
+	callAll(this.root._aftercreate);
+	this.root._lock = false;
+}
+
+function _set(newState) {
+	var oldState = this._state,
+		changed = {},
+		dirty = false;
+
+	for (var key in newState) {
+		if (this._differs(newState[key], oldState[key])) changed[key] = dirty = true;
+	}
+	if (!dirty) return;
+
+	this._state = assign(assign({}, oldState), newState);
+	this._recompute(changed, this._state);
+	if (this._bind) this._bind(changed, this._state);
+
+	if (this._fragment) {
+		this.fire("state", { changed: changed, current: this._state, previous: oldState });
+		this._fragment.p(changed, this._state);
+		this.fire("update", { changed: changed, current: this._state, previous: oldState });
+	}
+}
+
+function callAll(fns) {
+	while (fns && fns.length) fns.shift()();
+}
+
+function _mount(target, anchor) {
+	this._fragment[this._fragment.i ? 'i' : 'm'](target, anchor || null);
+}
+
+function _unmount() {
+	if (this._fragment) this._fragment.u();
+}
+
+var proto = {
+	destroy,
+	get: get$1,
+	fire,
+	on,
+	set: set$1,
+	_recompute: noop,
+	_set,
+	_mount,
+	_unmount,
+	_differs
+};
+
+/* src/ui/HoverMenu.html generated by Svelte v2.1.1 */
+
+var SOURCE_USER$6 = 'user';
+
+function pos(_ref) {
+	var view = _ref.view,
+	    range = _ref.range;
+
+	if (!view || !range) return { top: -100000, left: -100000 };
+	var rect = view.getBounds(range);
+	return {
+		top: rect.top,
+		left: rect.left + rect.width / 2
+	};
+}
+
+function items(_ref2) {
+	var view = _ref2.view,
+	    range = _ref2.range;
+
+	if (!view) return [];
+
+	var editor = view.editor;
+	var _view$paper = view.paper,
+	    blocks = _view$paper.blocks,
+	    markups = _view$paper.markups;
+	var _blocks$types = blocks.types,
+	    header = _blocks$types.header,
+	    blockquote = _blocks$types.blockquote;
+	var _markups$types = markups.types,
+	    bold = _markups$types.bold,
+	    italic = _markups$types.italic,
+	    link = _markups$types.link;
+
+	var format = editor.getFormat(range);
+	var items = [];
+
+	if (bold) {
+		items.push({
+			name: 'bold',
+			active: format.bold,
+			action: 'onMarkupClick'
+		});
+	}
+
+	if (italic) {
+		items.push({
+			name: 'italic',
+			active: format.italic,
+			action: 'onMarkupClick'
+		});
+	}
+
+	if (link) {
+		items.push({
+			name: 'link',
+			active: format.link,
+			action: 'onLinkClick'
+		});
+	}
+
+	if (items.length && (header || blockquote)) {
+		items.push(null);
+	}
+
+	if (header) {
+		items.push({
+			name: 'header',
+			icon: 'heading1',
+			active: format.header === 2,
+			action: 'onBlockClick',
+			value: 2
+		}, {
+			name: 'header',
+			icon: 'heading2',
+			active: format.header === 3,
+			action: 'onBlockClick',
+			value: 3
+		});
+	}
+
+	if (blockquote) {
+		items.push({
+			name: 'blockquote',
+			active: format.blockquote,
+			action: 'onBlockClick'
+		});
+	}
+
+	return items;
+}
+
+function data() {
+	return {
+		view: null,
+		active: false,
+		inputMode: false,
+		href: ''
+	};
+}
+var methods = {
+	inputLink: function inputLink() {
+		this.set({ inputMode: true, href: '' });
+		this.refs.input.focus();
+	},
+	exitInput: function exitInput() {
+		this.set({ inputMode: false, href: '' });
+	},
+	createLink: function createLink() {
+		var _get = this.get(),
+		    href = _get.href,
+		    view = _get.view,
+		    range = _get.range;
+
+		href = href.trim();
+		if (href) {
+			view.editor.formatText(range, { link: href }, SOURCE_USER$6);
+		}
+		view.focus();
+		this.exitInput();
+	},
+	onMarkupClick: function onMarkupClick(item) {
+		var _get2 = this.get(),
+		    view = _get2.view,
+		    range = _get2.range;
+
+		view.editor.toggleTextFormat(range, defineProperty({}, item.name, true), SOURCE_USER$6);
+		// Re-calculate the position of the menu
+		this.set({ range: range.slice() });
+	},
+	onBlockClick: function onBlockClick(item) {
+		var _get3 = this.get(),
+		    view = _get3.view,
+		    range = _get3.range;
+
+		view.editor.toggleLineFormat(range, defineProperty({}, item.name, item.value || true), SOURCE_USER$6);
+		// Re-calculate the position of the menu
+		this.set({ range: range.slice() });
+	},
+	onLinkClick: function onLinkClick() {
+		var _get4 = this.get(),
+		    view = _get4.view,
+		    range = _get4.range;
+
+		if (view.editor.getTextFormat(range).link) {
+			view.editor.formatText(range, { link: null }, SOURCE_USER$6);
+		} else {
+			this.inputLink();
+		}
+	},
+	onHeaderClick: function onHeaderClick(item) {
+		var _get5 = this.get(),
+		    view = _get5.view,
+		    range = _get5.range;
+
+		if (view.editor.getTextFormat(range).link) {
+			view.editor.formatText(range, { link: null }, SOURCE_USER$6);
+		} else {
+			this.inputLink();
+		}
+	},
+	onClick: function onClick(item) {
+		if (typeof this[item.action] === 'function') {
+			this[item.action](item);
+		}
+	},
+	onKeyDown: function onKeyDown(event) {
+		if (event.keyCode === 27) {
+			event.preventDefault();
+			this.exitInput();
+		} else if (event.keyCode === 13) {
+			event.preventDefault();
+			this.createLink();
+		}
+	}
+};
+
+function create_main_fragment(component, state) {
+	var div,
+	    div_1,
+	    text_1,
+	    div_2,
+	    input,
+	    input_updating = false,
+	    text_2,
+	    i,
+	    div_class_value;
+
+	var each_value = state.items;
+
+	var each_blocks = [];
+
+	for (var i_1 = 0; i_1 < each_value.length; i_1 += 1) {
+		each_blocks[i_1] = create_each_block(component, assign(assign({}, state), {
+			each_value: each_value,
+			item: each_value[i_1],
+			item_index: i_1
+		}));
+	}
+
+	function input_input_handler() {
+		input_updating = true;
+		component.set({ href: input.value });
+		input_updating = false;
+	}
+
+	function keydown_handler(event) {
+		component.onKeyDown(event);
+	}
+
+	function click_handler_1(event) {
+		component.set({ inputMode: true });
+	}
+
+	return {
+		c: function create() {
+			div = createElement$1("div");
+			div_1 = createElement$1("div");
+
+			for (var i_1 = 0; i_1 < each_blocks.length; i_1 += 1) {
+				each_blocks[i_1].c();
+			}
+
+			text_1 = createText("\n  ");
+			div_2 = createElement$1("div");
+			input = createElement$1("input");
+			text_2 = createText("\n    ");
+			i = createElement$1("i");
+			i.textContent = "×";
+			this.h();
+		},
+
+		h: function hydrate() {
+			div_1.className = "items svelte-1xc48ur";
+			addListener(input, "input", input_input_handler);
+			addListener(input, "keydown", keydown_handler);
+			input.placeholder = "https://example.com/";
+			input.className = "svelte-1xc48ur";
+			addListener(i, "click", click_handler_1);
+			i.className = "close svelte-1xc48ur";
+			div_2.className = "link-input svelte-1xc48ur";
+			setStyle(div, "top", "" + state.pos.top + "px");
+			setStyle(div, "left", "" + state.pos.left + "px");
+			div.className = div_class_value = "menu" + (state.active ? ' active' : '') + (state.inputMode ? ' input-mode' : '') + " svelte-1xc48ur";
+		},
+
+		m: function mount(target, anchor) {
+			insertNode(div, target, anchor);
+			appendNode(div_1, div);
+
+			for (var i_1 = 0; i_1 < each_blocks.length; i_1 += 1) {
+				each_blocks[i_1].m(div_1, null);
+			}
+
+			appendNode(text_1, div);
+			appendNode(div_2, div);
+			appendNode(input, div_2);
+			component.refs.input = input;
+
+			input.value = state.href;
+
+			appendNode(text_2, div_2);
+			appendNode(i, div_2);
+		},
+
+		p: function update(changed, state) {
+			var each_value = state.items;
+
+			if (changed.items) {
+				for (var i_1 = 0; i_1 < each_value.length; i_1 += 1) {
+					var each_context = assign(assign({}, state), {
+						each_value: each_value,
+						item: each_value[i_1],
+						item_index: i_1
+					});
+
+					if (each_blocks[i_1]) {
+						each_blocks[i_1].p(changed, each_context);
+					} else {
+						each_blocks[i_1] = create_each_block(component, each_context);
+						each_blocks[i_1].c();
+						each_blocks[i_1].m(div_1, null);
+					}
+				}
+
+				for (; i_1 < each_blocks.length; i_1 += 1) {
+					each_blocks[i_1].u();
+					each_blocks[i_1].d();
+				}
+				each_blocks.length = each_value.length;
+			}
+
+			if (!input_updating) input.value = state.href;
+			if (changed.pos) {
+				setStyle(div, "top", "" + state.pos.top + "px");
+				setStyle(div, "left", "" + state.pos.left + "px");
+			}
+
+			if ((changed.active || changed.inputMode) && div_class_value !== (div_class_value = "menu" + (state.active ? ' active' : '') + (state.inputMode ? ' input-mode' : '') + " svelte-1xc48ur")) {
+				div.className = div_class_value;
+			}
+		},
+
+		u: function unmount() {
+			detachNode(div);
+
+			for (var i_1 = 0; i_1 < each_blocks.length; i_1 += 1) {
+				each_blocks[i_1].u();
+			}
+		},
+
+		d: function destroy$$1() {
+			destroyEach(each_blocks);
+
+			removeListener(input, "input", input_input_handler);
+			removeListener(input, "keydown", keydown_handler);
+			if (component.refs.input === input) component.refs.input = null;
+			removeListener(i, "click", click_handler_1);
+		}
+	};
+}
+
+// (5:4) {#each items as item}
+function create_each_block(component, state) {
+	var item = state.item,
+	    each_value = state.each_value,
+	    item_index = state.item_index;
+	var if_block_anchor;
+
+	function select_block_type(state) {
+		if (item) return create_if_block;
+		return create_if_block_1;
+	}
+
+	var current_block_type = select_block_type(state);
+	var if_block = current_block_type(component, state);
+
+	return {
+		c: function create() {
+			if_block.c();
+			if_block_anchor = createComment();
+		},
+
+		m: function mount(target, anchor) {
+			if_block.m(target, anchor);
+			insertNode(if_block_anchor, target, anchor);
+		},
+
+		p: function update(changed, state) {
+			item = state.item;
+			each_value = state.each_value;
+			item_index = state.item_index;
+			if (current_block_type === (current_block_type = select_block_type(state)) && if_block) {
+				if_block.p(changed, state);
+			} else {
+				if_block.u();
+				if_block.d();
+				if_block = current_block_type(component, state);
+				if_block.c();
+				if_block.m(if_block_anchor.parentNode, if_block_anchor);
+			}
+		},
+
+		u: function unmount() {
+			if_block.u();
+			detachNode(if_block_anchor);
+		},
+
+		d: function destroy$$1() {
+			if_block.d();
+		}
+	};
+}
+
+// (6:6) {#if item}
+function create_if_block(component, state) {
+	var item = state.item,
+	    each_value = state.each_value,
+	    item_index = state.item_index;
+	var button, i, i_class_value, button_class_value, button_disabled_value;
+
+	return {
+		c: function create() {
+			button = createElement$1("button");
+			i = createElement$1("i");
+			this.h();
+		},
+
+		h: function hydrate() {
+			i.className = i_class_value = "typewriter-icon typewriter-" + (item.icon || item.name) + " svelte-1xc48ur";
+			addListener(button, "click", click_handler);
+			button.className = button_class_value = "editor-menu-" + item.name + (item.active ? ' active' : '') + " svelte-1xc48ur";
+			button.disabled = button_disabled_value = item.disabled;
+
+			button._svelte = {
+				component: component,
+				each_value: state.each_value,
+				item_index: state.item_index
+			};
+		},
+
+		m: function mount(target, anchor) {
+			insertNode(button, target, anchor);
+			appendNode(i, button);
+		},
+
+		p: function update(changed, state) {
+			item = state.item;
+			each_value = state.each_value;
+			item_index = state.item_index;
+			if (changed.items && i_class_value !== (i_class_value = "typewriter-icon typewriter-" + (item.icon || item.name) + " svelte-1xc48ur")) {
+				i.className = i_class_value;
+			}
+
+			if (changed.items && button_class_value !== (button_class_value = "editor-menu-" + item.name + (item.active ? ' active' : '') + " svelte-1xc48ur")) {
+				button.className = button_class_value;
+			}
+
+			if (changed.items && button_disabled_value !== (button_disabled_value = item.disabled)) {
+				button.disabled = button_disabled_value;
+			}
+
+			button._svelte.each_value = state.each_value;
+			button._svelte.item_index = state.item_index;
+		},
+
+		u: function unmount() {
+			detachNode(button);
+		},
+
+		d: function destroy$$1() {
+			removeListener(button, "click", click_handler);
+		}
+	};
+}
+
+// (10:6) {:else}
+function create_if_block_1(component, state) {
+	var item = state.item,
+	    each_value = state.each_value,
+	    item_index = state.item_index;
+	var div;
+
+	return {
+		c: function create() {
+			div = createElement$1("div");
+			this.h();
+		},
+
+		h: function hydrate() {
+			div.className = "typewriter-separator svelte-1xc48ur";
+		},
+
+		m: function mount(target, anchor) {
+			insertNode(div, target, anchor);
+		},
+
+		p: function update(changed, state) {
+			item = state.item;
+			each_value = state.each_value;
+			item_index = state.item_index;
+		},
+
+		u: function unmount() {
+			detachNode(div);
+		},
+
+		d: noop
+	};
+}
+
+function click_handler(event) {
+	var component = this._svelte.component;
+	var each_value = this._svelte.each_value,
+	    item_index = this._svelte.item_index,
+	    item = each_value[item_index];
+	component.onClick(item);
+}
+
+function HoverMenu(options) {
+	init(this, options);
+	this.refs = {};
+	this._state = assign(data(), options.data);
+	this._recompute({ view: 1, range: 1 }, this._state);
+
+	this._fragment = create_main_fragment(this, this._state);
+
+	if (options.target) {
+		this._fragment.c();
+		this._mount(options.target, options.anchor);
+	}
+}
+
+assign(HoverMenu.prototype, proto);
+assign(HoverMenu.prototype, methods);
+
+HoverMenu.prototype._recompute = function _recompute(changed, state) {
+	if (changed.view || changed.range) {
+		if (this._differs(state.pos, state.pos = pos(state))) changed.pos = true;
+		if (this._differs(state.items, state.items = items(state))) changed.items = true;
+	}
+};
+
+function hoverMenu() {
+
+  return function (view) {
+    var editor = view.editor;
+    var menu = void 0;
+
+    function show() {
+      var range = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : editor.selection;
+
+      if (!menu) {
+        menu = new HoverMenu({
+          target: view.root.parentNode,
+          data: { view: view, range: range }
+        });
+        requestAnimationFrame(function () {
+          return menu.set({ active: true });
+        });
+      } else {
+        menu.set({ range: range });
+      }
+    }
+
+    function hide() {
+      if (menu) menu.destroy();
+      view.focus();
+      menu = null;
+    }
+
+    function onEditorChange(_ref) {
+      var selection = _ref.selection;
+
+      var validSelection = selection && selection[0] !== selection[1];
+      var inputMode = menu && menu.get().inputMode;
+      if (!validSelection) {
+        if (!inputMode) hide();
+        return;
+      }
+
+      var _selection = slicedToArray(selection, 2),
+          from = _selection[0],
+          to = _selection[1];
+
+      // Don't show when selection goes across lines
+
+
+      if (from > to) {
+        var _ref2 = [to, from];
+        from = _ref2[0];
+        to = _ref2[1];
+      }if (editor.contents.getLines(from, to).length > 1) return;
+
+      show();
+    }
+
+    editor.on('editor-change', onEditorChange);
+
+    return {
+      show: show,
+      hide: hide,
+      destroy: function destroy() {
+        editor.off('editor-change', onEditorChange);
+        hide();
+      }
+    };
+  };
+}
+
 var defaultViewModules = {
   input: input(),
   keyShortcuts: keyShortcuts(),
@@ -4755,6 +5723,7 @@ var defaultViewModules = {
 
 exports.Editor = Editor;
 exports.View = View;
+exports.h = h;
 exports.input = input;
 exports.keyShortcuts = keyShortcuts;
 exports.history = history;
@@ -4762,3 +5731,4 @@ exports.placeholder = placeholder;
 exports.smartEntry = smartEntry;
 exports.smartQuotes = smartQuotes;
 exports.defaultViewModules = defaultViewModules;
+exports.hoverMenu = hoverMenu;

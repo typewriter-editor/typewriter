@@ -8,6 +8,7 @@ import history from './modules/history';
 import placeholder from './modules/placeholder';
 import smartEntry from './modules/smart-entry';
 import smartQuotes from './modules/smart-quotes';
+import hoverMenu from './modules/hover-menu';
 
 const defaultViewModules = {
   input: input(),
@@ -15,4 +16,16 @@ const defaultViewModules = {
   history: history()
 };
 
-export { Editor, View, h, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, defaultViewModules };
+export {
+  Editor,
+  View,
+  h,
+  input,
+  keyShortcuts,
+  history,
+  placeholder,
+  smartEntry,
+  smartQuotes,
+  defaultViewModules,
+  hoverMenu
+};
