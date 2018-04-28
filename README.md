@@ -46,7 +46,14 @@ Typewriter has just gotten its legs underneath it. Documentation may be lacking 
 
 ## Contributing
 
-If you are interested in being a part of something new, join the discussions on [Github issues](https://github.com/typewriter-editor/typewriter/issues) marked "discussion", check out the code, contribute modules and features, and join us on Gitter. [![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+If you are interested in being a part of something new:
+* join the discussions on [Github issues](https://github.com/typewriter-editor/typewriter/issues) marked "discussion"
+* join us on Gitter. [![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+* read through the [Typewriter Guide](docs/guide.md)
+* read through the code
+* write tests
+* write docs
+* contribute modules and features
 
 ## Getting Started
 

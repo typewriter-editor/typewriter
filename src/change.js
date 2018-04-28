@@ -1,6 +1,7 @@
 import Delta from './delta';
 
-
+// Playing with a potential alternative API. With transaction, is this really valuable at all? If it cleans up editor
+// it could be.
 class Change {
 
   constructor(selection = [0, 0]) {
