@@ -21,7 +21,6 @@ export default function hoverMenu() {
 
     function hide() {
       if (menu) menu.destroy();
-      view.focus();
       menu = null;
     }
 

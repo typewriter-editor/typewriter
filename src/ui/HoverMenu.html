@@ -1,4 +1,5 @@
 <div
+  ref:menu
   style="top: {pos.top}px; left: {pos.left}px"
   class="menu{active ? ' active' : ''}{inputMode ? ' input-mode' : ''}">
   <div class="items">
@@ -27,20 +28,20 @@
         view: null,
         active: false,
         inputMode: false,
+        pos: { left: 0, top: 0 },
         href: '',
       };
     },
 
-    computed: {
-      pos: ({ view, range }) => {
-        if (!view || !range) return { top: -100000, left: -100000 };
-        const rect = view.getBounds(range);
-        return {
-          top: rect.top,
-          left: rect.left + rect.width / 2,
-        };
-      },
+    oncreate() {
+      this.reposition();
+      this.on('state', ({ changed, current }) => {
+        if (!changed.view && !changed.range) return;
+        this.reposition();
+      });
+    },
 
+    computed: {
       items: ({ view, range }) => {
         if (!view) return [];
 
@@ -108,6 +109,22 @@
     },
 
     methods: {
+      reposition() {
+        const { view, range } = this.get();
+        let pos;
+        if (!view || !range) {
+          pos = { top: -100000, left: -100000 };
+        } else {
+          const target = view.getBounds(range);
+          const menu = this.refs.menu;
+          pos = {
+            top: target.top - menu.offsetHeight,
+            left: target.left + target.width / 2 - menu.offsetWidth / 2,
+          };
+        }
+        this.set({ pos });
+      },
+
       inputLink() {
         this.set({ inputMode: true, href: '' });
         this.refs.input.focus();
@@ -184,10 +201,10 @@
     position: absolute;
     background-image: linear-gradient(to bottom, rgba(49, 49, 47, .99), #262625);
     border-radius: .25rem;
-    transform: translate(-50%, -100%);
     opacity: 0;
     z-index: 10000;
     margin-top: -7px;
+    white-space: nowrap;
   }
   .menu.active {
     opacity: 1;
@@ -273,23 +290,23 @@
   }
   @keyframes pop-upwards {
     0% {
-      transform: translate(-50%, -25%) scale(.97, 1);
+      transform: matrix(.97, 0, 0, 1, 0, 12);
       opacity: 0
     }
     20% {
-      transform: translate(-50%, -92%) scale(.99, 1);
+      transform: matrix(.99, 0, 0, 1, 0, 2);
       opacity: .7
     }
     40% {
-      transform: translate(-50%, -104%) scale(1, 1);
+      transform: matrix(1, 0, 0, 1, 0, -1);
       opacity: 1
     }
     70% {
-      transform: translate(-50%, -100%) scale(1, 1);
+      transform: matrix(1, 0, 0, 1, 0, 0);
       opacity: 1
     }
     100% {
-      transform: translate(-50%, -100%) scale(1, 1);
+      transform: matrix(1, 0, 0, 1, 0, 0);
       opacity: 1
     }
   }

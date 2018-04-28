@@ -4987,6 +4987,11 @@ function assign(tar, src) {
 	return tar;
 }
 
+function assignTrue(tar, src) {
+	for (var k in src) tar[k] = 1;
+	return tar;
+}
+
 function appendNode(node, target) {
 	target.appendChild(node);
 }
@@ -5149,21 +5154,9 @@ var proto = {
 
 var SOURCE_USER$6 = 'user';
 
-function pos(_ref) {
+function items(_ref) {
 	var view = _ref.view,
 	    range = _ref.range;
-
-	if (!view || !range) return { top: -100000, left: -100000 };
-	var rect = view.getBounds(range);
-	return {
-		top: rect.top,
-		left: rect.left + rect.width / 2
-	};
-}
-
-function items(_ref2) {
-	var view = _ref2.view,
-	    range = _ref2.range;
 
 	if (!view) return [];
 
@@ -5242,10 +5235,29 @@ function data() {
 		view: null,
 		active: false,
 		inputMode: false,
+		pos: { left: 0, top: 0 },
 		href: ''
 	};
 }
 var methods = {
+	reposition: function reposition() {
+		var _get = this.get(),
+		    view = _get.view,
+		    range = _get.range;
+
+		var pos = void 0;
+		if (!view || !range) {
+			pos = { top: -100000, left: -100000 };
+		} else {
+			var target = view.getBounds(range);
+			var menu = this.refs.menu;
+			pos = {
+				top: target.top - menu.offsetHeight,
+				left: target.left + target.width / 2 - menu.offsetWidth / 2
+			};
+		}
+		this.set({ pos: pos });
+	},
 	inputLink: function inputLink() {
 		this.set({ inputMode: true, href: '' });
 		this.refs.input.focus();
@@ -5254,10 +5266,10 @@ var methods = {
 		this.set({ inputMode: false, href: '' });
 	},
 	createLink: function createLink() {
-		var _get = this.get(),
-		    href = _get.href,
-		    view = _get.view,
-		    range = _get.range;
+		var _get2 = this.get(),
+		    href = _get2.href,
+		    view = _get2.view,
+		    range = _get2.range;
 
 		href = href.trim();
 		if (href) {
@@ -5267,27 +5279,27 @@ var methods = {
 		this.exitInput();
 	},
 	onMarkupClick: function onMarkupClick(item) {
-		var _get2 = this.get(),
-		    view = _get2.view,
-		    range = _get2.range;
+		var _get3 = this.get(),
+		    view = _get3.view,
+		    range = _get3.range;
 
 		view.editor.toggleTextFormat(range, defineProperty({}, item.name, true), SOURCE_USER$6);
 		// Re-calculate the position of the menu
 		this.set({ range: range.slice() });
 	},
 	onBlockClick: function onBlockClick(item) {
-		var _get3 = this.get(),
-		    view = _get3.view,
-		    range = _get3.range;
+		var _get4 = this.get(),
+		    view = _get4.view,
+		    range = _get4.range;
 
 		view.editor.toggleLineFormat(range, defineProperty({}, item.name, item.value || true), SOURCE_USER$6);
 		// Re-calculate the position of the menu
 		this.set({ range: range.slice() });
 	},
 	onLinkClick: function onLinkClick() {
-		var _get4 = this.get(),
-		    view = _get4.view,
-		    range = _get4.range;
+		var _get5 = this.get(),
+		    view = _get5.view,
+		    range = _get5.range;
 
 		if (view.editor.getTextFormat(range).link) {
 			view.editor.formatText(range, { link: null }, SOURCE_USER$6);
@@ -5296,9 +5308,9 @@ var methods = {
 		}
 	},
 	onHeaderClick: function onHeaderClick(item) {
-		var _get5 = this.get(),
-		    view = _get5.view,
-		    range = _get5.range;
+		var _get6 = this.get(),
+		    view = _get6.view,
+		    range = _get6.range;
 
 		if (view.editor.getTextFormat(range).link) {
 			view.editor.formatText(range, { link: null }, SOURCE_USER$6);
@@ -5322,6 +5334,18 @@ var methods = {
 	}
 };
 
+function oncreate() {
+	var _this = this;
+
+	this.reposition();
+	this.on('state', function (_ref2) {
+		var changed = _ref2.changed,
+		    current = _ref2.current;
+
+		if (!changed.view && !changed.range) return;
+		_this.reposition();
+	});
+}
 function create_main_fragment(component, state) {
 	var div,
 	    div_1,
@@ -5378,17 +5402,17 @@ function create_main_fragment(component, state) {
 		},
 
 		h: function hydrate() {
-			div_1.className = "items svelte-1xc48ur";
+			div_1.className = "items svelte-1wig6bq";
 			addListener(input, "input", input_input_handler);
 			addListener(input, "keydown", keydown_handler);
 			input.placeholder = "https://example.com/";
-			input.className = "svelte-1xc48ur";
+			input.className = "svelte-1wig6bq";
 			addListener(i, "click", click_handler_1);
-			i.className = "close svelte-1xc48ur";
-			div_2.className = "link-input svelte-1xc48ur";
+			i.className = "close svelte-1wig6bq";
+			div_2.className = "link-input svelte-1wig6bq";
 			setStyle(div, "top", "" + state.pos.top + "px");
 			setStyle(div, "left", "" + state.pos.left + "px");
-			div.className = div_class_value = "menu" + (state.active ? ' active' : '') + (state.inputMode ? ' input-mode' : '') + " svelte-1xc48ur";
+			div.className = div_class_value = "menu" + (state.active ? ' active' : '') + (state.inputMode ? ' input-mode' : '') + " svelte-1wig6bq";
 		},
 
 		m: function mount(target, anchor) {
@@ -5408,6 +5432,7 @@ function create_main_fragment(component, state) {
 
 			appendNode(text_2, div_2);
 			appendNode(i, div_2);
+			component.refs.menu = div;
 		},
 
 		p: function update(changed, state) {
@@ -5443,7 +5468,7 @@ function create_main_fragment(component, state) {
 				setStyle(div, "left", "" + state.pos.left + "px");
 			}
 
-			if ((changed.active || changed.inputMode) && div_class_value !== (div_class_value = "menu" + (state.active ? ' active' : '') + (state.inputMode ? ' input-mode' : '') + " svelte-1xc48ur")) {
+			if ((changed.active || changed.inputMode) && div_class_value !== (div_class_value = "menu" + (state.active ? ' active' : '') + (state.inputMode ? ' input-mode' : '') + " svelte-1wig6bq")) {
 				div.className = div_class_value;
 			}
 		},
@@ -5463,11 +5488,12 @@ function create_main_fragment(component, state) {
 			removeListener(input, "keydown", keydown_handler);
 			if (component.refs.input === input) component.refs.input = null;
 			removeListener(i, "click", click_handler_1);
+			if (component.refs.menu === div) component.refs.menu = null;
 		}
 	};
 }
 
-// (5:4) {#each items as item}
+// (6:4) {#each items as item}
 function create_each_block(component, state) {
 	var item = state.item,
 	    each_value = state.each_value,
@@ -5519,7 +5545,7 @@ function create_each_block(component, state) {
 	};
 }
 
-// (6:6) {#if item}
+// (7:6) {#if item}
 function create_if_block(component, state) {
 	var item = state.item,
 	    each_value = state.each_value,
@@ -5534,9 +5560,9 @@ function create_if_block(component, state) {
 		},
 
 		h: function hydrate() {
-			i.className = i_class_value = "typewriter-icon typewriter-" + (item.icon || item.name) + " svelte-1xc48ur";
+			i.className = i_class_value = "typewriter-icon typewriter-" + (item.icon || item.name) + " svelte-1wig6bq";
 			addListener(button, "click", click_handler);
-			button.className = button_class_value = "editor-menu-" + item.name + (item.active ? ' active' : '') + " svelte-1xc48ur";
+			button.className = button_class_value = "editor-menu-" + item.name + (item.active ? ' active' : '') + " svelte-1wig6bq";
 			button.disabled = button_disabled_value = item.disabled;
 
 			button._svelte = {
@@ -5555,11 +5581,11 @@ function create_if_block(component, state) {
 			item = state.item;
 			each_value = state.each_value;
 			item_index = state.item_index;
-			if (changed.items && i_class_value !== (i_class_value = "typewriter-icon typewriter-" + (item.icon || item.name) + " svelte-1xc48ur")) {
+			if (changed.items && i_class_value !== (i_class_value = "typewriter-icon typewriter-" + (item.icon || item.name) + " svelte-1wig6bq")) {
 				i.className = i_class_value;
 			}
 
-			if (changed.items && button_class_value !== (button_class_value = "editor-menu-" + item.name + (item.active ? ' active' : '') + " svelte-1xc48ur")) {
+			if (changed.items && button_class_value !== (button_class_value = "editor-menu-" + item.name + (item.active ? ' active' : '') + " svelte-1wig6bq")) {
 				button.className = button_class_value;
 			}
 
@@ -5581,7 +5607,7 @@ function create_if_block(component, state) {
 	};
 }
 
-// (10:6) {:else}
+// (11:6) {:else}
 function create_if_block_1(component, state) {
 	var item = state.item,
 	    each_value = state.each_value,
@@ -5595,7 +5621,7 @@ function create_if_block_1(component, state) {
 		},
 
 		h: function hydrate() {
-			div.className = "typewriter-separator svelte-1xc48ur";
+			div.className = "typewriter-separator svelte-1wig6bq";
 		},
 
 		m: function mount(target, anchor) {
@@ -5625,16 +5651,29 @@ function click_handler(event) {
 }
 
 function HoverMenu(options) {
+	var _this2 = this;
+
 	init(this, options);
 	this.refs = {};
 	this._state = assign(data(), options.data);
 	this._recompute({ view: 1, range: 1 }, this._state);
 
+	if (!options.root) {
+		this._oncreate = [];
+	}
+
 	this._fragment = create_main_fragment(this, this._state);
+
+	this.root._oncreate.push(function () {
+		oncreate.call(_this2);
+		_this2.fire("update", { changed: assignTrue({}, _this2._state), current: _this2._state });
+	});
 
 	if (options.target) {
 		this._fragment.c();
 		this._mount(options.target, options.anchor);
+
+		callAll(this._oncreate);
 	}
 }
 
@@ -5643,7 +5682,6 @@ assign(HoverMenu.prototype, methods);
 
 HoverMenu.prototype._recompute = function _recompute(changed, state) {
 	if (changed.view || changed.range) {
-		if (this._differs(state.pos, state.pos = pos(state))) changed.pos = true;
 		if (this._differs(state.items, state.items = items(state))) changed.items = true;
 	}
 };
@@ -5672,7 +5710,6 @@ function hoverMenu() {
 
     function hide() {
       if (menu) menu.destroy();
-      view.focus();
       menu = null;
     }
 
