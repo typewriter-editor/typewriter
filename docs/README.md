@@ -7,7 +7,7 @@
 
 * [View](api/view.md)
 * [Editor](api/editor.md)
-* [Event Dispatcher](api/eventdispatcher.md)
+* [Event Dispatcher](api/event-dispatcher.md)
 * [Paper](api/paper.md)
 
 ## Modules

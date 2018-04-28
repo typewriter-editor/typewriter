@@ -1,4 +1,4 @@
-import EventDispatcher from './eventdispatcher';
+import EventDispatcher from './event-dispatcher';
 import Delta from './delta';
 import { shallowEqual, deepEqual } from 'fast-equals';
 

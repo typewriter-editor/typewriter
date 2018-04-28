@@ -1,4 +1,3 @@
-import EventDispatcher from './eventdispatcher';
 import Editor from './editor';
 import { renderChildren } from './view/vdom';
 import defaultPaper from './view/defaultPaper';

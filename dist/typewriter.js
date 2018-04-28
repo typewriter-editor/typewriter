@@ -139,7 +139,7 @@ var toConsumableArray = function (arr) {
 
 var dispatcherEvents = new WeakMap();
 
-var EventDispatcher = function () {
+var EventDispatcher$1 = function () {
   function EventDispatcher() {
     classCallCheck(this, EventDispatcher);
   }
@@ -2772,7 +2772,7 @@ var Editor = function (_EventDispatcher) {
     }
   }]);
   return Editor;
-}(EventDispatcher);
+}(EventDispatcher$1);
 function cleanDelete(editor, from, to, change) {
   if (from !== to) {
     var line = editor.contents.getLine(from);
@@ -4978,6 +4978,43 @@ function smartQuotes() {
   };
 }
 
+/**
+ * Adds smartquotes to a document as a decorator. This does not affect the source, allowing you to store regular quotes
+ * in your source data but display smart quotes to the user. Use this as an alternative to the module above, not in
+ * addition to it.
+ */
+function smartQuotesDecorator() {
+  return function (view) {
+    var quotes = [[/(^|\s)"/g, /(^|\s)"/, '$1“'], [/"/g, /"/, '”'], [/\b'/g, /'/, '’'], [/'/g, /'/, '‘']];
+
+    function onDecorate(editor) {
+      var text = editor.text;
+
+      quotes.forEach(function (_ref2) {
+        var _ref3 = slicedToArray(_ref2, 3),
+            expr = _ref3[0],
+            replacer = _ref3[1],
+            replaceWith = _ref3[2];
+
+        var match = void 0;
+        while (match = expr.exec(text)) {
+          var replacement = match[0].replace(replacer, replaceWith);
+          text = text.slice(0, match.index) + replacement + text.slice(expr.lastIndex);
+          editor.insertText(match.index, expr.lastIndex, replacement);
+        }
+      });
+    }
+
+    view.on('decorate', onDecorate);
+
+    return {
+      destroy: function destroy() {
+        view.off('decorate', onDecorate);
+      }
+    };
+  };
+}
+
 function isTextEntry$1(change) {
   return (change.ops.length === 1 || change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes) && change.ops[change.ops.length - 1].insert && change.ops[change.ops.length - 1].insert !== '\n';
 }
@@ -5760,7 +5797,8 @@ var defaultViewModules = {
   history: history()
 };
 
-exports.EventDispatcher = EventDispatcher;
+exports.EventDispatcher = EventDispatcher$1;
+exports.Delta = Delta;
 exports.Editor = Editor;
 exports.View = View;
 exports.Paper = Paper;
@@ -5771,6 +5809,7 @@ exports.history = history;
 exports.placeholder = placeholder;
 exports.smartEntry = smartEntry;
 exports.smartQuotes = smartQuotes;
-exports.defaultViewModules = defaultViewModules;
+exports.smartQuotesDecorator = smartQuotesDecorator;
 exports.hoverMenu = hoverMenu;
+exports.defaultViewModules = defaultViewModules;
 //# sourceMappingURL=typewriter.js.map
