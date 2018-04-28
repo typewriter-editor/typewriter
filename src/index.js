@@ -1,5 +1,7 @@
+import EventDispatcher from './eventdispatcher';
 import Editor from './editor';
 import View from './view';
+import Paper from './paper';
 import { h } from './view/vdom';
 
 import input from './modules/input';
@@ -17,8 +19,10 @@ const defaultViewModules = {
 };
 
 export {
+  EventDispatcher,
   Editor,
   View,
+  Paper,
   h,
   input,
   keyShortcuts,

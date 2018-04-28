@@ -7,7 +7,8 @@ export default {
   input: 'src/index.js',
   output: {
     file: 'dist/typewriter.js',
-    format: 'cjs'
+    format: 'cjs',
+    sourcemap: true,
   },
   plugins: [
     resolve(),

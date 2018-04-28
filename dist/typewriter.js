@@ -147,12 +147,13 @@ var EventDispatcher = function () {
   createClass(EventDispatcher, [{
     key: "on",
     value: function on(type, listener) {
-      getEventListeners(this, type).add(listener);
+      getEventListeners(this, type, true).add(listener);
     }
   }, {
     key: "off",
     value: function off(type, listener) {
-      getEventListeners(this, type).delete(listener);
+      var events = getEventListeners(this, type);
+      events && events.delete(listener);
     }
   }, {
     key: "once",
@@ -178,7 +179,8 @@ var EventDispatcher = function () {
       }
 
       var uncanceled = true;
-      getEventListeners(this, type).forEach(function (listener) {
+      var events = getEventListeners(this, type);
+      if (events) events.forEach(function (listener) {
         uncanceled && listener.apply(_this, args) !== false || (uncanceled = false);
       });
       return uncanceled;
@@ -188,10 +190,10 @@ var EventDispatcher = function () {
 }();
 
 
-function getEventListeners(obj, type) {
+function getEventListeners(obj, type, autocreate) {
   var events = dispatcherEvents.get(obj);
-  if (!events) dispatcherEvents.set(obj, events = Object.create(null));
-  return events[type] || (events[type] = new Set());
+  if (!events && autocreate) dispatcherEvents.set(obj, events = Object.create(null));
+  return events && events[type] || autocreate && (events[type] = new Set());
 }
 
 /**
@@ -5758,8 +5760,10 @@ var defaultViewModules = {
   history: history()
 };
 
+exports.EventDispatcher = EventDispatcher;
 exports.Editor = Editor;
 exports.View = View;
+exports.Paper = Paper;
 exports.h = h;
 exports.input = input;
 exports.keyShortcuts = keyShortcuts;
@@ -5769,3 +5773,4 @@ exports.smartEntry = smartEntry;
 exports.smartQuotes = smartQuotes;
 exports.defaultViewModules = defaultViewModules;
 exports.hoverMenu = hoverMenu;
+//# sourceMappingURL=typewriter.js.map

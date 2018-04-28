@@ -4,11 +4,12 @@ const dispatcherEvents = new WeakMap();
 export default class EventDispatcher {
 
   on(type, listener) {
-    getEventListeners(this, type).add(listener);
+    getEventListeners(this, type, true).add(listener);
   }
 
   off(type, listener) {
-    getEventListeners(this, type).delete(listener);
+    const events = getEventListeners(this, type);
+    events && events.delete(listener);
   }
 
   once(type, listener) {
@@ -21,7 +22,8 @@ export default class EventDispatcher {
 
   fire(type, ...args) {
     let uncanceled = true;
-    getEventListeners(this, type).forEach(listener => {
+    const events = getEventListeners(this, type);
+    if (events) events.forEach(listener => {
       uncanceled && listener.apply(this, args) !== false || (uncanceled = false);
     });
     return uncanceled;
@@ -29,8 +31,8 @@ export default class EventDispatcher {
 }
 
 
-function getEventListeners(obj, type) {
+function getEventListeners(obj, type, autocreate) {
   let events = dispatcherEvents.get(obj);
-  if (!events) dispatcherEvents.set(obj, events = Object.create(null));
-  return events[type] || (events[type] = new Set());
+  if (!events && autocreate) dispatcherEvents.set(obj, events = Object.create(null));
+  return events && events[type] || autocreate && (events[type] = new Set());
 }
