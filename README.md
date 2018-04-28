@@ -5,7 +5,7 @@
 [![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
-Built on the same data model as Quill.js, the [Delta](https://github.com/quilljs/delta/) format, but using a tiny virtual DOM, Typewriter aims to make custom rich text editors fast, easy, and more powerful.
+Built on the same data model as Quill.js, the [Delta](https://github.com/quilljs/delta/) format, and using a tiny virtual DOM, [Ultradom](https://github.com/jorgebucaran/ultradom/), Typewriter aims to make custom rich text editors fast, easy, and more powerful. UI is framework agnostic, built with [Svelte](https://svelte.technology/).
 
 ## Why Typewriter?
 
@@ -23,6 +23,10 @@ Typewriter was built for [Dabble](https://www.dabblewriter.com/), an in-browser 
 
 The result is something close to Quill.js, but with some differences in API and output. Pains were taken to ensure Typewriter could consume the data from Quill so Quill users could migrate if desired.
 
+## Learn Typewriter
+
+For an overview of the Typerwriter concepts and how it works, see the [Typewriter Guide](docs/guide.md).
+
 ## Differences Between Typewriter and Quill.js
 
 * Typewriter’s ranges use `from` and `to` (start index and end index) while Quill uses `index` and `length`.
@@ -38,7 +42,11 @@ The result is something close to Quill.js, but with some differences in API and 
 
 ## The Current State of Typewriter
 
-Typewriter has just gotten its legs underneath it. Documentation may be lacking and there will likely be breaking API changes as we get a feel for it. If you are interested in being a part of something new, join us on Gitter. [![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Typewriter has just gotten its legs underneath it. Documentation may be lacking and there may be breaking API changes as we get a feel for it.
+
+## Contributing
+
+If you are interested in being a part of something new, join the discussions on [Github issues](https://github.com/typewriter-editor/typewriter/issues) marked "discussion", check out the code, contribute modules and features, and join us on Gitter. [![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Getting Started
 
@@ -80,7 +88,7 @@ The [`src/dev.js`](src/dev.js) file is the current test runner for playing aroun
 
 ## Documentation
 
-Link to our [documentation](doc/README.md)
+Link to our [documentation](docs/README.md)
 
 ### TODO
 
