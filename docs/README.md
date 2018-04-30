@@ -5,10 +5,10 @@
 
 ## API
 
-* [View](api/view.md)
-* [Editor](api/editor.md)
-* [Event Dispatcher](api/event-dispatcher.md)
-* [Paper](api/paper.md)
+* [View](api/view.js.md)
+* [Editor](api/editor.js.md)
+* [Delta](api/delta.js.md)
+* [Paper](api/paper.js.md)
 
 ## Modules
 

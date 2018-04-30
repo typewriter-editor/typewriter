@@ -1,5 +1,15 @@
 import { h } from './view/vdom';
 
+/**
+ * Paper is a document definition layer that the View uses to:
+ *
+ * - know what formats (attributes) are allowed
+ * - translate between DOM and Delta, Delta and VDom (virtual DOM)
+ * - translate delta indexes to DOM locations and visa versa
+ *
+ * @param {Types} types
+ *
+ **/
 export default class Paper {
   constructor(types) {
     this.blocks = new Types();
@@ -12,7 +22,14 @@ export default class Paper {
   }
 }
 
-
+/**
+ * returns the editor object
+ *
+ * @param {Object} children
+ * @param {Object} view
+ * @returns {HTMLElement}
+ *
+ **/
 export function container(children, view) {
   return <div class="typewriter-editor" contentEditable={view.enabled}>
     {children && children.length ? children : this.blocks.getDefault().vdom()}
@@ -20,6 +37,12 @@ export function container(children, view) {
 }
 
 
+/**
+ * container for allowable HTML nodes and operations on them
+ * @param {Object} definition
+ * @param {Integer} index
+ *
+ **/
 class Types {
   constructor() {
     this.selector = '';
