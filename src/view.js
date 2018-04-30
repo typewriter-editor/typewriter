@@ -296,6 +296,8 @@ export default class View extends EventDispatcher {
         if (typeof op.insert === 'object') {
           return !this.paper.embeds.find(op.insert);
         } else if (op.attributes) {
+          // If attributes is empty except for classes/attributes than it is the default block
+          if (!Object.keys(op.attributes).filter(key => key !== 'classes' && key !== 'attributes').length) return;
           return !(this.paper.blocks.find(op.attributes) || this.paper.markups.find(op.attributes));
         }
       });

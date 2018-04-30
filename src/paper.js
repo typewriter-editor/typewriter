@@ -52,6 +52,13 @@ class Types {
     this.selector = this.array.map(type => type.selector).join(', ');
   }
 
+  clear() {
+    this.selector = '';
+    this.types = {};
+    this.array = [];
+    this.priorities = {};
+  }
+
   get(name) {
     return this.types[name];
   }

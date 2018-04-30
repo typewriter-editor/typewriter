@@ -1,4 +1,5 @@
 import { h } from './vdom';
+import { decorateBlock } from './dom';
 
 
 export const paragraph = {
@@ -44,7 +45,7 @@ export const list = {
     lists.forEach(([children, attr]) => {
       const List = attr.list === 'ordered' ? 'ol' : 'ul';
       const index = Math.min((attr.indent || 0) * 2, levels.length);
-      const item = <li>{children}</li>;
+      const item = decorateBlock(<li>{children}</li>, attr);
       let list = levels[index];
       if (list && list.name === List) {
         list.children.push(item);
@@ -67,6 +68,6 @@ export const blockquote = {
   selector: 'blockquote p',
   optimize: true,
   vdom: quotes => {
-    return <blockquote>{quotes.map(([children]) => <p>{children}</p>)}</blockquote>;
+    return <blockquote>{quotes.map(([children, attr]) => decorateBlock(<p>{children}</p>, attr))}</blockquote>;
   },
 };

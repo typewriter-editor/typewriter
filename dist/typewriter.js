@@ -139,7 +139,7 @@ var toConsumableArray = function (arr) {
 
 var dispatcherEvents = new WeakMap();
 
-var EventDispatcher$1 = function () {
+var EventDispatcher = function () {
   function EventDispatcher() {
     classCallCheck(this, EventDispatcher);
   }
@@ -2470,8 +2470,94 @@ var Editor = function (_EventDispatcher) {
         });
         change.retain(1, formats);
       });
+      change.chop();
 
-      return change.ops.length ? this.updateContents(change, source) : this.contents;
+      return change.ops.length ? this.updateContents(change, source) : null;
+    }
+
+    /**
+     * Adds additional attributes or classes to the lines intersected by `from` and `to`. Markups are easy to nest to add
+     * additional attributes/classes, but you cannot do that with lines/blocks.
+     * Setting a class to false will remove a previous decoration, but it will not remove a class which is part of the
+     * block definition. This method is a cross-over with HTML view and should be used sparingly.
+     *
+     * Example:
+     * ```js
+     * editor.decorateLine(0, {
+     *   attributes: { 'data-placeholder': 'Enter Text' },
+     *   classes: { active: true, empty: true }
+     * });
+     * // <p data-placeholder="Enter Text" class="active empty">
+     * ```
+     *
+     * @param {Number} from        The starting index
+     * @param {Number} to          The ending index
+     * @param {String} decorations The attributes/classes for the line.
+     * @param {String} source      The source of the change, user, api, or silent
+     * @returns {Delta}            Returns the change when successful, or null if not
+     */
+
+  }, {
+    key: 'decorateLine',
+    value: function decorateLine(from, to, decorations, source) {
+      var _normalizeRange20 = this._normalizeRange(from, to, decorations, source);
+
+      var _normalizeRange21 = slicedToArray(_normalizeRange20, 4);
+
+      from = _normalizeRange21[0];
+      to = _normalizeRange21[1];
+      decorations = _normalizeRange21[2];
+      source = _normalizeRange21[3];
+
+      var change = this.delta();
+
+      if (decorations.attributes) {
+        Object.keys(decorations.attributes).forEach(function (name) {
+          if (decorations.attributes[name] === '') decorations.attributes[name] = true;
+        });
+      }
+
+      this.contents.getLines(from, to).forEach(function (line) {
+        if (!change.ops.length) change.retain(line.end - 1);else change.retain(line.end - line.start - 1);
+        var _decorations = decorations,
+            attributes = _decorations.attributes,
+            classes = _decorations.classes;
+
+        // Merge with any existing formats on the line
+
+        if (attributes) {
+          if (line.attributes.attributes) {
+            decorations = _extends({}, decorations, { attributes: _extends({}, line.attributes.attributes, attributes) });
+          }
+
+          Object.keys(attributes).forEach(function (name) {
+            var value = attributes[name];
+            if (value == null || value === false) delete decorations.attributes[name];
+          });
+
+          if (!Object.keys(decorations.attributes).length) {
+            decorations = _extends({}, decorations, { attributes: null });
+          }
+        }
+        if (classes) {
+          if (line.attributes.classes) {
+            decorations = _extends({}, decorations, { classes: _extends({}, line.attributes.classes, classes) });
+          }
+
+          Object.keys(classes).forEach(function (name) {
+            if (!classes[name]) delete decorations.classes[name];
+          });
+
+          if (!Object.keys(decorations.classes).length) {
+            decorations = _extends({}, decorations, { classes: null });
+          }
+        }
+
+        change.retain(1, decorations);
+      });
+      change.chop();
+
+      return change.ops.length ? this.updateContents(change, source) : null;
     }
 
     /**
@@ -2490,14 +2576,14 @@ var Editor = function (_EventDispatcher) {
     value: function formatText(from, to, formats, source) {
       var _this3 = this;
 
-      var _normalizeRange20 = this._normalizeRange(from, to, formats, source);
+      var _normalizeRange22 = this._normalizeRange(from, to, formats, source);
 
-      var _normalizeRange21 = slicedToArray(_normalizeRange20, 4);
+      var _normalizeRange23 = slicedToArray(_normalizeRange22, 4);
 
-      from = _normalizeRange21[0];
-      to = _normalizeRange21[1];
-      formats = _normalizeRange21[2];
-      source = _normalizeRange21[3];
+      from = _normalizeRange23[0];
+      to = _normalizeRange23[1];
+      formats = _normalizeRange23[2];
+      source = _normalizeRange23[3];
 
       if (from === to) {
         if (this.activeFormats === empty) this.activeFormats = {};
@@ -2533,14 +2619,14 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'toggleLineFormat',
     value: function toggleLineFormat(from, to, format, source) {
-      var _normalizeRange22 = this._normalizeRange(from, to, format, source);
+      var _normalizeRange24 = this._normalizeRange(from, to, format, source);
 
-      var _normalizeRange23 = slicedToArray(_normalizeRange22, 4);
+      var _normalizeRange25 = slicedToArray(_normalizeRange24, 4);
 
-      from = _normalizeRange23[0];
-      to = _normalizeRange23[1];
-      format = _normalizeRange23[2];
-      source = _normalizeRange23[3];
+      from = _normalizeRange25[0];
+      to = _normalizeRange25[1];
+      format = _normalizeRange25[2];
+      source = _normalizeRange25[3];
 
       var existing = this.getLineFormat(from, to);
       if (deepEqual(existing, format)) {
@@ -2565,14 +2651,14 @@ var Editor = function (_EventDispatcher) {
   }, {
     key: 'toggleTextFormat',
     value: function toggleTextFormat(from, to, format, source) {
-      var _normalizeRange24 = this._normalizeRange(from, to, format, source);
+      var _normalizeRange26 = this._normalizeRange(from, to, format, source);
 
-      var _normalizeRange25 = slicedToArray(_normalizeRange24, 4);
+      var _normalizeRange27 = slicedToArray(_normalizeRange26, 4);
 
-      from = _normalizeRange25[0];
-      to = _normalizeRange25[1];
-      format = _normalizeRange25[2];
-      source = _normalizeRange25[3];
+      from = _normalizeRange27[0];
+      to = _normalizeRange27[1];
+      format = _normalizeRange27[2];
+      source = _normalizeRange27[3];
 
       var existing = this.getTextFormat(from, to);
       var isSame = Object.keys(format).every(function (key) {
@@ -2601,13 +2687,13 @@ var Editor = function (_EventDispatcher) {
     value: function removeFormat(from, to, source) {
       var _this4 = this;
 
-      var _normalizeRange26 = this._normalizeRange(from, to, source);
+      var _normalizeRange28 = this._normalizeRange(from, to, source);
 
-      var _normalizeRange27 = slicedToArray(_normalizeRange26, 3);
+      var _normalizeRange29 = slicedToArray(_normalizeRange28, 3);
 
-      from = _normalizeRange27[0];
-      to = _normalizeRange27[1];
-      source = _normalizeRange27[2];
+      from = _normalizeRange29[0];
+      to = _normalizeRange29[1];
+      source = _normalizeRange29[2];
 
       var formats = {};
 
@@ -2772,7 +2858,7 @@ var Editor = function (_EventDispatcher) {
     }
   }]);
   return Editor;
-}(EventDispatcher$1);
+}(EventDispatcher);
 function cleanDelete(editor, from, to, change) {
   if (from !== to) {
     var line = editor.contents.getLine(from);
@@ -2974,166 +3060,82 @@ function patch(parent, element, node, isSvg) {
   return element;
 }
 
-var paragraph = {
-  name: 'paragraph',
-  selector: 'p',
-  vdom: function vdom(children) {
-    return h(
-      'p',
-      null,
-      children
-    );
-  }
-};
+/*!
+ * escape-html
+ * Copyright(c) 2012-2013 TJ Holowaychuk
+ * Copyright(c) 2015 Andreas Lubbe
+ * Copyright(c) 2015 Tiancheng "Timothy" Gu
+ * MIT Licensed
+ */
 
-var header = {
-  name: 'header',
-  selector: 'h1, h2, h3, h4, h5, h6',
-  defaultFollows: true,
-  dom: function dom(node) {
-    return { header: parseInt(node.nodeName.replace('H', '')) };
-  },
-  vdom: function vdom(children, attr) {
-    var H = 'h' + attr.header;
-    return h(
-      H,
-      null,
-      children
-    );
-  }
-};
+/**
+ * Module variables.
+ * @private
+ */
 
-var list = {
-  name: 'list',
-  selector: 'ul > li, ol > li',
-  optimize: true,
-  dom: function dom(node) {
-    var indent = -1,
-        parent = node.parentNode;
-    var list = parent.nodeName === 'OL' ? 'ordered' : 'bullet';
-    while (parent) {
-      if (/^UL|OL$/.test(parent.nodeName)) indent++;else if (parent.nodeName !== 'LI') break;
-      parent = parent.parentNode;
+var matchHtmlRegExp = /["'&<>]/;
+
+/**
+ * Module exports.
+ * @public
+ */
+
+var escapeHtml_1 = escapeHtml;
+
+/**
+ * Escape special characters in the given string of html.
+ *
+ * @param  {string} string The string to escape for inserting into HTML
+ * @return {string}
+ * @public
+ */
+
+function escapeHtml(string) {
+  var str = '' + string;
+  var match = matchHtmlRegExp.exec(str);
+
+  if (!match) {
+    return str;
+  }
+
+  var escape;
+  var html = '';
+  var index = 0;
+  var lastIndex = 0;
+
+  for (index = match.index; index < str.length; index++) {
+    switch (str.charCodeAt(index)) {
+      case 34: // "
+        escape = '&quot;';
+        break;
+      case 38: // &
+        escape = '&amp;';
+        break;
+      case 39: // '
+        escape = '&#39;';
+        break;
+      case 60: // <
+        escape = '&lt;';
+        break;
+      case 62: // >
+        escape = '&gt;';
+        break;
+      default:
+        continue;
     }
-    var attr = { list: list };
-    if (indent) attr.indent = indent;
-    return attr;
-  },
-  vdom: function vdom(lists) {
-    var topLevelChildren = [];
-    var levels = [];
-    // e.g. levels = [ul, li, ul, li]
 
-    lists.forEach(function (_ref) {
-      var _ref2 = slicedToArray(_ref, 2),
-          children = _ref2[0],
-          attr = _ref2[1];
+    if (lastIndex !== index) {
+      html += str.substring(lastIndex, index);
+    }
 
-      var List = attr.list === 'ordered' ? 'ol' : 'ul';
-      var index = Math.min((attr.indent || 0) * 2, levels.length);
-      var item = h(
-        'li',
-        null,
-        children
-      );
-      var list = levels[index];
-      if (list && list.name === List) {
-        list.children.push(item);
-      } else {
-        list = h(
-          List,
-          null,
-          item
-        );
-        var childrenArray = index ? levels[index - 1].children : topLevelChildren;
-        childrenArray.push(list);
-        levels[index] = list;
-      }
-      levels[index + 1] = item;
-      levels.length = index + 2;
-    });
-
-    return topLevelChildren;
+    lastIndex = index + 1;
+    html += escape;
   }
-};
 
-var blockquote = {
-  name: 'blockquote',
-  selector: 'blockquote p',
-  optimize: true,
-  vdom: function vdom(quotes) {
-    return h(
-      'blockquote',
-      null,
-      quotes.map(function (_ref3) {
-        var _ref4 = slicedToArray(_ref3, 1),
-            children = _ref4[0];
-
-        return h(
-          'p',
-          null,
-          children
-        );
-      })
-    );
-  }
-};
-
-var bold = {
-  name: 'bold',
-  selector: 'strong, b',
-  vdom: function vdom(children) {
-    return h(
-      'strong',
-      null,
-      children
-    );
-  }
-};
-
-var italics = {
-  name: 'italic',
-  selector: 'em, i',
-  vdom: function vdom(children) {
-    return h(
-      'em',
-      null,
-      children
-    );
-  }
-};
-
-var link = {
-  name: 'link',
-  selector: 'a[href]',
-  dom: function dom(node) {
-    return node.href;
-  },
-  vdom: function vdom(children, attr) {
-    return h(
-      'a',
-      { href: attr.link, target: '_blank' },
-      children
-    );
-  }
-};
-
-var image = {
-  name: 'image',
-  selector: 'img',
-  dom: function dom(node) {
-    return node.src;
-  },
-  vdom: function vdom(value) {
-    return h('img', { src: value });
-  }
-};
-
-var defaultPaper = {
-  blocks: [paragraph, header, list, blockquote],
-  markups: [bold, italics, link],
-  embeds: [image]
-};
+  return lastIndex !== index
+    ? html + str.substring(lastIndex, index)
+    : html;
+}
 
 var indexOf = [].indexOf;
 
@@ -3288,83 +3290,6 @@ function isBRNode(view, node) {
   node.nextSibling.nodeType === Node.TEXT_NODE || node.nextSibling.nodeName === 'BR' || view.paper.markups.matches(node.nextSibling) || view.paper.embeds.matches(node.nextSibling));
 }
 
-/*!
- * escape-html
- * Copyright(c) 2012-2013 TJ Holowaychuk
- * Copyright(c) 2015 Andreas Lubbe
- * Copyright(c) 2015 Tiancheng "Timothy" Gu
- * MIT Licensed
- */
-
-/**
- * Module variables.
- * @private
- */
-
-var matchHtmlRegExp = /["'&<>]/;
-
-/**
- * Module exports.
- * @public
- */
-
-var escapeHtml_1 = escapeHtml;
-
-/**
- * Escape special characters in the given string of html.
- *
- * @param  {string} string The string to escape for inserting into HTML
- * @return {string}
- * @public
- */
-
-function escapeHtml(string) {
-  var str = '' + string;
-  var match = matchHtmlRegExp.exec(str);
-
-  if (!match) {
-    return str;
-  }
-
-  var escape;
-  var html = '';
-  var index = 0;
-  var lastIndex = 0;
-
-  for (index = match.index; index < str.length; index++) {
-    switch (str.charCodeAt(index)) {
-      case 34: // "
-        escape = '&quot;';
-        break;
-      case 38: // &
-        escape = '&amp;';
-        break;
-      case 39: // '
-        escape = '&#39;';
-        break;
-      case 60: // <
-        escape = '&lt;';
-        break;
-      case 62: // >
-        escape = '&gt;';
-        break;
-      default:
-        continue;
-    }
-
-    if (lastIndex !== index) {
-      html += str.substring(lastIndex, index);
-    }
-
-    lastIndex = index + 1;
-    html += escape;
-  }
-
-  return lastIndex !== index
-    ? html + str.substring(lastIndex, index)
-    : html;
-}
-
 var nodeMarkup = new WeakMap();
 
 var br = h('br', null);
@@ -3453,11 +3378,74 @@ function deltaToVdom(view, delta) {
       }
     } else {
       var node = block.vdom.call(paper, children, attr);
+      decorateBlock(node, attr);
       blockChildren.push(node);
     }
   });
 
   return container.call(paper, blockChildren, view);
+}
+
+function decorateBlock(vdom, attr) {
+  if (!attr.attributes && !attr.classes) return vdom;
+  var attributes = attr.attributes,
+      classes = attr.classes;
+
+  if (attributes) {
+    Object.keys(attributes).forEach(function (name) {
+      vdom.attributes[name] = attributes[name];
+    });
+  }
+  if (classes) {
+    var classArray = Object.keys(classes);
+    if (classArray.length) {
+      if (vdom.attributes.class) classArray.unshift(vdom.attributes.class);
+      vdom.attributes.class = classArray.join(' ');
+    }
+  }
+  return vdom;
+}
+
+function undecorateBlock(node, block, attr) {
+  var ignoreClasses = {};
+  var ignoreAttributes = { class: true };
+  block.selector.replace(/\.([-\w])/, function (_, name) {
+    return ignoreClasses[name] = true;
+  });
+  block.selector.replace(/\[([-\w])[^\]]\]/, function (_, name) {
+    return ignoreAttributes[name] = true;
+  });
+  var attrLength = node.attributes.length;
+
+  if (node.classList.length) {
+    attrLength--;
+    var classes = {};
+    var match = false;
+
+    for (var i = 0; i < node.classList.length; i++) {
+      var name = node.classList.item(i);
+      if (!ignoreClasses[name]) {
+        match = true;
+        classes[name] = true;
+      }
+    }
+    if (match) attr.classes = classes;
+  }
+
+  if (attrLength) {
+    var _attributes = {};
+    var _match = false;
+
+    for (var _i = 0; _i < node.attributes.length; _i++) {
+      var attribute = node.attributes[_i];
+      if (!ignoreAttributes[attribute.name]) {
+        _match = true;
+        _attributes[attribute.name] = attribute.value || true;
+      }
+    }
+    if (_match) attr.attributes = _attributes;
+  }
+  return attr;
 }
 
 function deltaFromDom(view) {
@@ -3513,9 +3501,9 @@ function deltaFromDom(view) {
       if (firstBlockSeen) delta.insert('\n', currentBlock);else firstBlockSeen = true;
       var block = blocks.find(node);
       if (block !== blocks.getDefault()) {
-        currentBlock = block.dom ? block.dom.call(paper, node) : defineProperty({}, block.name, true);
+        currentBlock = undecorateBlock(node, block, block.dom ? block.dom.call(paper, node) : defineProperty({}, block.name, true));
       } else {
-        currentBlock = undefined;
+        currentBlock = undecorateBlock(node, block, {});
       }
     }
   }
@@ -3571,6 +3559,168 @@ function childrenToHTML(children) {
     return html + (child.name ? nodeToHTML(child) : escapeHtml_1(child).replace(/\xA0/g, '&nbsp;'));
   }, '');
 }
+
+var paragraph = {
+  name: 'paragraph',
+  selector: 'p',
+  vdom: function vdom(children) {
+    return h(
+      'p',
+      null,
+      children
+    );
+  }
+};
+
+var header = {
+  name: 'header',
+  selector: 'h1, h2, h3, h4, h5, h6',
+  defaultFollows: true,
+  dom: function dom(node) {
+    return { header: parseInt(node.nodeName.replace('H', '')) };
+  },
+  vdom: function vdom(children, attr) {
+    var H = 'h' + attr.header;
+    return h(
+      H,
+      null,
+      children
+    );
+  }
+};
+
+var list = {
+  name: 'list',
+  selector: 'ul > li, ol > li',
+  optimize: true,
+  dom: function dom(node) {
+    var indent = -1,
+        parent = node.parentNode;
+    var list = parent.nodeName === 'OL' ? 'ordered' : 'bullet';
+    while (parent) {
+      if (/^UL|OL$/.test(parent.nodeName)) indent++;else if (parent.nodeName !== 'LI') break;
+      parent = parent.parentNode;
+    }
+    var attr = { list: list };
+    if (indent) attr.indent = indent;
+    return attr;
+  },
+  vdom: function vdom(lists) {
+    var topLevelChildren = [];
+    var levels = [];
+    // e.g. levels = [ul, li, ul, li]
+
+    lists.forEach(function (_ref) {
+      var _ref2 = slicedToArray(_ref, 2),
+          children = _ref2[0],
+          attr = _ref2[1];
+
+      var List = attr.list === 'ordered' ? 'ol' : 'ul';
+      var index = Math.min((attr.indent || 0) * 2, levels.length);
+      var item = decorateBlock(h(
+        'li',
+        null,
+        children
+      ), attr);
+      var list = levels[index];
+      if (list && list.name === List) {
+        list.children.push(item);
+      } else {
+        list = h(
+          List,
+          null,
+          item
+        );
+        var childrenArray = index ? levels[index - 1].children : topLevelChildren;
+        childrenArray.push(list);
+        levels[index] = list;
+      }
+      levels[index + 1] = item;
+      levels.length = index + 2;
+    });
+
+    return topLevelChildren;
+  }
+};
+
+var blockquote = {
+  name: 'blockquote',
+  selector: 'blockquote p',
+  optimize: true,
+  vdom: function vdom(quotes) {
+    return h(
+      'blockquote',
+      null,
+      quotes.map(function (_ref3) {
+        var _ref4 = slicedToArray(_ref3, 2),
+            children = _ref4[0],
+            attr = _ref4[1];
+
+        return decorateBlock(h(
+          'p',
+          null,
+          children
+        ), attr);
+      })
+    );
+  }
+};
+
+var bold = {
+  name: 'bold',
+  selector: 'strong, b',
+  vdom: function vdom(children) {
+    return h(
+      'strong',
+      null,
+      children
+    );
+  }
+};
+
+var italics = {
+  name: 'italic',
+  selector: 'em, i',
+  vdom: function vdom(children) {
+    return h(
+      'em',
+      null,
+      children
+    );
+  }
+};
+
+var link = {
+  name: 'link',
+  selector: 'a[href]',
+  dom: function dom(node) {
+    return node.href;
+  },
+  vdom: function vdom(children, attr) {
+    return h(
+      'a',
+      { href: attr.link, target: '_blank' },
+      children
+    );
+  }
+};
+
+var image = {
+  name: 'image',
+  selector: 'img',
+  dom: function dom(node) {
+    return node.src;
+  },
+  vdom: function vdom(value) {
+    return h('img', { src: value });
+  }
+};
+
+var defaultPaper = {
+  blocks: [paragraph, header, list, blockquote],
+  markups: [bold, italics, link],
+  embeds: [image]
+};
 
 var Paper = function Paper(types) {
   var _this = this;
@@ -3650,6 +3800,14 @@ var Types = function () {
       this.selector = this.array.map(function (type) {
         return type.selector;
       }).join(', ');
+    }
+  }, {
+    key: 'clear',
+    value: function clear() {
+      this.selector = '';
+      this.types = {};
+      this.array = [];
+      this.priorities = {};
     }
   }, {
     key: 'get',
@@ -3959,6 +4117,7 @@ var View = function (_EventDispatcher) {
     if (options.modules) Object.keys(options.modules).forEach(function (key) {
       return _this.modules[key] = options.modules[key](_this);
     });
+    _this.render();
     return _this;
   }
 
@@ -4246,6 +4405,10 @@ var View = function (_EventDispatcher) {
           if (_typeof(op.insert) === 'object') {
             return !_this8.paper.embeds.find(op.insert);
           } else if (op.attributes) {
+            // If attributes is empty except for classes/attributes than it is the default block
+            if (!Object.keys(op.attributes).filter(function (key) {
+              return key !== 'classes' && key !== 'attributes';
+            }).length) return;
             return !(_this8.paper.blocks.find(op.attributes) || _this8.paper.markups.find(op.attributes));
           }
         });
@@ -4263,9 +4426,9 @@ var View = function (_EventDispatcher) {
         if (checking) clearTimeout(checking);
         checking = setTimeout(function () {
           checking = 0;
-          var diff = editor.contents.compose(_this8.decorators).diff(deltaFromDom(view));
+          var diff = _this8.editor.contents.compose(_this8.decorators).diff(deltaFromDom(_this8));
           if (diff.length()) {
-            console.error('Delta out of sync with DOM:', diff, deltaFromDom(view));
+            console.error('Delta out of sync with DOM:', diff, deltaFromDom(_this8));
           }
         }, 20);
       });
@@ -5797,7 +5960,7 @@ var defaultViewModules = {
   history: history()
 };
 
-exports.EventDispatcher = EventDispatcher$1;
+exports.EventDispatcher = EventDispatcher;
 exports.Delta = Delta;
 exports.Editor = Editor;
 exports.View = View;

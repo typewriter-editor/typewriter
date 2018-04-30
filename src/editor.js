@@ -408,8 +408,81 @@ export default class Editor extends EventDispatcher {
       Object.keys(line.attributes).forEach(name => !formats[name] && (formats[name] = null));
       change.retain(1, formats);
     });
+    change.chop();
 
-    return change.ops.length ? this.updateContents(change, source) : this.contents;
+    return change.ops.length ? this.updateContents(change, source) : null;
+  }
+
+  /**
+   * Adds additional attributes or classes to the lines intersected by `from` and `to`. Markups are easy to nest to add
+   * additional attributes/classes, but you cannot do that with lines/blocks.
+   * Setting a class to false will remove a previous decoration, but it will not remove a class which is part of the
+   * block definition. This method is a cross-over with HTML view and should be used sparingly.
+   *
+   * Example:
+   * ```js
+   * editor.decorateLine(0, {
+   *   attributes: { 'data-placeholder': 'Enter Text' },
+   *   classes: { active: true, empty: true }
+   * });
+   * // <p data-placeholder="Enter Text" class="active empty">
+   * ```
+   *
+   * @param {Number} from        The starting index
+   * @param {Number} to          The ending index
+   * @param {String} decorations The attributes/classes for the line.
+   * @param {String} source      The source of the change, user, api, or silent
+   * @returns {Delta}            Returns the change when successful, or null if not
+   */
+  decorateLine(from, to, decorations, source) {
+    [ from, to, decorations, source ] = this._normalizeRange(from, to, decorations, source);
+    const change = this.delta();
+
+    if (decorations.attributes) {
+      Object.keys(decorations.attributes).forEach(name => {
+        if (decorations.attributes[name] === '') decorations.attributes[name] = true;
+      });
+    }
+
+    this.contents.getLines(from, to).forEach(line => {
+      if (!change.ops.length) change.retain(line.end - 1);
+      else change.retain(line.end - line.start - 1);
+      let { attributes, classes } = decorations;
+
+      // Merge with any existing formats on the line
+      if (attributes) {
+        if (line.attributes.attributes) {
+          decorations = { ...decorations, attributes: { ...line.attributes.attributes, ...attributes }};
+        }
+
+        Object.keys(attributes).forEach(name => {
+          const value = attributes[name];
+          if (value == null || value === false) delete decorations.attributes[name];
+        });
+
+        if (!Object.keys(decorations.attributes).length) {
+          decorations = { ...decorations, attributes: null };
+        }
+      }
+      if (classes) {
+        if (line.attributes.classes) {
+          decorations = { ...decorations, classes: { ...line.attributes.classes, ...classes }};
+        }
+
+        Object.keys(classes).forEach(name => {
+          if (!classes[name]) delete decorations.classes[name];
+        });
+
+        if (!Object.keys(decorations.classes).length) {
+          decorations = { ...decorations, classes: null };
+        }
+      }
+
+      change.retain(1, decorations);
+    });
+    change.chop();
+
+    return change.ops.length ? this.updateContents(change, source) : null;
   }
 
   /**
