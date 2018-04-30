@@ -1,3 +1,4 @@
+import EventDispatcher from './event-dispatcher';
 import Editor from './editor';
 import { renderChildren } from './view/vdom';
 import defaultPaper from './view/defaultPaper';
@@ -85,6 +86,7 @@ export default class View extends EventDispatcher {
     this.init();
     this.modules = {};
     if (options.modules) Object.keys(options.modules).forEach(key => this.modules[key] = options.modules[key](this));
+    this.render();
   }
 
   /**
@@ -311,9 +313,9 @@ export default class View extends EventDispatcher {
       if (checking) clearTimeout(checking);
       checking = setTimeout(() => {
         checking = 0;
-        const diff = editor.contents.compose(this.decorators).diff(deltaFromDom(view));
+        const diff = this.editor.contents.compose(this.decorators).diff(deltaFromDom(this));
         if (diff.length()) {
-          console.error('Delta out of sync with DOM:', diff, deltaFromDom(view));
+          console.error('Delta out of sync with DOM:', diff, deltaFromDom(this));
         }
       }, 20);
     });
