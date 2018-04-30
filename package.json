@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.2.5",
+  "version": "0.2.7",
   "scripts": {
     "start": "rollup --config rollup.config.dev.js --watch",
     "build": "rollup --config",
@@ -14,7 +14,6 @@
     "url": "https://github.com/typewriter-editor/typewriter.git"
   },
   "main": "dist/typewriter.js",
-  "module": "src/index.js",
   "engines": {
     "node": ">=4"
   },
