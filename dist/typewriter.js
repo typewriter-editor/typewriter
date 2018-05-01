@@ -5475,13 +5475,17 @@ var methods = {
 		this.refs.input.focus();
 	},
 	exitInput: function exitInput() {
+		var _get2 = this.get(),
+		    view = _get2.view;
+
 		this.set({ inputMode: false, href: '' });
+		view.focus();
 	},
 	createLink: function createLink() {
-		var _get2 = this.get(),
-		    href = _get2.href,
-		    view = _get2.view,
-		    range = _get2.range;
+		var _get3 = this.get(),
+		    href = _get3.href,
+		    view = _get3.view,
+		    range = _get3.range;
 
 		href = href.trim();
 		if (href) {
@@ -5491,27 +5495,27 @@ var methods = {
 		this.exitInput();
 	},
 	onMarkupClick: function onMarkupClick(item) {
-		var _get3 = this.get(),
-		    view = _get3.view,
-		    range = _get3.range;
+		var _get4 = this.get(),
+		    view = _get4.view,
+		    range = _get4.range;
 
 		view.editor.toggleTextFormat(range, defineProperty({}, item.name, true), SOURCE_USER$6);
 		// Re-calculate the position of the menu
 		this.set({ range: range.slice() });
 	},
 	onBlockClick: function onBlockClick(item) {
-		var _get4 = this.get(),
-		    view = _get4.view,
-		    range = _get4.range;
+		var _get5 = this.get(),
+		    view = _get5.view,
+		    range = _get5.range;
 
 		view.editor.toggleLineFormat(range, defineProperty({}, item.name, item.value || true), SOURCE_USER$6);
 		// Re-calculate the position of the menu
 		this.set({ range: range.slice() });
 	},
 	onLinkClick: function onLinkClick() {
-		var _get5 = this.get(),
-		    view = _get5.view,
-		    range = _get5.range;
+		var _get6 = this.get(),
+		    view = _get6.view,
+		    range = _get6.range;
 
 		if (view.editor.getTextFormat(range).link) {
 			view.editor.formatText(range, { link: null }, SOURCE_USER$6);
@@ -5520,9 +5524,9 @@ var methods = {
 		}
 	},
 	onHeaderClick: function onHeaderClick(item) {
-		var _get6 = this.get(),
-		    view = _get6.view,
-		    range = _get6.range;
+		var _get7 = this.get(),
+		    view = _get7.view,
+		    range = _get7.range;
 
 		if (view.editor.getTextFormat(range).link) {
 			view.editor.formatText(range, { link: null }, SOURCE_USER$6);
@@ -5591,8 +5595,12 @@ function create_main_fragment(component, state) {
 		component.onKeyDown(event);
 	}
 
+	function blur_handler(event) {
+		component.exitInput();
+	}
+
 	function click_handler_1(event) {
-		component.set({ inputMode: true });
+		component.exitInput();
 	}
 
 	return {
@@ -5617,6 +5625,7 @@ function create_main_fragment(component, state) {
 			div_1.className = "items svelte-1wig6bq";
 			addListener(input, "input", input_input_handler);
 			addListener(input, "keydown", keydown_handler);
+			addListener(input, "blur", blur_handler);
 			input.placeholder = "https://example.com/";
 			input.className = "svelte-1wig6bq";
 			addListener(i, "click", click_handler_1);
@@ -5698,6 +5707,7 @@ function create_main_fragment(component, state) {
 
 			removeListener(input, "input", input_input_handler);
 			removeListener(input, "keydown", keydown_handler);
+			removeListener(input, "blur", blur_handler);
 			if (component.refs.input === input) component.refs.input = null;
 			removeListener(i, "click", click_handler_1);
 			if (component.refs.menu === div) component.refs.menu = null;

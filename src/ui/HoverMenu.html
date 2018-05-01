@@ -14,8 +14,8 @@
     {/each}
   </div>
   <div class="link-input">
-    <input ref:input bind:value="href" on:keydown="onKeyDown(event)" placeholder="https://example.com/">
-    <i on:click="set({ inputMode: true,  })" class="close">×</i>
+    <input ref:input bind:value="href" on:keydown="onKeyDown(event)" on:blur="exitInput()" placeholder="https://example.com/">
+    <i on:click="exitInput()" class="close">×</i>
   </div>
 </div>
 
@@ -132,7 +132,9 @@
       },
 
       exitInput() {
+        let { view } = this.get();
         this.set({ inputMode: false, href: '' });
+        view.focus();
       },
 
       createLink() {
