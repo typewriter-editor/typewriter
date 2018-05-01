@@ -3144,9 +3144,13 @@ function escapeHtml(string) {
 var indexOf = [].indexOf;
 
 // Get the range (a tuple of indexes) for this view from the browser selection
-function getSelection(view) {
+function getSelection(view, range) {
   var root = view.root;
-  var selection = root.ownerDocument.defaultView.getSelection();
+  var selection = !range ? root.ownerDocument.defaultView.getSelection() : {
+    anchorNode: range.startContainer, anchorOffset: range.startOffset,
+    focusNode: range.endContainer, focusOffset: range.endOffset,
+    isCollapsed: range.collapsed
+  };
 
   if (!root.contains(selection.anchorNode)) {
     return null;
@@ -4199,6 +4203,7 @@ var View = function (_EventDispatcher) {
       var _this2 = this;
 
       var range = this.editor._normalizeRange(from, to);
+      range = this.editor.getSelectedRange(range);
       if (range && this.decorators.ops.length) {
         range = range.map(function (i) {
           return _this2.decorators.transform(i);
@@ -4228,6 +4233,7 @@ var View = function (_EventDispatcher) {
       var _this3 = this;
 
       var range = this.editor._normalizeRange(from, to);
+      range = this.editor.getSelectedRange(range);
       if (range && this.decorators.ops.length) {
         range = range.map(function (i) {
           return _this3.decorators.transform(i);
@@ -4344,10 +4350,10 @@ var View = function (_EventDispatcher) {
 
   }, {
     key: 'getSelection',
-    value: function getSelection$$1() {
+    value: function getSelection$$1(nativeRange) {
       var _this6 = this;
 
-      var range = getSelection(this);
+      var range = getSelection(this, nativeRange);
       if (range && this.reverseDecorators.ops.length) {
         range = range.map(function (i) {
           return _this6.reverseDecorators.transform(i);

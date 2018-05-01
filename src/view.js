@@ -141,6 +141,7 @@ export default class View extends EventDispatcher {
    */
   getBounds(from, to) {
     let range = this.editor._normalizeRange(from, to);
+    range = this.editor.getSelectedRange(range);
     if (range && this.decorators.ops.length) {
       range = range.map(i => this.decorators.transform(i));
     }
@@ -163,6 +164,7 @@ export default class View extends EventDispatcher {
    */
   getAllBounds(from, to) {
     let range = this.editor._normalizeRange(from, to);
+    range = this.editor.getSelectedRange(range);
     if (range && this.decorators.ops.length) {
       range = range.map(i => this.decorators.transform(i));
     }
@@ -249,8 +251,8 @@ export default class View extends EventDispatcher {
    *
    * @returns {Array} A range (or null) that represents the current browser selection
    */
-  getSelection() {
-    let range = getSelection(this);
+  getSelection(nativeRange) {
+    let range = getSelection(this, nativeRange);
     if (range && this.reverseDecorators.ops.length) {
       range = range.map(i => this.reverseDecorators.transform(i));
     }

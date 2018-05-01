@@ -1,9 +1,13 @@
 const indexOf = [].indexOf;
 
 // Get the range (a tuple of indexes) for this view from the browser selection
-export function getSelection(view) {
+export function getSelection(view, range) {
   const root = view.root;
-  const selection = root.ownerDocument.defaultView.getSelection();
+  const selection = !range ? root.ownerDocument.defaultView.getSelection() : {
+    anchorNode: range.startContainer, anchorOffset: range.startOffset,
+    focusNode: range.endContainer, focusOffset: range.endOffset,
+    isCollapsed: range.collapsed,
+  };
 
   if (!root.contains(selection.anchorNode)) {
     return null;
