@@ -442,7 +442,7 @@ export default class Delta {
     var delta = new Delta();
     while (thisIter.hasNext() || otherIter.hasNext()) {
       if (thisIter.peekType() === 'insert' && (priority || otherIter.peekType() !== 'insert')) {
-        delta.retain(length(thisIter.next()));
+        delta.retain(getOpLength(thisIter.next()));
       } else if (otherIter.peekType() === 'insert') {
         delta._push(otherIter.next());
       } else {

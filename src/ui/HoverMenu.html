@@ -115,11 +115,12 @@
         if (!view || !range) {
           pos = { top: -100000, left: -100000 };
         } else {
-          const target = view.getBounds(range);
           const menu = this.refs.menu;
+          const container = menu.offsetParent.getBoundingClientRect();
+          const target = view.getBounds(range);
           pos = {
-            top: target.top - menu.offsetHeight,
-            left: target.left + target.width / 2 - menu.offsetWidth / 2,
+            top: target.top - container.top - menu.offsetHeight,
+            left: target.left - container.left + target.width / 2 - menu.offsetWidth / 2,
           };
         }
         this.set({ pos });

@@ -695,6 +695,8 @@ function cleanDelete(editor, from, to, change) {
 
 // Ensures contents end with a newline
 function normalizeContents(contents) {
+  // Contents only have inserts. Deletes and retains belong to changes only.
+  contents.ops = contents.ops.filter(op => op.insert);
   const lastOp = contents.ops[contents.ops.length - 1];
   if (!lastOp || typeof lastOp.insert !== 'string' || lastOp.insert.slice(-1) !== '\n') contents.insert('\n');
   return contents;

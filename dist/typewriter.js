@@ -1652,7 +1652,7 @@ var Delta = function () {
       var delta = new Delta();
       while (thisIter.hasNext() || otherIter.hasNext()) {
         if (thisIter.peekType() === 'insert' && (priority || otherIter.peekType() !== 'insert')) {
-          delta.retain(length(thisIter.next()));
+          delta.retain(getOpLength(thisIter.next()));
         } else if (otherIter.peekType() === 'insert') {
           delta._push(otherIter.next());
         } else {
@@ -2876,6 +2876,10 @@ function cleanDelete(editor, from, to, change) {
 
 // Ensures contents end with a newline
 function normalizeContents(contents) {
+  // Contents only have inserts. Deletes and retains belong to changes only.
+  contents.ops = contents.ops.filter(function (op) {
+    return op.insert;
+  });
   var lastOp = contents.ops[contents.ops.length - 1];
   if (!lastOp || typeof lastOp.insert !== 'string' || lastOp.insert.slice(-1) !== '\n') contents.insert('\n');
   return contents;
@@ -4791,7 +4795,6 @@ function keyShortcuts() {
 }
 
 var SOURCE_USER$4 = 'user';
-var SOURCE_SILENT$2 = 'silent';
 var defaultOptions = {
   delay: 0,
   maxStack: 500
@@ -4854,7 +4857,7 @@ function history() {
       if (typeof entry[source] === 'function') {
         entry[source]();
       } else {
-        editor.updateContents(entry[source], SOURCE_SILENT$2, entry[source + 'Selection']);
+        editor.updateContents(entry[source], SOURCE_USER$4, entry[source + 'Selection']);
       }
       ignoreChange = false;
     }
@@ -5451,11 +5454,12 @@ var methods = {
 		if (!view || !range) {
 			pos = { top: -100000, left: -100000 };
 		} else {
-			var target = view.getBounds(range);
 			var menu = this.refs.menu;
+			var container = menu.offsetParent.getBoundingClientRect();
+			var target = view.getBounds(range);
 			pos = {
-				top: target.top - menu.offsetHeight,
-				left: target.left + target.width / 2 - menu.offsetWidth / 2
+				top: target.top - container.top - menu.offsetHeight,
+				left: target.left - container.left + target.width / 2 - menu.offsetWidth / 2
 			};
 		}
 		this.set({ pos: pos });

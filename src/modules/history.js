@@ -65,7 +65,7 @@ export default function history(options = {}) {
       if (typeof entry[source] === 'function') {
         entry[source]();
       } else {
-        editor.updateContents(entry[source], SOURCE_SILENT, entry[source + 'Selection']);
+        editor.updateContents(entry[source], SOURCE_USER, entry[source + 'Selection']);
       }
       ignoreChange = false;
     }
