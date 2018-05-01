@@ -13,7 +13,9 @@ export default function hoverMenu() {
           target: view.root.parentNode,
           data: { view, range },
         });
-        requestAnimationFrame(() => menu.set({ active: true }));
+        if (menu.get().items.length) {
+          requestAnimationFrame(() => menu.set({ active: true }));
+        }
       } else {
         menu.set({ range });
       }

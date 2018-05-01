@@ -5912,9 +5912,11 @@ function hoverMenu() {
           target: view.root.parentNode,
           data: { view: view, range: range }
         });
-        requestAnimationFrame(function () {
-          return menu.set({ active: true });
-        });
+        if (menu.get().items.length) {
+          requestAnimationFrame(function () {
+            return menu.set({ active: true });
+          });
+        }
       } else {
         menu.set({ range: range });
       }
