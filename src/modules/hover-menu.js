@@ -29,7 +29,7 @@ export default function hoverMenu() {
     function onEditorChange({ selection }) {
       const validSelection = selection && selection[0] !== selection[1];
       const inputMode = menu && menu.get().inputMode;
-      if (!validSelection) {
+      if (!validSelection || !view.enabled) {
         if (!inputMode) hide();
         return;
       }
