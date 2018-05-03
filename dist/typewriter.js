@@ -4501,7 +4501,8 @@ function input() {
     var mutationOptions = {
       characterData: true,
       characterDataOldValue: true,
-      subtree: true, childList: true,
+      subtree: true,
+      childList: true,
       attributes: true
     };
 
@@ -4545,7 +4546,7 @@ function input() {
           // console.log('changing a little', change);
           editor.updateContents(change, SOURCE_USER$2, selection);
         }
-      } else if (list.length === 1 && mutation.type === 'childList' && addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE) ; else {
+      } else if (list.length === 1 && mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE) ; else {
         var contents = deltaFromDom(view, view.root);
         contents = contents.compose(view.reverseDecorators);
         var _change = editor.contents.diff(contents);
@@ -4844,7 +4845,7 @@ function history() {
       action(event, 'undo', 'redo');
     }
 
-    function redo() {
+    function redo(event) {
       action(event, 'redo', 'undo');
     }
 
@@ -5942,7 +5943,7 @@ function hoverMenu() {
 
       var validSelection = selection && selection[0] !== selection[1];
       var inputMode = menu && menu.get().inputMode;
-      if (!validSelection) {
+      if (!validSelection || !view.enabled) {
         if (!inputMode) hide();
         return;
       }
