@@ -15,7 +15,8 @@ export default function input() {
     const mutationOptions = {
       characterData: true,
       characterDataOldValue: true,
-      subtree: true,childList: true,
+      subtree: true,
+      childList: true,
       attributes: true
     };
 
@@ -60,7 +61,7 @@ export default function input() {
           editor.updateContents(change, SOURCE_USER, selection);
         }
       } else if (list.length === 1 && mutation.type === 'childList' &&
-        addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE)
+        mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE)
       {
 
       } else {

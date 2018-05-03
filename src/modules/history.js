@@ -41,7 +41,7 @@ export default function history(options = {}) {
       action(event, 'undo', 'redo');
     }
 
-    function redo() {
+    function redo(event) {
       action(event, 'redo', 'undo');
     }
 
