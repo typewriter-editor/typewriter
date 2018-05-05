@@ -65,7 +65,7 @@ export default function input() {
       {
 
       } else {
-        let contents = deltaFromDom(view, view.root);
+        let contents = deltaFromDom(view, view.root, { ignoreAttributes: true });
         contents = contents.compose(view.reverseDecorators);
         const change = editor.contents.diff(contents);
         // console.log('changing a lot (possibly)', change);

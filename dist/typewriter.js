@@ -3458,7 +3458,7 @@ function undecorateBlock(node, block, attr) {
 
 function deltaFromDom(view) {
   var root = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : view.root;
-  var notInDOM = arguments[2];
+  var opts = arguments[2];
 
   var paper = view.paper;
   var blocks = paper.blocks,
@@ -3468,7 +3468,7 @@ function deltaFromDom(view) {
 
   var walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: function acceptNode(node) {
-      return (node.nodeType === Node.TEXT_NODE || notInDOM || node.offsetParent) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
+      return (node.nodeType === Node.TEXT_NODE || !opts || opts.notInDom || node.offsetParent) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
     }
   });
   var delta = new Delta();
@@ -3509,9 +3509,12 @@ function deltaFromDom(view) {
       if (firstBlockSeen) delta.insert('\n', currentBlock);else firstBlockSeen = true;
       var block = blocks.find(node);
       if (block !== blocks.getDefault()) {
-        currentBlock = undecorateBlock(node, block, block.dom ? block.dom.call(paper, node) : defineProperty({}, block.name, true));
+        currentBlock = block.dom ? block.dom.call(paper, node) : defineProperty({}, block.name, true);
       } else {
-        currentBlock = undecorateBlock(node, block, {});
+        currentBlock = {};
+      }
+      if (!opts || !opts.ignoreAttributes) {
+        currentBlock = undecorateBlock(node, block, currentBlock);
       }
     }
   }
@@ -3532,7 +3535,7 @@ function deltaToHTML(view, delta) {
 function deltaFromHTML(view, html) {
   var template = document.createElement('template');
   template.innerHTML = '<div>' + html + '</div>';
-  return deltaFromDom(view, template.content.firstChild, true);
+  return deltaFromDom(view, template.content.firstChild, { notInDom: true });
 }
 
 // Joins adjacent markup nodes
@@ -4438,7 +4441,7 @@ var View = function (_EventDispatcher) {
           checking = 0;
           var diff = _this8.editor.contents.compose(_this8.decorators).diff(deltaFromDom(_this8));
           if (diff.length()) {
-            console.error('Delta out of sync with DOM:', diff, deltaFromDom(_this8));
+            console.error('Delta out of sync with DOM:', diff, _this8.editor.contents, deltaFromDom(_this8), _this8.decorators);
           }
         }, 20);
       });
@@ -4547,7 +4550,7 @@ function input() {
           editor.updateContents(change, SOURCE_USER$2, selection);
         }
       } else if (list.length === 1 && mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE) ; else {
-        var contents = deltaFromDom(view, view.root);
+        var contents = deltaFromDom(view, view.root, { ignoreAttributes: true });
         contents = contents.compose(view.reverseDecorators);
         var _change = editor.contents.diff(contents);
         // console.log('changing a lot (possibly)', change);
@@ -4831,7 +4834,7 @@ function history() {
 
   return function (view) {
     var editor = view.editor;
-    options = _extends({}, defaultOptions, { options: options });
+    options = _extends({}, defaultOptions, options);
 
     var stack = options.stack || {
       undo: [],

@@ -146,13 +146,13 @@ function undecorateBlock(node, block, attr) {
 }
 
 
-export function deltaFromDom(view, root = view.root, notInDOM) {
+export function deltaFromDom(view, root = view.root, opts) {
   const paper = view.paper;
   const { blocks, markups, embeds } = paper;
 
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
-      return (node.nodeType === Node.TEXT_NODE || notInDOM || node.offsetParent) &&
+      return (node.nodeType === Node.TEXT_NODE || (!opts || opts.notInDom) || node.offsetParent) &&
         NodeFilter.FILTER_ACCEPT ||
         NodeFilter.FILTER_REJECT;
     }
@@ -193,9 +193,12 @@ export function deltaFromDom(view, root = view.root, notInDOM) {
       else firstBlockSeen = true;
       const block = blocks.find(node);
       if (block !== blocks.getDefault()) {
-        currentBlock = undecorateBlock(node, block, block.dom ? block.dom.call(paper, node) : { [block.name]: true });
+        currentBlock = block.dom ? block.dom.call(paper, node) : { [block.name]: true };
       } else {
-        currentBlock = undecorateBlock(node, block, {});
+        currentBlock = {};
+      }
+      if (!opts || !opts.ignoreAttributes) {
+        currentBlock = undecorateBlock(node, block, currentBlock);
       }
     }
   }
@@ -216,7 +219,7 @@ export function deltaToHTML(view, delta) {
 export function deltaFromHTML(view, html) {
   const template = document.createElement('template');
   template.innerHTML = '<div>' + html + '</div>';
-  return deltaFromDom(view, template.content.firstChild, true);
+  return deltaFromDom(view, template.content.firstChild, { notInDom: true });
 }
 
 

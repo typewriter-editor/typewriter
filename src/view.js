@@ -319,7 +319,7 @@ export default class View extends EventDispatcher {
         checking = 0;
         const diff = this.editor.contents.compose(this.decorators).diff(deltaFromDom(this));
         if (diff.length()) {
-          console.error('Delta out of sync with DOM:', diff, deltaFromDom(this));
+          console.error('Delta out of sync with DOM:', diff, this.editor.contents, deltaFromDom(this), this.decorators);
         }
       }, 20);
     });

@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "scripts": {
     "start": "rollup --config rollup.config.dev.js --watch",
     "build": "rollup --config",

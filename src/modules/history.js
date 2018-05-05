@@ -27,7 +27,7 @@ export default function history(options = {}) {
 
   return view => {
     const editor = view.editor;
-    options = { ...defaultOptions, options };
+    options = { ...defaultOptions, ...options };
 
     const stack = options.stack || {
       undo: [],
