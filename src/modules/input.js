@@ -1,6 +1,6 @@
 import { getNodeIndex } from '../view/selection';
 import { deltaFromDom } from '../view/dom';
-import diff from 'fast-diff';
+import diff from '../diff';
 
 const SOURCE_USER = 'user';
 const lastWord = /\w+[^\w]*$/;

@@ -1,6 +1,6 @@
 import EventDispatcher from './event-dispatcher';
 import Delta from './delta';
-import { shallowEqual, deepEqual } from 'fast-equals';
+import { shallowEqual, deepEqual } from './equal';
 
 const SOURCE_API = 'api';
 const SOURCE_USER = 'user';

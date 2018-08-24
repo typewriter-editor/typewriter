@@ -1,5 +1,5 @@
-import diff from 'fast-diff';
-import { deepEqual } from 'fast-equals';
+import diff from './diff';
+import { deepEqual } from './equal';
 
 const NULL_CHARACTER = String.fromCharCode(0);  // Placeholder char for embed in diff()
 

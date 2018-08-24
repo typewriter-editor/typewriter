@@ -124,7 +124,7 @@ describe('======== dom ========', () => {
         <p>I just washed a behind that I‘m sure wasn‘t mine.</p>
         <p>There‘s too many kids in this tub.</p>`;
 
-      const delta = deltaFromDom(view, root, true);
+      const delta = deltaFromDom(view, root, { notInDom: true });
 
       expect(delta.ops).to.deep.equal([
         { insert: 'There‘s too many kids in this tub.\nThere‘s too many elbows to scrub.\nI just washed a behind that ' +
@@ -146,7 +146,7 @@ describe('======== dom ========', () => {
         `</blockquote>` +
         `<p>&nbsp; &nbsp; —Bertrand Russell</p>`;
 
-      const delta = deltaFromDom(view, root, true);
+      const delta = deltaFromDom(view, root, { notInDom: true });
 
       expect(delta.ops).to.deep.equal([
         { insert: 'Quotes:' },

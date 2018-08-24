@@ -2,12 +2,11 @@ import EventDispatcher from './event-dispatcher';
 import Editor from './editor';
 import { renderChildren } from './view/vdom';
 import defaultPaper from './view/defaultPaper';
-import { getSelection, setSelection, getBrowserRange, getNodeAndOffset } from './view/selection';
+import { getSelection, setSelection, getBrowserRange } from './view/selection';
 import { deltaToVdom, deltaFromDom, deltaToHTML, deltaFromHTML } from './view/dom';
 import Paper from './paper';
-import shortcuts from 'shortcut-string';
-import { shallowEqual } from 'fast-equals';
-import diff from 'fast-diff';
+import { shortcutFromEvent } from './shortcut-string';
+import { shallowEqual } from './equal';
 
 const SOURCE_API = 'api';
 const SOURCE_USER = 'user';
@@ -212,7 +211,7 @@ export default class View extends EventDispatcher {
     if (!this.enabled) vdom.attributes.contenteditable = undefined;
     this.fire('rendering', changeEvent);
     renderChildren(vdom, this.root);
-    this.updateBrowserSelection();
+    if (this.hasFocus()) this.updateBrowserSelection();
     this.fire('render', changeEvent);
   }
 
@@ -278,7 +277,7 @@ export default class View extends EventDispatcher {
     this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, this.paper.blocks.getDefault().selector);
 
     const onKeyDown = event => {
-      let shortcut = shortcuts.fromEvent(event);
+      let shortcut = shortcutFromEvent(event);
       this.fire(`shortcut:${shortcut}`, event, shortcut);
       this.fire(`shortcut`, event, shortcut);
       if (modExpr.test(shortcut)) {

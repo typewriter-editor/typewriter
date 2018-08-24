@@ -1,7 +1,3 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
 const dispatcherEvents = new WeakMap();
 
 class EventDispatcher {
@@ -4668,19 +4664,5 @@ const defaultViewModules = {
   history: history()
 };
 
-exports.EventDispatcher = EventDispatcher;
-exports.Delta = Delta;
-exports.Editor = Editor;
-exports.View = View;
-exports.Paper = Paper;
-exports.h = h;
-exports.input = input;
-exports.keyShortcuts = keyShortcuts;
-exports.history = history;
-exports.placeholder = placeholder;
-exports.smartEntry = smartEntry;
-exports.smartQuotes = smartQuotes;
-exports.smartQuotesDecorator = smartQuotesDecorator;
-exports.hoverMenu = hoverMenu;
-exports.defaultViewModules = defaultViewModules;
-//# sourceMappingURL=typewriter.js.map
+export { EventDispatcher, Delta, Editor, View, Paper, h, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, smartQuotesDecorator, hoverMenu, defaultViewModules };
+//# sourceMappingURL=typewriter.esm.js.map

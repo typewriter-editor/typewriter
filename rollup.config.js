@@ -2,14 +2,14 @@ import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import babel from 'rollup-plugin-babel';
 import svelte from 'rollup-plugin-svelte';
+import pkg from './package.json';
 
 export default {
   input: 'src/index.js',
-  output: {
-    file: 'dist/typewriter.js',
-    format: 'cjs',
-    sourcemap: true,
-  },
+  output: [
+    { file: pkg.main, format: 'cjs', sourcemap: true },
+    { file: pkg.module, format: 'es', sourcemap: true }
+  ],
   plugins: [
     resolve(),
     commonjs({
@@ -26,6 +26,9 @@ export default {
       "presets": [
         "stage-2",
         ["env", {
+          "targets": {
+            "browsers": ["> 2%", "not ie <= 11"]
+          },
           "modules": false
         }]
       ],

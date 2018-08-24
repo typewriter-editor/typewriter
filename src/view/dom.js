@@ -1,6 +1,6 @@
 import Delta from '../delta';
-import { deepEqual } from 'fast-equals';
-import escape from 'escape-html';
+import { deepEqual } from '../equal';
+import escape from '../escape-html';
 import { h } from './vdom';
 import { isBRNode } from './selection';
 const nodeMarkup = new WeakMap();
