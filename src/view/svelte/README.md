@@ -1,0 +1,1 @@
+This folder is unused currently. It is a thought experiment to determine of Svelte can be used to render rich-text contents.

@@ -1,0 +1,17 @@
+{#each contents as content}
+  {#if !content.attributes}
+    {content.insert || ''}
+  {:else}
+    <svelte:component/>
+  {/if}
+{/each}
+
+<script>
+export default {
+  computed: {
+    entries: ({ markups, embeds, contents }) => {
+
+    },
+  }
+}
+</script>
