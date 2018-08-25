@@ -2988,7 +2988,7 @@ const modifierKeys = {
  */
 function shortcutFromEvent(event) {
   const shortcutArray = [];
-  const key = event.key;
+  let key = event.key;
   if (!key) return '';
   if (key === ' ') key = 'Space';
 
