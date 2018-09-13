@@ -61,13 +61,13 @@ export default function history(options = {}) {
       let entry = stack[source].pop();
       stack[dest].push(entry);
       cutoff();
+      ignoreChange = true;
       if (typeof entry[source] === 'function') {
         entry[source]();
       } else {
-        ignoreChange = true;
-        editor.once('editor-change', () => ignoreChange = false);
         editor.updateContents(entry[source], SOURCE_USER, entry[source + 'Selection']);
       }
+      ignoreChange = false;
     }
 
     function record(change, contents, oldContents, selection, oldSelection) {

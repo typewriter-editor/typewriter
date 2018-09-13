@@ -73,9 +73,7 @@ describe('======== Editor ========', () => {
       editor.on('selection-change', () => dispatched = true);
       editor.setSelection(8, 3, 'silent');
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.false;
-      });
+      expect(dispatched).to.be.false;
     })
 
 
@@ -85,9 +83,7 @@ describe('======== Editor ========', () => {
       editor.on('editor-change', () => dispatched = true);
       editor.setSelection([ 1, 5 ]);
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.true;
-      });
+      expect(dispatched).to.be.true;
     })
 
 
@@ -115,9 +111,7 @@ describe('======== Editor ========', () => {
       editor.on('text-change', () => dispatched = true);
       editor.updateContents(editor.delta().insert('test'));
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.true;
-      });
+      expect(dispatched).to.be.true;
     })
 
 
@@ -126,9 +120,7 @@ describe('======== Editor ========', () => {
       editor.on('text-change', () => dispatched = true);
       editor.updateContents(editor.delta());
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.false;
-      });
+      expect(dispatched).to.be.false;
     })
 
 
@@ -137,9 +129,7 @@ describe('======== Editor ========', () => {
       editor.on('text-change', () => dispatched = true);
       editor.updateContents(editor.delta().insert('test'), 'silent');
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.false;
-      });
+      expect(dispatched).to.be.false;
     })
 
 
@@ -148,9 +138,7 @@ describe('======== Editor ========', () => {
       editor.on('selection-change', () => dispatched = true);
       editor.updateContents(editor.delta().insert('test'), 'user', [ 2, 2 ]);
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.true;
-      });
+      expect(dispatched).to.be.true;
     })
 
 
@@ -161,11 +149,8 @@ describe('======== Editor ========', () => {
       editor.on('selection-change', () => dispatched = true);
       editor.deleteText(2, 5);
 
+      expect(dispatched).to.be.false;
       expect(editor.selection).to.deep.equal([ 2, 2 ]);
-
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.false;
-      });
     })
 
 
@@ -174,9 +159,7 @@ describe('======== Editor ========', () => {
       editor.on('selection-change', () => dispatched = true);
       editor.updateContents(editor.delta().insert('test'), 'silent', [ 2, 2 ]);
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.false;
-      });
+      expect(dispatched).to.be.false;
     })
 
 
@@ -195,11 +178,8 @@ describe('======== Editor ========', () => {
       editor.on('text-change', () => dispatched = true);
       editor.updateContents(editor.delta().insert('test'));
 
+      expect(dispatched).to.be.false;
       expect(editor.contents.ops).to.deep.equal([{ insert: '\n' }]);
-
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.false;
-      });
     })
 
 
@@ -209,11 +189,8 @@ describe('======== Editor ========', () => {
       editor.on('selection-change', () => dispatched = true);
       editor.updateContents(editor.delta().insert('test'), 'user', [ 2, 2 ]);
 
+      expect(dispatched).to.be.false;
       expect(editor.contents.ops).to.deep.equal([{ insert: '\n' }]);
-
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.false;
-      });
     })
 
 
@@ -222,9 +199,7 @@ describe('======== Editor ========', () => {
       editor.on('editor-change', () => dispatched = true);
       editor.updateContents(editor.delta().insert('test'));
 
-      return Promise.resolve().then(() => {
-        expect(dispatched).to.be.true;
-      });
+      expect(dispatched).to.be.true;
     })
 
 
@@ -269,26 +244,22 @@ describe('======== Editor ========', () => {
       const delta = editor.delta().insert('This is a ').insert('test', { bold: true, italic: true }).insert('!');
       editor.setContents(delta);
       editor.setSelection(2, 8);
-      return Promise.resolve().then(() => {
-        let dispatched = false;
-        editor.on('text-change', () => dispatched = true);
-        editor.on('selection-change', () => dispatched = true);
-        editor.on('editor-change', () => dispatched = true);
+      let dispatched = false;
+      editor.on('text-change', () => dispatched = true);
+      editor.on('selection-change', () => dispatched = true);
+      editor.on('editor-change', () => dispatched = true);
 
-        const change = editor.setContents(delta);
+      const change = editor.setContents(delta);
 
-        expect(editor.contents.ops).to.deep.equal([
-          { insert: 'This is a ' },
-          { insert: 'test', attributes: { bold: true, italic: true } },
-          { insert: '!\n'}
-        ]);
+      expect(dispatched).to.be.false;
 
-        expect(change).to.be.null;
+      expect(editor.contents.ops).to.deep.equal([
+        { insert: 'This is a ' },
+        { insert: 'test', attributes: { bold: true, italic: true } },
+        { insert: '!\n'}
+      ]);
 
-        return Promise.resolve().then(() => {
-          expect(dispatched).to.be.false;
-        });
-      });
+      expect(change).to.be.null;
     })
 
 
@@ -359,24 +330,20 @@ describe('======== Editor ========', () => {
     it('should do nothing when setting the text to the current value', () => {
       editor.setText('Testing\nthis\nis\nfun');
       editor.setSelection(2, 8);
-      return Promise.resolve().then(() => {
-        let dispatched = false;
-        editor.on('text-change', () => dispatched = true);
-        editor.on('selection-change', () => dispatched = true);
-        editor.on('editor-change', () => dispatched = true);
+      let dispatched = false;
+      editor.on('text-change', () => dispatched = true);
+      editor.on('selection-change', () => dispatched = true);
+      editor.on('editor-change', () => dispatched = true);
 
-        const change = editor.setText('Testing\nthis\nis\nfun');
+      const change = editor.setText('Testing\nthis\nis\nfun');
 
-        expect(editor.contents.ops).to.deep.equal([
-          { insert: 'Testing\nthis\nis\nfun\n' }
-        ]);
+      expect(dispatched).to.be.false;
 
-        expect(change).to.be.null;
+      expect(editor.contents.ops).to.deep.equal([
+        { insert: 'Testing\nthis\nis\nfun\n' }
+      ]);
 
-        return Promise.resolve().then(() => {
-          expect(dispatched).to.be.false;
-        });
-      });
+      expect(change).to.be.null;
     })
 
 

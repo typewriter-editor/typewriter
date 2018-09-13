@@ -1512,6 +1512,7 @@ class Editor extends EventDispatcher {
     this.activeFormats = empty;
     setContents(this, options.contents || this.delta().insert('\n'));
     this.modules = {};
+    this._queuedEvents = []; // Event queuing ensure they are fired in order
     if (options.modules) Object.keys(options.modules).forEach(key => this.modules[key] = options.modules[key](this));
   }
 
@@ -1633,17 +1634,13 @@ class Editor extends EventDispatcher {
       this.selection = selection;
     }
 
-    // Queue events to fire asynchronously so changes which happen in response to an event do not put the events out of
-    // their correct order. It is essential for change tracking they fire in the correct order. E.g.
-    // if a change occurs as the result of the text-change event, that change's editor-change event would fire before
-    // the original change's editor-change event if this wasn't in place.
-    Promise.resolve().then(() => {
-      if (source !== SOURCE_SILENT) {
-        this.fire('text-change', changeEvent);
-        if (selectionChanged) this.fire('selection-change', changeEvent);
-      }
-      this.fire('editor-change', changeEvent);
-    });
+    const events = [];
+    if (source !== SOURCE_SILENT) {
+      events.push(['text-change', changeEvent]);
+      if (selectionChanged) events.push(['selection-change', changeEvent]);
+    }
+    events.push(['editor-change', changeEvent]);
+    this._queueEvents(events);
     return change;
   }
 
@@ -2065,6 +2062,16 @@ class Editor extends EventDispatcher {
     if (typeof range === 'number') range = [range, range];
     if (range[0] > range[1]) [range[0], range[1]] = [range[1], range[0]];
     return range.map(index => Math.max(0, Math.min(max, index)));
+  }
+
+  _queueEvents(events) {
+    const alreadyRunning = this._queuedEvents.length;
+    this._queuedEvents.push(...events);
+    if (alreadyRunning) return;
+    while (this._queuedEvents.length) {
+      const event = this._queuedEvents.shift();
+      this.fire(...event);
+    }
   }
 
   /**
@@ -3712,13 +3719,13 @@ function history(options = {}) {
       let entry = stack[source].pop();
       stack[dest].push(entry);
       cutoff();
+      ignoreChange = true;
       if (typeof entry[source] === 'function') {
         entry[source]();
       } else {
-        ignoreChange = true;
-        editor.once('editor-change', () => ignoreChange = false);
         editor.updateContents(entry[source], SOURCE_USER$4, entry[source + 'Selection']);
       }
+      ignoreChange = false;
     }
 
     function record(change, contents, oldContents, selection, oldSelection) {
