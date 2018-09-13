@@ -2,7 +2,11 @@ import EventDispatcher from './event-dispatcher';
 import Delta from './delta';
 import Editor from './editor';
 import View from './view';
-import Paper from './paper';
+import Paper, { container } from './paper';
+import * as blocks from './view/blocks';
+import * as markups from './view/markups';
+import * as embeds from './view/embeds';
+import defaultPaper from './view/defaultPaper';
 import { h } from './view/vdom';
 
 import input from './modules/input';
@@ -25,6 +29,11 @@ export {
   Editor,
   View,
   Paper,
+  defaultPaper,
+  container,
+  blocks,
+  markups,
+  embeds,
   h,
   input,
   keyShortcuts,

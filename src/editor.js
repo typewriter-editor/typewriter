@@ -207,11 +207,17 @@ export default class Editor extends EventDispatcher {
       this.selection = selection;
     }
 
-    if (source !== SOURCE_SILENT) {
-      this.fire('text-change', changeEvent);
-      if (selectionChanged) this.fire('selection-change', changeEvent);
-    }
-    this.fire('editor-change', changeEvent);
+    // Queue events to fire asynchronously so changes which happen in response to an event do not put the events out of
+    // their correct order. It is essential for change tracking they fire in the correct order. E.g.
+    // if a change occurs as the result of the text-change event, that change's editor-change event would fire before
+    // the original change's editor-change event if this wasn't in place.
+    Promise.resolve().then(() => {
+      if (source !== SOURCE_SILENT) {
+        this.fire('text-change', changeEvent);
+        if (selectionChanged) this.fire('selection-change', changeEvent);
+      }
+      this.fire('editor-change', changeEvent);
+    });
     return change;
   }
 
@@ -672,8 +678,8 @@ export default class Editor extends EventDispatcher {
       if (to !== undefined || rest.length) rest.unshift(to);
       to = from;
     }
-    from = Math.max(0, Math.min(this.length, ~~from));
-    to = Math.max(0, Math.min(this.length, ~~to));
+    from = Math.max(0, Math.min(this.length, Math.floor(from)));
+    to = Math.max(0, Math.min(this.length, Math.floor(to)));
     return [from, to].concat(rest);
   }
 }

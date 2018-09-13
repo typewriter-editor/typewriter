@@ -1629,11 +1629,17 @@ class Editor extends EventDispatcher {
       this.selection = selection;
     }
 
-    if (source !== SOURCE_SILENT) {
-      this.fire('text-change', changeEvent);
-      if (selectionChanged) this.fire('selection-change', changeEvent);
-    }
-    this.fire('editor-change', changeEvent);
+    // Queue events to fire asynchronously so changes which happen in response to an event do not put the events out of
+    // their correct order. It is essential for change tracking they fire in the correct order. E.g.
+    // if a change occurs as the result of the text-change event, that change's editor-change event would fire before
+    // the original change's editor-change event if this wasn't in place.
+    Promise.resolve().then(() => {
+      if (source !== SOURCE_SILENT) {
+        this.fire('text-change', changeEvent);
+        if (selectionChanged) this.fire('selection-change', changeEvent);
+      }
+      this.fire('editor-change', changeEvent);
+    });
     return change;
   }
 
@@ -2085,8 +2091,8 @@ class Editor extends EventDispatcher {
       if (to !== undefined || rest.length) rest.unshift(to);
       to = from;
     }
-    from = Math.max(0, Math.min(this.length, ~~from));
-    to = Math.max(0, Math.min(this.length, ~~to));
+    from = Math.max(0, Math.min(this.length, Math.floor(from)));
+    to = Math.max(0, Math.min(this.length, Math.floor(to)));
     return [from, to].concat(rest);
   }
 }
@@ -2825,6 +2831,13 @@ const blockquote = {
   }
 };
 
+var blocks = /*#__PURE__*/Object.freeze({
+  paragraph: paragraph,
+  header: header,
+  list: list,
+  blockquote: blockquote
+});
+
 const bold = {
   name: 'bold',
   selector: 'strong, b',
@@ -2856,12 +2869,33 @@ const link = {
   )
 };
 
+var markups = /*#__PURE__*/Object.freeze({
+  bold: bold,
+  italics: italics,
+  link: link
+});
+
 const image = {
   name: 'image',
   selector: 'img',
   dom: node => node.src,
   vdom: value => h('img', { src: value })
 };
+
+// To represent a collaborator's cursor, for use in decorators
+const cursor = {
+  name: 'cursor',
+  selector: 'span.cursor',
+  dom: node => ({ name: node.dataset.name, color: node.style.backgroundColor }),
+  vdom: value => {
+    return h('span', { 'class': 'cursor', 'data-name': value.name, style: `background-color: ${value.color}` });
+  }
+};
+
+var embeds = /*#__PURE__*/Object.freeze({
+  image: image,
+  cursor: cursor
+});
 
 var defaultPaper = {
   blocks: [paragraph, header, list, blockquote],
@@ -3674,13 +3708,13 @@ function history(options = {}) {
       let entry = stack[source].pop();
       stack[dest].push(entry);
       cutoff();
-      ignoreChange = true;
       if (typeof entry[source] === 'function') {
         entry[source]();
       } else {
+        ignoreChange = true;
+        editor.once('editor-change', () => ignoreChange = false);
         editor.updateContents(entry[source], SOURCE_USER$4, entry[source + 'Selection']);
       }
-      ignoreChange = false;
     }
 
     function record(change, contents, oldContents, selection, oldSelection) {
@@ -4664,5 +4698,5 @@ const defaultViewModules = {
   history: history()
 };
 
-export { EventDispatcher, Delta, Editor, View, Paper, h, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, smartQuotesDecorator, hoverMenu, defaultViewModules };
+export { EventDispatcher, Delta, Editor, View, Paper, defaultPaper, container, blocks, markups, embeds, h, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, smartQuotesDecorator, hoverMenu, defaultViewModules };
 //# sourceMappingURL=typewriter.esm.js.map
