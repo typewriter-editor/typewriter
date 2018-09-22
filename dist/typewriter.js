@@ -3514,12 +3514,8 @@ function input() {
             if (from === line.start) {
               const block = view.paper.blocks.find(line.attributes);
               if (block && !block.defaultFollows) {
-                const prevLine = editor.contents.getLine(line.start - 1);
-                const prevBlock = prevLine && view.paper.blocks.find(prevLine.attributes);
-                if (block !== prevBlock) {
-                  editor.formatLine(from, {}, SOURCE_USER$2);
-                  return;
-                }
+                editor.formatLine(from, {}, SOURCE_USER$2);
+                return;
               }
             }
 
@@ -3872,7 +3868,7 @@ const textReplacements = [[/--$/, () => '—'], [/\.\.\.$/, () => '…']];
 /**
  * Allow text representations to format a block
  */
-function blockReplace(index, prefix) {
+function blockReplace(editor, index, prefix) {
   return blockReplacements.some(([regexp, getAttributes]) => {
     const match = prefix.match(regexp);
     if (match) {
@@ -3887,7 +3883,7 @@ function blockReplace(index, prefix) {
   });
 }
 
-function textReplace(index, prefix) {
+function textReplace(editor, index, prefix) {
   return textReplacements.some(([regexp, replaceWith]) => {
     const match = prefix.match(regexp);
     if (match) {
@@ -3913,7 +3909,7 @@ function smartEntry (handlers = defaultHandlers) {
       const prefix = text.slice(lineStart, index);
 
       ignore = true;
-      handlers.some(handler => handler(index, prefix));
+      handlers.some(handler => handler(editor, index, prefix));
       ignore = false;
     }
 
@@ -4653,7 +4649,8 @@ function hoverMenu() {
 
   return view => {
     const editor = view.editor;
-    let menu;
+    let menu,
+        mousedown = false;
 
     function show(range = editor.selection) {
       if (!menu) {
@@ -4674,29 +4671,41 @@ function hoverMenu() {
       menu = null;
     }
 
-    function onEditorChange({ selection }) {
+    function update() {
+      const selection = editor.selection;
       const validSelection = selection && selection[0] !== selection[1];
       const inputMode = menu && menu.get().inputMode;
       if (!validSelection || !view.enabled) {
         if (!inputMode) hide();
         return;
       }
-      let [from, to] = selection;
-
-      // Don't show when selection goes across lines
-      if (from > to) [from, to] = [to, from];
-      if (editor.contents.getLines(from, to).length > 1) return;
-
       show();
     }
 
+    function onEditorChange() {
+      if (!mousedown) update();
+    }
+
+    function onMouseDown() {
+      view.root.ownerDocument.addEventListener('mouseup', onMouseUp);
+      mousedown = true;
+    }
+
+    function onMouseUp() {
+      mousedown = false;
+      update();
+    }
+
     editor.on('editor-change', onEditorChange);
+    view.root.addEventListener('mousedown', onMouseDown);
 
     return {
       show,
       hide,
       destroy() {
         editor.off('editor-change', onEditorChange);
+        view.root.removeEventListener('mousedown', onMouseDown);
+        view.root.ownerDocument.removeEventListener('mouseup', onMouseUp);
         hide();
       }
     };

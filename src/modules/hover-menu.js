@@ -4,7 +4,7 @@ export default function hoverMenu() {
 
   return view => {
     const editor = view.editor;
-    let menu;
+    let menu, mousedown = false;
 
 
     function show(range = editor.selection) {
@@ -26,30 +26,41 @@ export default function hoverMenu() {
       menu = null;
     }
 
-    function onEditorChange({ selection }) {
+    function update() {
+      const selection = editor.selection;
       const validSelection = selection && selection[0] !== selection[1];
       const inputMode = menu && menu.get().inputMode;
       if (!validSelection || !view.enabled) {
         if (!inputMode) hide();
         return;
       }
-      let [ from, to ] = selection;
-
-      // Don't show when selection goes across lines
-      if (from > to) [ from, to ] = [ to, from ];
-      if (editor.contents.getLines(from, to).length > 1) return;
-
       show();
     }
 
+    function onEditorChange() {
+      if (!mousedown) update();
+    }
+
+    function onMouseDown() {
+      view.root.ownerDocument.addEventListener('mouseup', onMouseUp);
+      mousedown = true;
+    }
+
+    function onMouseUp() {
+      mousedown = false;
+      update();
+    }
 
     editor.on('editor-change', onEditorChange);
+    view.root.addEventListener('mousedown', onMouseDown);
 
     return {
       show,
       hide,
       destroy() {
         editor.off('editor-change', onEditorChange);
+        view.root.removeEventListener('mousedown', onMouseDown);
+        view.root.ownerDocument.removeEventListener('mouseup', onMouseUp);
         hide();
       }
     }

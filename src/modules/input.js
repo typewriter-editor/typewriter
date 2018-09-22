@@ -132,12 +132,8 @@ export default function input() {
             if (from === line.start) {
               const block = view.paper.blocks.find(line.attributes);
               if (block && !block.defaultFollows) {
-                const prevLine = editor.contents.getLine(line.start - 1);
-                const prevBlock = prevLine && view.paper.blocks.find(prevLine.attributes);
-                if (block !== prevBlock) {
-                  editor.formatLine(from, {}, SOURCE_USER);
-                  return;
-                }
+                editor.formatLine(from, {}, SOURCE_USER);
+                return;
               }
             }
 

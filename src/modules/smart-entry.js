@@ -26,7 +26,7 @@ export const textReplacements = [
 /**
  * Allow text representations to format a block
  */
-export function blockReplace(index, prefix) {
+export function blockReplace(editor, index, prefix) {
   return blockReplacements.some(([ regexp, getAttributes ]) => {
     const match = prefix.match(regexp);
     if (match) {
@@ -41,7 +41,7 @@ export function blockReplace(index, prefix) {
   });
 }
 
-export function textReplace(index, prefix) {
+export function textReplace(editor, index, prefix) {
   return textReplacements.some(([ regexp, replaceWith ]) => {
     const match = prefix.match(regexp);
     if (match) {
@@ -68,7 +68,7 @@ export default function(handlers = defaultHandlers) {
       const prefix = text.slice(lineStart, index);
 
       ignore = true;
-      handlers.some(handler => handler(index, prefix));
+      handlers.some(handler => handler(editor, index, prefix));
       ignore = false;
     }
 
