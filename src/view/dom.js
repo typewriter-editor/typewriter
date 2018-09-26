@@ -3,6 +3,8 @@ import { deepEqual } from '../equal';
 import escape from '../escape-html';
 import { h } from './vdom';
 import { isBRNode } from './selection';
+import defaultPaper from './defaultPaper';
+import Paper from '../paper';
 const nodeMarkup = new WeakMap();
 
 const br = <br/>;
@@ -10,10 +12,10 @@ const voidElements = {
   area: true, base: true, br: true, col: true, embed: true, hr: true, img: true, input: true,
   link: true, meta: true, param: true, source: true, track: true, wbr: true
 };
+const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 
 
-export function deltaToVdom(view, delta) {
-  const paper = view.paper;
+export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
   const { blocks, markups, embeds, container } = paper;
   const blockData = [];
 
@@ -84,7 +86,7 @@ export function deltaToVdom(view, delta) {
     }
   });
 
-  return container.call(paper, blockChildren, view);
+  return container(blockChildren, paper);
 }
 
 
@@ -111,7 +113,6 @@ function undecorateBlock(node, block, attr) {
   const ignoreAttributes = { class: true };
   block.selector.replace(/\.([-\w])/, (_, name) => ignoreClasses[name] = true);
   block.selector.replace(/\[([-\w])[^\]]\]/, (_, name) => ignoreAttributes[name] = true);
-  const attributes = {};
   let attrLength = node.attributes.length;
 
   if (node.classList.length) {
@@ -158,7 +159,7 @@ export function deltaFromDom(view, root = view.root, opts) {
     }
   });
   const delta = new Delta();
-  let currentBlock, firstBlockSeen = false, node;
+  let currentBlock, firstBlockSeen = false, unknownBlock = false, insertedText = '', node;
 
   walker.currentNode = root;
 
@@ -179,8 +180,9 @@ export function deltaFromDom(view, root = view.root, opts) {
         parent = parent.parentNode;
       }
 
-      // If the text was not inside a block, ignore it (space between block perhaps)
-      if (parent !== root) {
+      // If the text was not inside a block
+      if (text.trim()) {
+        insertedText += text;
         delta.insert(text, attr);
       }
     } else if (embeds.matches(node)) {
@@ -188,10 +190,17 @@ export function deltaFromDom(view, root = view.root, opts) {
       if (embed) {
         delta.insert({ [embed.name]: embed.dom.call(paper, node) });
       }
-    } else if (blocks.matches(node)) {
-      if (firstBlockSeen) delta.insert('\n', currentBlock);
-      else firstBlockSeen = true;
-      const block = blocks.find(node);
+    } else if (blocks.matches(node) || (node.matches && node.matches(blockElements))) {
+      if (firstBlockSeen) {
+        if (!unknownBlock || insertedText.trim()) {
+          delta.insert('\n', currentBlock);
+        }
+        insertedText = '';
+      } else {
+        firstBlockSeen = true;
+      }
+      unknownBlock = !blocks.matches(node);
+      const block = blocks.find(node) || blocks.getDefault();
       if (block !== blocks.getDefault()) {
         currentBlock = block.dom ? block.dom.call(paper, node) : { [block.name]: true };
       } else {
@@ -209,8 +218,8 @@ export function deltaFromDom(view, root = view.root, opts) {
 /**
  * Converts a delta object into an HTML string based off of the supplied Paper definition.
  */
-export function deltaToHTML(view, delta) {
-  return childrenToHTML(deltaToVdom(view, delta).children);
+export function deltaToHTML(delta, paper) {
+  return childrenToHTML(deltaToVdom(delta, paper).children);
 }
 
 /**

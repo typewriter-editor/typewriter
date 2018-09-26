@@ -13,9 +13,9 @@ export default class Paper {
 }
 
 
-export function container(children, view) {
-  return <div class="typewriter-editor" contentEditable={view.enabled}>
-    {children && children.length ? children : this.blocks.getDefault().vdom()}
+export function container(children, paper) {
+  return <div class="typewriter-editor" contentEditable="true">
+    {children && children.length ? children : paper.blocks.getDefault().vdom()}
   </div>;
 }
 

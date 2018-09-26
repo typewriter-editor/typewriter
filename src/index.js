@@ -7,7 +7,10 @@ import * as blocks from './view/blocks';
 import * as markups from './view/markups';
 import * as embeds from './view/embeds';
 import defaultPaper from './view/defaultPaper';
-import { h } from './view/vdom';
+
+export  { h } from './view/vdom';
+export { shortcutFromEvent } from './shortcut-string';
+export { deltaToVdom, deltaFromDom, deltaToHTML, deltaFromHTML } from './view/dom';
 
 import input from './modules/input';
 import keyShortcuts from './modules/key-shortcuts';
@@ -34,7 +37,6 @@ export {
   blocks,
   markups,
   embeds,
-  h,
   input,
   keyShortcuts,
   history,

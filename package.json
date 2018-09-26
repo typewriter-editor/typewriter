@@ -2,7 +2,7 @@
   "name": "typewriter-editor",
   "version": "0.2.18",
   "scripts": {
-    "start": "rollup --config rollup.config.dev.js --watch",
+    "start": "rollup --config --watch",
     "build": "rollup --config",
     "prepare": "npm run build",
     "test": "mocha -r jsdom-global/register -r babel-register",

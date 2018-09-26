@@ -181,7 +181,7 @@ export default class View extends EventDispatcher {
    * @returns {String} A string of HTML
    */
   getHTML() {
-    return deltaToHTML(this, this.editor.contents);
+    return deltaToHTML(this.editor.contents, this.paper);
   }
 
   /**
@@ -207,7 +207,7 @@ export default class View extends EventDispatcher {
     } else {
       this.reverseDecorators = this.decorators;
     }
-    const vdom = deltaToVdom(this, contents);
+    const vdom = deltaToVdom(contents, this.paper);
     if (!this.enabled) vdom.attributes.contenteditable = undefined;
     this.fire('rendering', changeEvent);
     renderChildren(vdom, this.root);
@@ -287,6 +287,11 @@ export default class View extends EventDispatcher {
       }
     };
 
+    // const onPaste = event => {
+    //   event.preventDefault();
+    //   const html = event.clipboardData.getData('text/html');
+    // };
+
     const onSelectionChange = () => {
       this.updateEditorSelection(SOURCE_USER);
     };
@@ -326,6 +331,7 @@ export default class View extends EventDispatcher {
 
 
     this.root.addEventListener('keydown', onKeyDown);
+    // this.root.addEventListener('paste', onPaste);
     this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
     this.editor.on('text-changing', onTextChanging);
     this.editor.on('editor-change', onEditorChange);
@@ -334,6 +340,7 @@ export default class View extends EventDispatcher {
     this.uninit = () => {
       devObserver.disconnect();
       this.root.removeEventListener('keydown', onKeyDown);
+      // this.root.removeEventListener('paste', onPaste);
       this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
       this.editor.off('text-changing', onTextChanging);
       this.editor.off('editor-change', onEditorChange);

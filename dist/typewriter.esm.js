@@ -1925,7 +1925,8 @@ class Editor extends EventDispatcher {
     Object.keys(formats).forEach(name => formats[name] === false && (formats[name] = null));
     const change = this.delta().retain(from);
     this.getText(from, to).split('\n').forEach(line => {
-      line.length && change.retain(line.length, formats).retain(1);
+      line.length && change.retain(line.length, formats);
+      change.retain(1);
     });
     change.chop();
 
@@ -2502,6 +2503,100 @@ function isBRNode(view, node) {
   node.nextSibling.nodeType === Node.TEXT_NODE || node.nextSibling.nodeName === 'BR' || view.paper.markups.matches(node.nextSibling) || view.paper.embeds.matches(node.nextSibling));
 }
 
+class Paper {
+  constructor(types) {
+    this.blocks = new Types();
+    this.markups = new Types();
+    this.embeds = new Types();
+    this.container = types.container || container;
+    if (types && types.blocks) types.blocks.forEach(block => this.blocks.add(block));
+    if (types && types.markups) types.markups.forEach(markup => this.markups.add(markup));
+    if (types && types.embeds) types.embeds.forEach(embed => this.embeds.add(embed));
+  }
+}
+
+function container(children, paper) {
+  return h(
+    "div",
+    { "class": "typewriter-editor", contentEditable: "true" },
+    children && children.length ? children : paper.blocks.getDefault().vdom()
+  );
+}
+
+class Types {
+  constructor() {
+    this.selector = '';
+    this.types = {};
+    this.array = [];
+    this.priorities = {};
+  }
+
+  add(definition, index) {
+    if (!definition.name || !definition.selector || !definition.vdom) {
+      throw new Error('DOMType definitions must include a name, selector, and vdom function');
+    }
+    if (this.types[definition.name]) this.remove(definition.name);
+    this.selector += (this.selector ? ', ' : '') + definition.selector;
+    this.types[definition.name] = definition;
+    if (typeof index !== 'number') {
+      this.priorities[name] = this.array.length;
+      this.array.push(definition);
+    } else {
+      this.array.splice(i, 0, definition);
+      this.array.forEach(({ name }, i) => this.priorities[name] = i);
+    }
+  }
+
+  remove(name) {
+    if (!this.types[name]) return;
+    delete this.types[name];
+    this.array = this.array.filter(domType => domType.name !== name);
+    this.array.forEach(({ name }, i) => this.priorities[name] = i);
+    this.selector = this.array.map(type => type.selector).join(', ');
+  }
+
+  clear() {
+    this.selector = '';
+    this.types = {};
+    this.array = [];
+    this.priorities = {};
+  }
+
+  get(name) {
+    return this.types[name];
+  }
+
+  priority(name) {
+    return this.priorities[name];
+  }
+
+  getDefault() {
+    return this.array[0];
+  }
+
+  matches(node) {
+    if (node instanceof Node) {
+      return this.selector ? node.matches(this.selector) : false;
+    } else {
+      throw new Error('Cannot match against ' + node);
+    }
+  }
+
+  find(nodeOrAttr) {
+    if (nodeOrAttr instanceof Node) {
+      let i = this.array.length;
+      while (i--) {
+        let domType = this.array[i];
+        if (nodeOrAttr.matches(domType.selector)) return domType;
+      }
+    } else if (nodeOrAttr && typeof nodeOrAttr === 'object') {
+      let domType;
+      Object.keys(nodeOrAttr).some(name => domType = this.get(name));
+      return domType;
+    }
+  }
+}
+
 const nodeMarkup = new WeakMap();
 
 const br = h('br', null);
@@ -2509,10 +2604,10 @@ const voidElements = {
   area: true, base: true, br: true, col: true, embed: true, hr: true, img: true, input: true,
   link: true, meta: true, param: true, source: true, track: true, wbr: true
 };
+const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 
-function deltaToVdom(view, delta) {
-  const paper = view.paper;
-  const { blocks, markups, embeds, container } = paper;
+function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
+  const { blocks, markups, embeds, container: container$$1 } = paper;
   const blockData = [];
 
   delta.eachLine(({ ops, attributes }) => {
@@ -2582,7 +2677,7 @@ function deltaToVdom(view, delta) {
     }
   });
 
-  return container.call(paper, blockChildren, view);
+  return container$$1(blockChildren, paper);
 }
 
 function decorateBlock(vdom, attr) {
@@ -2653,6 +2748,8 @@ function deltaFromDom(view, root = view.root, opts) {
   const delta = new Delta();
   let currentBlock,
       firstBlockSeen = false,
+      unknownBlock = false,
+      insertedText = '',
       node;
 
   walker.currentNode = root;
@@ -2675,8 +2772,9 @@ function deltaFromDom(view, root = view.root, opts) {
         parent = parent.parentNode;
       }
 
-      // If the text was not inside a block, ignore it (space between block perhaps)
-      if (parent !== root) {
+      // If the text was not inside a block
+      if (text.trim()) {
+        insertedText += text;
         delta.insert(text, attr);
       }
     } else if (embeds.matches(node)) {
@@ -2684,9 +2782,17 @@ function deltaFromDom(view, root = view.root, opts) {
       if (embed) {
         delta.insert({ [embed.name]: embed.dom.call(paper, node) });
       }
-    } else if (blocks.matches(node)) {
-      if (firstBlockSeen) delta.insert('\n', currentBlock);else firstBlockSeen = true;
-      const block = blocks.find(node);
+    } else if (blocks.matches(node) || node.matches && node.matches(blockElements)) {
+      if (firstBlockSeen) {
+        if (!unknownBlock || insertedText.trim()) {
+          delta.insert('\n', currentBlock);
+        }
+        insertedText = '';
+      } else {
+        firstBlockSeen = true;
+      }
+      unknownBlock = !blocks.matches(node);
+      const block = blocks.find(node) || blocks.getDefault();
       if (block !== blocks.getDefault()) {
         currentBlock = block.dom ? block.dom.call(paper, node) : { [block.name]: true };
       } else {
@@ -2704,8 +2810,8 @@ function deltaFromDom(view, root = view.root, opts) {
 /**
  * Converts a delta object into an HTML string based off of the supplied Paper definition.
  */
-function deltaToHTML(view, delta) {
-  return childrenToHTML(deltaToVdom(view, delta).children);
+function deltaToHTML(delta, paper) {
+  return childrenToHTML(deltaToVdom(delta, paper).children);
 }
 
 /**
@@ -2909,100 +3015,6 @@ var defaultPaper = {
   markups: [bold, italics, link],
   embeds: [image]
 };
-
-class Paper {
-  constructor(types) {
-    this.blocks = new Types();
-    this.markups = new Types();
-    this.embeds = new Types();
-    this.container = types.container || container;
-    if (types && types.blocks) types.blocks.forEach(block => this.blocks.add(block));
-    if (types && types.markups) types.markups.forEach(markup => this.markups.add(markup));
-    if (types && types.embeds) types.embeds.forEach(embed => this.embeds.add(embed));
-  }
-}
-
-function container(children, view) {
-  return h(
-    'div',
-    { 'class': 'typewriter-editor', contentEditable: view.enabled },
-    children && children.length ? children : this.blocks.getDefault().vdom()
-  );
-}
-
-class Types {
-  constructor() {
-    this.selector = '';
-    this.types = {};
-    this.array = [];
-    this.priorities = {};
-  }
-
-  add(definition, index) {
-    if (!definition.name || !definition.selector || !definition.vdom) {
-      throw new Error('DOMType definitions must include a name, selector, and vdom function');
-    }
-    if (this.types[definition.name]) this.remove(definition.name);
-    this.selector += (this.selector ? ', ' : '') + definition.selector;
-    this.types[definition.name] = definition;
-    if (typeof index !== 'number') {
-      this.priorities[name] = this.array.length;
-      this.array.push(definition);
-    } else {
-      this.array.splice(i, 0, definition);
-      this.array.forEach(({ name }, i) => this.priorities[name] = i);
-    }
-  }
-
-  remove(name) {
-    if (!this.types[name]) return;
-    delete this.types[name];
-    this.array = this.array.filter(domType => domType.name !== name);
-    this.array.forEach(({ name }, i) => this.priorities[name] = i);
-    this.selector = this.array.map(type => type.selector).join(', ');
-  }
-
-  clear() {
-    this.selector = '';
-    this.types = {};
-    this.array = [];
-    this.priorities = {};
-  }
-
-  get(name) {
-    return this.types[name];
-  }
-
-  priority(name) {
-    return this.priorities[name];
-  }
-
-  getDefault() {
-    return this.array[0];
-  }
-
-  matches(node) {
-    if (node instanceof Node) {
-      return this.selector ? node.matches(this.selector) : false;
-    } else {
-      throw new Error('Cannot match against ' + node);
-    }
-  }
-
-  find(nodeOrAttr) {
-    if (nodeOrAttr instanceof Node) {
-      let i = this.array.length;
-      while (i--) {
-        let domType = this.array[i];
-        if (nodeOrAttr.matches(domType.selector)) return domType;
-      }
-    } else if (nodeOrAttr && typeof nodeOrAttr === 'object') {
-      let domType;
-      Object.keys(nodeOrAttr).some(name => domType = this.get(name));
-      return domType;
-    }
-  }
-}
 
 const modifierKeys = {
   Control: true,
@@ -3214,7 +3226,7 @@ class View extends EventDispatcher {
    * @returns {String} A string of HTML
    */
   getHTML() {
-    return deltaToHTML(this, this.editor.contents);
+    return deltaToHTML(this.editor.contents, this.paper);
   }
 
   /**
@@ -3240,7 +3252,7 @@ class View extends EventDispatcher {
     } else {
       this.reverseDecorators = this.decorators;
     }
-    const vdom = deltaToVdom(this, contents);
+    const vdom = deltaToVdom(contents, this.paper);
     if (!this.enabled) vdom.attributes.contenteditable = undefined;
     this.fire('rendering', changeEvent);
     renderChildren(vdom, this.root);
@@ -3320,6 +3332,11 @@ class View extends EventDispatcher {
       }
     };
 
+    // const onPaste = event => {
+    //   event.preventDefault();
+    //   const html = event.clipboardData.getData('text/html');
+    // };
+
     const onSelectionChange = () => {
       this.updateEditorSelection(SOURCE_USER$1);
     };
@@ -3358,6 +3375,7 @@ class View extends EventDispatcher {
     devObserver.observe(this.root, { characterData: true, characterDataOldValue: true, childList: true, attributes: true, subtree: true });
 
     this.root.addEventListener('keydown', onKeyDown);
+    // this.root.addEventListener('paste', onPaste);
     this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
     this.editor.on('text-changing', onTextChanging);
     this.editor.on('editor-change', onEditorChange);
@@ -3366,6 +3384,7 @@ class View extends EventDispatcher {
     this.uninit = () => {
       devObserver.disconnect();
       this.root.removeEventListener('keydown', onKeyDown);
+      // this.root.removeEventListener('paste', onPaste);
       this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
       this.editor.off('text-changing', onTextChanging);
       this.editor.off('editor-change', onEditorChange);
@@ -4714,5 +4733,5 @@ const defaultViewModules = {
   history: history()
 };
 
-export { EventDispatcher, Delta, Editor, View, Paper, defaultPaper, container, blocks, markups, embeds, h, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, smartQuotesDecorator, hoverMenu, defaultViewModules };
+export { EventDispatcher, Delta, Editor, View, Paper, defaultPaper, container, blocks, markups, embeds, input, keyShortcuts, history, placeholder, smartEntry, smartQuotes, smartQuotesDecorator, hoverMenu, defaultViewModules, h, shortcutFromEvent, deltaToVdom, deltaFromDom, deltaToHTML, deltaFromHTML };
 //# sourceMappingURL=typewriter.esm.js.map

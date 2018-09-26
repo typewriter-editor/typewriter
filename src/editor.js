@@ -512,7 +512,8 @@ export default class Editor extends EventDispatcher {
     Object.keys(formats).forEach(name => formats[name] === false && (formats[name] = null));
     const change = this.delta().retain(from);
     this.getText(from, to).split('\n').forEach(line => {
-      line.length && change.retain(line.length, formats).retain(1);
+      line.length && change.retain(line.length, formats);
+      change.retain(1);
     });
     change.chop();
 
