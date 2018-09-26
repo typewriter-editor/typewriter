@@ -1,5 +1,5 @@
 import { h } from './vdom';
-import { decorateBlock } from './dom';
+import { decorateBlock } from './dom-utils';
 
 
 export const paragraph = {

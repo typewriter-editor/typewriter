@@ -23,18 +23,17 @@ export default {
     babel({
       exclude: 'node_modules/**',
       babelrc: false,
-      "presets": [
-        "stage-2",
-        ["env", {
-          "targets": {
-            "browsers": ["> 2%", "not ie <= 11"]
+      presets: [
+        ['@babel/preset-env', {
+          targets: {
+            browsers: ['>= .5% in US', 'not ie <= 11']
           },
-          "modules": false
+          modules: false
         }]
       ],
-      "plugins": [
-        [ "transform-react-jsx", { "pragma": "h" }],
-        "external-helpers"
+      plugins: [
+        [ '@babel/plugin-transform-react-jsx', { 'pragma': 'h' }],
+        '@babel/plugin-proposal-object-rest-spread',
       ]
     }),
   ],
