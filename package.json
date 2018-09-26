@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.2.18",
+  "version": "0.3.0",
   "scripts": {
     "start": "rollup --config --watch",
     "build": "rollup --config",
