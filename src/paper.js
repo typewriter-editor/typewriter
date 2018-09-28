@@ -88,7 +88,8 @@ class Types {
       }
     } else if (nodeOrAttr && typeof nodeOrAttr === 'object') {
       let domType;
-      Object.keys(nodeOrAttr).some(name => domType = this.get(name));
+      const keys = Object.keys(nodeOrAttr);
+      keys.length ? keys.some(name => domType = this.get(name)) : (domType = this.getDefault());
       return domType;
     }
   }

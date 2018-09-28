@@ -13,7 +13,7 @@ const voidElements = {
   area: true, base: true, br: true, col: true, embed: true, hr: true, img: true, input: true,
   link: true, meta: true, param: true, source: true, track: true, wbr: true
 };
-const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
+// const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 
 
 export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
@@ -113,40 +113,47 @@ export function deltaFromDom(view, root = view.root, opts) {
     if (node.nodeType === Node.TEXT_NODE || isBr) {
       // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
       const text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
-      if (!text) continue;
+      if (!text || (text === ' ' && node.parentNode.classList.contains('EOP'))) continue;
       let parent = node.parentNode, attr = {};
 
       while (parent && !blocks.matches(parent) && parent !== root) {
         if (markups.matches(parent)) {
           const markup = markups.find(parent);
-          attr[markup.name] = markup.dom ? markup.dom.call(paper, parent) : true;
+          attr[markup.name] = markup.dom ? markup.dom(parent, paper) : true;
+        } else if (parent.hasAttribute('style')) {
+          markups.array.forEach(markup => {
+            if (markup.styleSelector && parent.matches(markup.styleSelector)) {
+              attr[markup.name] = markup.dom ? markup.dom(parent, paper) : true;
+            }
+          })
         }
         parent = parent.parentNode;
       }
 
-      // If the text was not inside a block
-      if (text.trim()) {
-        insertedText += text;
-        delta.insert(text, attr);
-      }
+      delta.insert(text, attr);
     } else if (embeds.matches(node)) {
       const embed = embeds.find(node);
       if (embed) {
-        delta.insert({ [embed.name]: embed.dom.call(paper, node) });
+        delta.insert({ [embed.name]: embed.dom(node, paper) });
       }
-    } else if (blocks.matches(node) || (node.matches && node.matches(blockElements))) {
+    } else if (blocks.matches(node)) {// || (node.matches && node.matches(blockElements))) {
+      unknownBlock = !blocks.matches(node);
+      const block = blocks.find(node) || blocks.getDefault();
+      // Skip paragraphs/divs inside blockquotes and list items etc.
+      if (block === blocks.getDefault() && blocks.matches(node.parentNode)) {
+        continue;
+      }
+
       if (firstBlockSeen) {
-        if (!unknownBlock || insertedText.trim()) {
+        if (!unknownBlock) {
           delta.insert('\n', currentBlock);
         }
-        insertedText = '';
       } else {
         firstBlockSeen = true;
       }
-      unknownBlock = !blocks.matches(node);
-      const block = blocks.find(node) || blocks.getDefault();
+
       if (block !== blocks.getDefault()) {
-        currentBlock = block.dom ? block.dom.call(paper, node) : { [block.name]: true };
+        currentBlock = block.dom ? block.dom(node, paper) : { [block.name]: true };
       } else {
         currentBlock = {};
       }

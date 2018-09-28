@@ -124,8 +124,8 @@ export default class Editor extends EventDispatcher {
   }
 
   /**
-   * Returns the text for the editor with spaces in place of embeds. This can be used to determine the index of given
-   * words or lines of text within the contents.
+   * Returns the text for the editor with null characters in place of embeds. This can be used to determine the index of
+   * given words or lines of text within the contents.
    *
    * @param {Number} from The starting index
    * @param {Number} to   The ending index
@@ -134,7 +134,7 @@ export default class Editor extends EventDispatcher {
   getExactText(from = 0, to = this.length - 1) {
     [ from, to ] = this._normalizeRange(from, to);
     return this.getContents(from, to)
-      .map(op => typeof op.insert === 'string' ? op.insert : ' ')
+      .map(op => typeof op.insert === 'string' ? op.insert : '\0')
       .join('');
   }
 

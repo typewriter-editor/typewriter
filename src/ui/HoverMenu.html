@@ -35,10 +35,12 @@
 
     oncreate() {
       this.reposition();
-      this.on('state', ({ changed, current }) => {
-        if (!changed.view && !changed.range) return;
+    },
+
+    onstate({ changed, current }) {
+      if (this.refs.menu && (changed.view || changed.range)) {
         this.reposition();
-      });
+      }
     },
 
     computed: {
@@ -116,6 +118,7 @@
           pos = { top: -100000, left: -100000 };
         } else {
           const menu = this.refs.menu;
+          if (!menu.offsetParent) return; // Removed from DOM
           const container = menu.offsetParent.getBoundingClientRect();
           const target = view.getBounds(range);
           pos = {

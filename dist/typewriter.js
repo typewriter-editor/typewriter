@@ -2021,8 +2021,8 @@ function (_EventDispatcher) {
       }).join('');
     }
     /**
-     * Returns the text for the editor with spaces in place of embeds. This can be used to determine the index of given
-     * words or lines of text within the contents.
+     * Returns the text for the editor with null characters in place of embeds. This can be used to determine the index of
+     * given words or lines of text within the contents.
      *
      * @param {Number} from The starting index
      * @param {Number} to   The ending index
@@ -2042,7 +2042,7 @@ function (_EventDispatcher) {
       from = _this$_normalizeRange6[0];
       to = _this$_normalizeRange6[1];
       return this.getContents(from, to).map(function (op) {
-        return typeof op.insert === 'string' ? op.insert : ' ';
+        return typeof op.insert === 'string' ? op.insert : '\0';
       }).join('');
     }
     /**
@@ -3208,13 +3208,15 @@ var blocks = /*#__PURE__*/Object.freeze({
 var bold = {
   name: 'bold',
   selector: 'strong, b',
+  styleSelector: '[style*="bold"]',
   vdom: function vdom(children) {
     return h("strong", null, children);
   }
 };
-var italics = {
+var italic = {
   name: 'italic',
   selector: 'em, i',
+  styleSelector: '[style*="italic"]',
   vdom: function vdom(children) {
     return h("em", null, children);
   }
@@ -3235,7 +3237,7 @@ var link = {
 
 var markups = /*#__PURE__*/Object.freeze({
   bold: bold,
-  italics: italics,
+  italic: italic,
   link: link
 });
 
@@ -3277,7 +3279,7 @@ var embeds = /*#__PURE__*/Object.freeze({
 
 var defaultPaper = {
   blocks: [paragraph, header, list, blockquote],
-  markups: [bold, italics, link],
+  markups: [italic, bold, link],
   embeds: [image]
 };
 
@@ -3629,9 +3631,10 @@ function () {
       } else if (nodeOrAttr && _typeof(nodeOrAttr) === 'object') {
         var _domType;
 
-        Object.keys(nodeOrAttr).some(function (name) {
+        var keys = Object.keys(nodeOrAttr);
+        keys.length ? keys.some(function (name) {
           return _domType = _this4.get(name);
-        });
+        }) : _domType = this.getDefault();
         return _domType;
       }
     }
@@ -3657,8 +3660,8 @@ var voidElements = {
   source: true,
   track: true,
   wbr: true
-};
-var blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
+}; // const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
+
 function deltaToVdom(delta) {
   var paper = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new Paper(defaultPaper);
   var blocks = paper.blocks,
@@ -3763,7 +3766,6 @@ function deltaFromDom(view) {
   var currentBlock,
       firstBlockSeen = false,
       unknownBlock = false,
-      insertedText = '',
       node;
   walker.currentNode = root;
 
@@ -3771,48 +3773,57 @@ function deltaFromDom(view) {
     var isBr = isBRNode(view, node);
 
     if (node.nodeType === Node.TEXT_NODE || isBr) {
-      // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
-      var text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
-      if (!text) continue;
-      var parent = node.parentNode,
-          attr = {};
+      var _ret = function () {
+        // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
+        var text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
+        if (!text || text === ' ' && node.parentNode.classList.contains('EOP')) return "continue";
+        var parent = node.parentNode,
+            attr = {};
 
-      while (parent && !blocks.matches(parent) && parent !== root) {
-        if (markups.matches(parent)) {
-          var markup = markups.find(parent);
-          attr[markup.name] = markup.dom ? markup.dom.call(paper, parent) : true;
+        while (parent && !blocks.matches(parent) && parent !== root) {
+          if (markups.matches(parent)) {
+            var markup = markups.find(parent);
+            attr[markup.name] = markup.dom ? markup.dom(parent, paper) : true;
+          } else if (parent.hasAttribute('style')) {
+            markups.array.forEach(function (markup) {
+              if (markup.styleSelector && parent.matches(markup.styleSelector)) {
+                attr[markup.name] = markup.dom ? markup.dom(parent, paper) : true;
+              }
+            });
+          }
+
+          parent = parent.parentNode;
         }
 
-        parent = parent.parentNode;
-      } // If the text was not inside a block
-
-
-      if (text.trim()) {
-        insertedText += text;
         delta.insert(text, attr);
-      }
+      }();
+
+      if (_ret === "continue") continue;
     } else if (embeds.matches(node)) {
       var embed = embeds.find(node);
 
       if (embed) {
-        delta.insert(_defineProperty({}, embed.name, embed.dom.call(paper, node)));
+        delta.insert(_defineProperty({}, embed.name, embed.dom(node, paper)));
       }
-    } else if (blocks.matches(node) || node.matches && node.matches(blockElements)) {
+    } else if (blocks.matches(node)) {
+      // || (node.matches && node.matches(blockElements))) {
+      unknownBlock = !blocks.matches(node);
+      var block = blocks.find(node) || blocks.getDefault(); // Skip paragraphs/divs inside blockquotes and list items etc.
+
+      if (block === blocks.getDefault() && blocks.matches(node.parentNode)) {
+        continue;
+      }
+
       if (firstBlockSeen) {
-        if (!unknownBlock || insertedText.trim()) {
+        if (!unknownBlock) {
           delta.insert('\n', currentBlock);
         }
-
-        insertedText = '';
       } else {
         firstBlockSeen = true;
       }
 
-      unknownBlock = !blocks.matches(node);
-      var block = blocks.find(node) || blocks.getDefault();
-
       if (block !== blocks.getDefault()) {
-        currentBlock = block.dom ? block.dom.call(paper, node) : _defineProperty({}, block.name, true);
+        currentBlock = block.dom ? block.dom(node, paper) : _defineProperty({}, block.name, true);
       } else {
         currentBlock = {};
       }
@@ -4284,9 +4295,18 @@ function (_EventDispatcher) {
 
           _this8.fire("shortcut", event, shortcut);
         }
-      }; // const onPaste = event => {
-      //   event.preventDefault();
+      }; // The browser does a better job of adding the text correctly
+      // const onPaste = event => {
       //   const html = event.clipboardData.getData('text/html');
+      //   if (!html || !this.editor.selection) return;
+      //   event.preventDefault();
+      //   const root = document.createElement('div');
+      //   root.innerHTML = html;
+      //   let delta = deltaFromDom(this, root, { ignoreAttributes: true, notInDom: true });
+      //   const [ from , to ] = this.editor.selection;
+      //   const change = this.editor.delta().retain(from).delete(to - from);
+      //   change.ops.push(...delta.ops);
+      //   this.editor.updateContents(change, SOURCE_USER, change.length());
       // };
 
 
@@ -4316,28 +4336,20 @@ function (_EventDispatcher) {
         _this8.updateBrowserSelection();
       }; // Use mutation tracking during development to catch errors
       // TODO delete this mutation observer when we're confident in core (or put it behind a development flag)
+      // let checking = 0;
+      // const devObserver = new MutationObserver(list => {
+      //   if (checking) clearTimeout(checking);
+      //   checking = setTimeout(() => {
+      //     checking = 0;
+      //     const diff = this.editor.contents.compose(this.decorators).diff(deltaFromDom(this));
+      //     if (diff.length()) {
+      //       console.error('Delta out of sync with DOM:', diff, this.editor.contents, deltaFromDom(this), this.decorators);
+      //     }
+      //   }, 20);
+      // });
+      // devObserver.observe(this.root, { characterData: true, characterDataOldValue: true, childList: true, attributes: true, subtree: true });
 
 
-      var checking = 0;
-      var devObserver = new MutationObserver(function (list) {
-        if (checking) clearTimeout(checking);
-        checking = setTimeout(function () {
-          checking = 0;
-
-          var diff = _this8.editor.contents.compose(_this8.decorators).diff(deltaFromDom(_this8));
-
-          if (diff.length()) {
-            console.error('Delta out of sync with DOM:', diff, _this8.editor.contents, deltaFromDom(_this8), _this8.decorators);
-          }
-        }, 20);
-      });
-      devObserver.observe(this.root, {
-        characterData: true,
-        characterDataOldValue: true,
-        childList: true,
-        attributes: true,
-        subtree: true
-      });
       this.root.addEventListener('keydown', onKeyDown); // this.root.addEventListener('paste', onPaste);
 
       this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
@@ -4346,8 +4358,7 @@ function (_EventDispatcher) {
       this.render();
 
       this.uninit = function () {
-        devObserver.disconnect();
-
+        // devObserver.disconnect();
         _this8.root.removeEventListener('keydown', onKeyDown); // this.root.removeEventListener('paste', onPaste);
 
 
@@ -4378,8 +4389,9 @@ function (_EventDispatcher) {
       var _this9 = this;
 
       this.uninit();
-      Object.keys(modules).forEach(function (key) {
-        var api = _this9.module[key];
+      this.fire('destroy');
+      Object.keys(this.modules).forEach(function (key) {
+        var api = _this9.modules[key];
         if (api && typeof api.destroy === 'function') api.destroy();
       });
     }
@@ -4413,7 +4425,7 @@ function input() {
       });
       var selection = view.getSelection();
       var mutation = list[0];
-      var isTextChange = list.length === 1 && mutation.type === 'characterData' || mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE; // Only one text node has been altered. Optimize for view most common case.
+      var isTextChange = list.length === 1 && (mutation.type === 'characterData' || mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE); // Only one text node has been altered. Optimize for view most common case.
 
       if (isTextChange) {
         var change = editor.delta();
@@ -4439,7 +4451,9 @@ function input() {
 
         if (change.ops.length) {
           // console.log('changing a little', change);
-          editor.updateContents(change, SOURCE_USER$2, selection);
+          if (!editor.updateContents(change, SOURCE_USER$2, selection)) {
+            view.render();
+          }
         }
       } else if (list.length === 1 && mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE) ; else {
         var contents = deltaFromDom(view, view.root, {
@@ -4450,7 +4464,9 @@ function input() {
         var _change = editor.contents.diff(contents); // console.log('changing a lot (possibly)', change);
 
 
-        editor.updateContents(_change, SOURCE_USER$2, selection);
+        if (!editor.updateContents(_change, SOURCE_USER$2, selection)) {
+          view.render();
+        }
       }
     }
 
@@ -4527,9 +4543,11 @@ function input() {
             var _line = editor.contents.getLine(from);
 
             if (from === _line.start) {
-              var _block = view.paper.blocks.find(_line.attributes);
+              var blocks = view.paper.blocks;
 
-              if (_block && !_block.defaultFollows) {
+              var _block = blocks.find(_line.attributes);
+
+              if (_block && _block !== blocks.getDefault() && !_block.defaultFollows) {
                 editor.formatLine(from, {}, SOURCE_USER$2);
                 return;
               }
@@ -5379,6 +5397,7 @@ var methods = {
       pos = { top: -100000, left: -100000 };
     } else {
       const menu = this.refs.menu;
+      if (!menu.offsetParent) return; // Removed from DOM
       const container = menu.offsetParent.getBoundingClientRect();
       const target = view.getBounds(range);
       pos = {
@@ -5461,10 +5480,11 @@ var methods = {
 
 function oncreate() {
   this.reposition();
-  this.on('state', ({ changed, current }) => {
-    if (!changed.view && !changed.range) return;
+}
+function onstate({ changed, current }) {
+  if (this.refs.menu && (changed.view || changed.range)) {
     this.reposition();
-  });
+  }
 }
 function create_main_fragment(component, ctx) {
 	var div, div_1, text_1, div_2, input, input_updating = false, text_2, i, div_class_value;
@@ -5729,6 +5749,10 @@ function HoverMenu(options) {
 	this._state = assign(data(), options.data);
 	this._recompute({ view: 1, range: 1 }, this._state);
 	this._intro = true;
+
+	this._handlers.state = [onstate];
+
+	onstate.call(this, { changed: assignTrue({}, this._state), current: this._state });
 
 	this._fragment = create_main_fragment(this, this._state);
 

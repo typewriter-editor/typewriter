@@ -31,9 +31,9 @@ export default function input() {
 
       const selection = view.getSelection();
       const mutation = list[0];
-      const isTextChange = list.length === 1 && mutation.type === 'characterData' ||
+      const isTextChange = list.length === 1 && (mutation.type === 'characterData' ||
         (mutation.type === 'childList' && mutation.addedNodes.length === 1 &&
-         mutation.addedNodes[0].nodeType === Node.TEXT_NODE);
+         mutation.addedNodes[0].nodeType === Node.TEXT_NODE));
 
       // Only one text node has been altered. Optimize for view most common case.
       if (isTextChange) {
@@ -58,7 +58,9 @@ export default function input() {
 
         if (change.ops.length) {
           // console.log('changing a little', change);
-          editor.updateContents(change, SOURCE_USER, selection);
+          if (!editor.updateContents(change, SOURCE_USER, selection)) {
+            view.render();
+          }
         }
       } else if (list.length === 1 && mutation.type === 'childList' &&
         mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE)
@@ -69,7 +71,9 @@ export default function input() {
         contents = contents.compose(view.reverseDecorators);
         const change = editor.contents.diff(contents);
         // console.log('changing a lot (possibly)', change);
-        editor.updateContents(change, SOURCE_USER, selection);
+        if (!editor.updateContents(change, SOURCE_USER, selection)) {
+          view.render();
+        }
       }
     }
 
@@ -130,8 +134,9 @@ export default function input() {
           } else {
             const line = editor.contents.getLine(from);
             if (from === line.start) {
-              const block = view.paper.blocks.find(line.attributes);
-              if (block && !block.defaultFollows) {
+              const blocks = view.paper.blocks;
+              const block = blocks.find(line.attributes);
+              if (block && block !== blocks.getDefault() && !block.defaultFollows) {
                 editor.formatLine(from, {}, SOURCE_USER);
                 return;
               }

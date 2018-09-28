@@ -287,9 +287,18 @@ export default class View extends EventDispatcher {
       }
     };
 
+    // The browser does a better job of adding the text correctly
     // const onPaste = event => {
-    //   event.preventDefault();
     //   const html = event.clipboardData.getData('text/html');
+    //   if (!html || !this.editor.selection) return;
+    //   event.preventDefault();
+    //   const root = document.createElement('div');
+    //   root.innerHTML = html;
+    //   let delta = deltaFromDom(this, root, { ignoreAttributes: true, notInDom: true });
+    //   const [ from , to ] = this.editor.selection;
+    //   const change = this.editor.delta().retain(from).delete(to - from);
+    //   change.ops.push(...delta.ops);
+    //   this.editor.updateContents(change, SOURCE_USER, change.length());
     // };
 
     const onSelectionChange = () => {
@@ -316,18 +325,18 @@ export default class View extends EventDispatcher {
 
     // Use mutation tracking during development to catch errors
     // TODO delete this mutation observer when we're confident in core (or put it behind a development flag)
-    let checking = 0;
-    const devObserver = new MutationObserver(list => {
-      if (checking) clearTimeout(checking);
-      checking = setTimeout(() => {
-        checking = 0;
-        const diff = this.editor.contents.compose(this.decorators).diff(deltaFromDom(this));
-        if (diff.length()) {
-          console.error('Delta out of sync with DOM:', diff, this.editor.contents, deltaFromDom(this), this.decorators);
-        }
-      }, 20);
-    });
-    devObserver.observe(this.root, { characterData: true, characterDataOldValue: true, childList: true, attributes: true, subtree: true });
+    // let checking = 0;
+    // const devObserver = new MutationObserver(list => {
+    //   if (checking) clearTimeout(checking);
+    //   checking = setTimeout(() => {
+    //     checking = 0;
+    //     const diff = this.editor.contents.compose(this.decorators).diff(deltaFromDom(this));
+    //     if (diff.length()) {
+    //       console.error('Delta out of sync with DOM:', diff, this.editor.contents, deltaFromDom(this), this.decorators);
+    //     }
+    //   }, 20);
+    // });
+    // devObserver.observe(this.root, { characterData: true, characterDataOldValue: true, childList: true, attributes: true, subtree: true });
 
 
     this.root.addEventListener('keydown', onKeyDown);
@@ -338,7 +347,7 @@ export default class View extends EventDispatcher {
     this.render();
 
     this.uninit = () => {
-      devObserver.disconnect();
+      // devObserver.disconnect();
       this.root.removeEventListener('keydown', onKeyDown);
       // this.root.removeEventListener('paste', onPaste);
       this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
@@ -360,8 +369,9 @@ export default class View extends EventDispatcher {
    */
   destroy() {
     this.uninit();
-    Object.keys(modules).forEach(key => {
-      const api = this.module[key];
+    this.fire('destroy');
+    Object.keys(this.modules).forEach(key => {
+      const api = this.modules[key];
       if (api && typeof api.destroy === 'function') api.destroy();
     });
   }
