@@ -48,7 +48,7 @@ export default function hoverMenu() {
 
     function onMouseUp() {
       mousedown = false;
-      update();
+      setTimeout(update);
     }
 
     editor.on('editor-change', onEditorChange);

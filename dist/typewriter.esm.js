@@ -2777,8 +2777,9 @@ function (_EventDispatcher) {
       rest = _this$_normalizeSelec4.slice(2);
 
       if (from > to) {
+        var toValue = from;
         from = to;
-        to = from;
+        to = toValue;
       }
 
       return [from, to].concat(rest);
@@ -5835,7 +5836,7 @@ function hoverMenu() {
 
     function onMouseUp() {
       mousedown = false;
-      update();
+      setTimeout(update);
     }
 
     editor.on('editor-change', onEditorChange);

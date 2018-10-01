@@ -669,7 +669,11 @@ export default class Editor extends EventDispatcher {
    */
   _normalizeRange(from, to, ...rest) {
     [ from, to, ...rest ] = this._normalizeSelection(from, to, ...rest);
-    if (from > to) [from, to] = [to, from];
+    if (from > to) {
+      const toValue = from;
+      from = to;
+      to = toValue;
+    }
     return [from, to].concat(rest);
   }
 
