@@ -17,6 +17,13 @@ export const italic = {
 };
 
 
+export const code = {
+  name: 'code',
+  selector: 'code',
+  vdom: children => <code>{children}</code>,
+};
+
+
 export const link = {
   name: 'link',
   selector: 'a[href]',

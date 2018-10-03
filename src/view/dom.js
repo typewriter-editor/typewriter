@@ -28,14 +28,11 @@ export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
       if (op.insert) {
         let children = [];
         if (typeof op.insert === 'string') {
-          op.insert.split(/\r/).forEach((child, i) => {
-            if (i !== 0) children.push(br);
-            child && children.push(child.replace(/  /g, '\xA0 ').replace(/^ | $/g, '\xA0'));
-          });
+          children.push(op.insert.replace(/  /g, '\xA0 ').replace(/^ | $/g, '\xA0'));
         } else {
           const embed = embeds.find(op.insert);
           if (embed) {
-            const node = embed.vdom.call(paper, op.insert[embed.name]);
+            const node = embed.vdom(op.insert[embed.name], paper);
             children.push(node);
           }
         }
@@ -45,7 +42,7 @@ export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
           Object.keys(op.attributes).sort((a, b) => markups.priority(b) - markups.priority(a)).forEach(name => {
             const markup = markups.get(name);
             if (markup) {
-              const node = markup.vdom.call(paper, children, op.attributes);
+              const node = markup.vdom(children, op.attributes, paper);
               nodeMarkup.set(node, markup); // Store for merging
               children = [ node ];
             }
@@ -108,11 +105,12 @@ export function deltaFromDom(view, root = view.root, opts) {
   walker.currentNode = root;
 
   while ((node = walker.nextNode())) {
-    const isBr = isBRNode(view, node);
 
-    if (node.nodeType === Node.TEXT_NODE || isBr) {
-      // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
-      const text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
+    if (node.nodeName === 'BR' && !isBRNode(this, node)) continue;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      // non-breaking spaces are space, and newlines should not exist
+      const text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
       if (!text || (text === ' ' && node.parentNode.classList.contains('EOP'))) continue;
       let parent = node.parentNode, attr = {};
 
@@ -134,7 +132,7 @@ export function deltaFromDom(view, root = view.root, opts) {
     } else if (embeds.matches(node)) {
       const embed = embeds.find(node);
       if (embed) {
-        delta.insert({ [embed.name]: embed.dom(node, paper) });
+        delta.insert({ [embed.name]: embed.dom ? embed.dom(node, paper) : true });
       }
     } else if (blocks.matches(node)) {// || (node.matches && node.matches(blockElements))) {
       unknownBlock = !blocks.matches(node);

@@ -25,9 +25,6 @@ export default {
       babelrc: false,
       presets: [
         ['@babel/preset-env', {
-          targets: {
-            browsers: ['>= .5% in US', 'not ie <= 11']
-          },
           modules: false
         }]
       ],

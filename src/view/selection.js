@@ -105,7 +105,7 @@ export function getNodeAndOffset(view, index) {
 export function getNodeAndOffsetIndex(view, node, offset) {
   if (node.nodeType === Node.ELEMENT_NODE && offset > 0) {
     node = node.childNodes[offset - 1];
-    offset = 0;
+    offset = node.nodeType === Node.ELEMENT_NODE ? 0 : node.nodeValue.length;
   }
   return getNodeIndex(view, node) + offset;
 }

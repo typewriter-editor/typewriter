@@ -109,7 +109,7 @@ export default function input() {
       if (event.defaultPrevented) return;
       event.preventDefault();
       let [ from, to ] = editor.getSelectedRange();
-      editor.insertText(from, to, '\r', null, SOURCE_USER);
+      editor.insertEmbed(from, to, 'br', true, null, SOURCE_USER);
     }
 
 

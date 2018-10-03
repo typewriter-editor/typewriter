@@ -71,3 +71,18 @@ export const blockquote = {
     return <blockquote>{quotes.map(([children, attr]) => decorateBlock(<p>{children}</p>, attr))}</blockquote>;
   },
 };
+
+export const codeblock = {
+  name: 'code-block',
+  selector: 'pre code, pre',
+  optimize: true,
+  vdom: lines => {
+    return <pre>{lines.map(([children, attr]) => [children, '\n'])}</pre>;
+  },
+};
+
+export const hr = {
+  name: 'hr',
+  selector: 'hr',
+  vdom: () => <hr/>,
+};

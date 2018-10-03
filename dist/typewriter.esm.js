@@ -3194,12 +3194,35 @@ var blockquote = {
     }));
   }
 };
+var codeblock = {
+  name: 'code-block',
+  selector: 'pre code, pre',
+  optimize: true,
+  vdom: function vdom(lines) {
+    return h("pre", null, lines.map(function (_ref5) {
+      var _ref6 = _slicedToArray(_ref5, 2),
+          children = _ref6[0],
+          attr = _ref6[1];
+
+      return [children, '\n'];
+    }));
+  }
+};
+var hr = {
+  name: 'hr',
+  selector: 'hr',
+  vdom: function vdom() {
+    return h("hr", null);
+  }
+};
 
 var blocks = /*#__PURE__*/Object.freeze({
   paragraph: paragraph,
   header: header,
   list: list,
-  blockquote: blockquote
+  blockquote: blockquote,
+  codeblock: codeblock,
+  hr: hr
 });
 
 var bold = {
@@ -3216,6 +3239,13 @@ var italic = {
   styleSelector: '[style*="italic"]',
   vdom: function vdom(children) {
     return h("em", null, children);
+  }
+};
+var code = {
+  name: 'code',
+  selector: 'code',
+  vdom: function vdom(children) {
+    return h("code", null, children);
   }
 };
 var link = {
@@ -3235,6 +3265,7 @@ var link = {
 var markups = /*#__PURE__*/Object.freeze({
   bold: bold,
   italic: italic,
+  code: code,
   link: link
 });
 
@@ -3248,6 +3279,13 @@ var image = {
     return h("img", {
       src: value
     });
+  }
+};
+var br = {
+  name: 'br',
+  selector: 'br',
+  vdom: function vdom(value) {
+    return h("br", null);
   }
 }; // To represent a collaborator's cursor, for use in decorators
 
@@ -3271,13 +3309,14 @@ var cursor = {
 
 var embeds = /*#__PURE__*/Object.freeze({
   image: image,
+  br: br,
   cursor: cursor
 });
 
 var defaultPaper = {
-  blocks: [paragraph, header, list, blockquote],
+  blocks: [paragraph, header, list, blockquote, hr],
   markups: [italic, bold, link],
-  embeds: [image]
+  embeds: [image, br]
 };
 
 var indexOf = [].indexOf; // Get the range (a tuple of indexes) for this view from the browser selection
@@ -3399,7 +3438,7 @@ function getNodeAndOffset(view, index) {
 function getNodeAndOffsetIndex(view, node, offset) {
   if (node.nodeType === Node.ELEMENT_NODE && offset > 0) {
     node = node.childNodes[offset - 1];
-    offset = 0;
+    offset = node.nodeType === Node.ELEMENT_NODE ? 0 : node.nodeValue.length;
   }
 
   return getNodeIndex(view, node) + offset;
@@ -3641,7 +3680,7 @@ function () {
 }();
 
 var nodeMarkup = new WeakMap();
-var br = h("br", null);
+var br$1 = h("br", null);
 var voidElements = {
   area: true,
   base: true,
@@ -3676,15 +3715,12 @@ function deltaToVdom(delta) {
         var children = [];
 
         if (typeof op.insert === 'string') {
-          op.insert.split(/\r/).forEach(function (child, i) {
-            if (i !== 0) children.push(br);
-            child && children.push(child.replace(/  /g, '\xA0 ').replace(/^ | $/g, '\xA0'));
-          });
+          children.push(op.insert.replace(/  /g, '\xA0 ').replace(/^ | $/g, '\xA0'));
         } else {
           var embed = embeds.find(op.insert);
 
           if (embed) {
-            var node = embed.vdom.call(paper, op.insert[embed.name]);
+            var node = embed.vdom(op.insert[embed.name], paper);
             children.push(node);
           }
         }
@@ -3697,7 +3733,7 @@ function deltaToVdom(delta) {
             var markup = markups.get(name);
 
             if (markup) {
-              var _node = markup.vdom.call(paper, children, op.attributes);
+              var _node = markup.vdom(children, op.attributes, paper);
 
               nodeMarkup.set(_node, markup); // Store for merging
 
@@ -3712,8 +3748,8 @@ function deltaToVdom(delta) {
 
     inlineChildren = mergeChildren(inlineChildren);
 
-    if (!inlineChildren.length || inlineChildren[inlineChildren.length - 1] === br) {
-      inlineChildren.push(br);
+    if (!inlineChildren.length || inlineChildren[inlineChildren.length - 1] === br$1) {
+      inlineChildren.push(br$1);
     }
 
     var block = blocks.find(attributes);
@@ -3767,12 +3803,12 @@ function deltaFromDom(view) {
   walker.currentNode = root;
 
   while (node = walker.nextNode()) {
-    var isBr = isBRNode(view, node);
+    if (node.nodeName === 'BR' && !isBRNode(this, node)) continue;
 
-    if (node.nodeType === Node.TEXT_NODE || isBr) {
+    if (node.nodeType === Node.TEXT_NODE) {
       var _ret = function () {
-        // BRs are represented with \r, non-breaking spaces are space, and newlines should not exist
-        var text = isBr ? '\r' : node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
+        // non-breaking spaces are space, and newlines should not exist
+        var text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
         if (!text || text === ' ' && node.parentNode.classList.contains('EOP')) return "continue";
         var parent = node.parentNode,
             attr = {};
@@ -3800,7 +3836,7 @@ function deltaFromDom(view) {
       var embed = embeds.find(node);
 
       if (embed) {
-        delta.insert(_defineProperty({}, embed.name, embed.dom(node, paper)));
+        delta.insert(_defineProperty({}, embed.name, embed.dom ? embed.dom(node, paper) : true));
       }
     } else if (blocks.matches(node)) {
       // || (node.matches && node.matches(blockElements))) {
@@ -4510,7 +4546,7 @@ function input() {
           from = _editor$getSelectedRa4[0],
           to = _editor$getSelectedRa4[1];
 
-      editor.insertText(from, to, '\r', null, SOURCE_USER$2);
+      editor.insertEmbed(from, to, 'br', true, null, SOURCE_USER$2);
     }
 
     function onBackspace(event, shortcut) {

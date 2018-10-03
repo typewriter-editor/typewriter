@@ -8,6 +8,12 @@ export const image = {
   vdom: value => <img src={value}/>,
 };
 
+export const br = {
+  name: 'br',
+  selector: 'br',
+  vdom: value => <br/>,
+};
+
 // To represent a collaborator's cursor, for use in decorators
 export const cursor = {
   name: 'cursor',
