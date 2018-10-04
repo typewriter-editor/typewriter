@@ -1,9 +1,9 @@
 {
   "presets": [
-    "stage-2",
-    "env"
+    ["@babel/preset-env"]
   ],
   "plugins": [
-    [ "transform-react-jsx", { "pragma": "h" }]
+    [ "@babel/plugin-transform-react-jsx", { "pragma": "h" }],
+    "@babel/plugin-proposal-object-rest-spread"
   ]
 }

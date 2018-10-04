@@ -22,11 +22,11 @@ describe('======== dom ========', () => {
           'I‘m sure wasn‘t mine.\nThere‘s too many kids in this tub.\n' }
       ]);
 
-      const vdom = deltaToVdom(view, delta);
+      const vdom = deltaToVdom(delta);
 
       expect(vdom).to.deep.equal({
         name: 'div',
-        attributes: { contentEditable: true, class: "typewriter-editor" },
+        attributes: { contentEditable: "true", class: "typewriter-editor" },
         children: [
           { name: 'p', attributes: {}, children: ['There‘s too many kids in this tub.'] },
           { name: 'p', attributes: {}, children: ['There‘s too many elbows to scrub.'] },
@@ -50,11 +50,11 @@ describe('======== dom ========', () => {
         { insert: '    —Bertrand Russell\n' },
       ]);
 
-      const vdom = deltaToVdom(view, delta);
+      const vdom = deltaToVdom(delta);
 
       expect(vdom).to.deep.equal({
         name: 'div',
-        attributes: { contentEditable: true, class: "typewriter-editor" },
+        attributes: { contentEditable: "true", class: "typewriter-editor" },
         children: [
           {
             name: 'h1',
@@ -120,9 +120,9 @@ describe('======== dom ========', () => {
     it('should create a delta from paragraph nodes and unformatted content', () => {
       const root = document.createElement('div');
       root.innerHTML = `<p>There‘s too many kids in this tub.</p>
-        <p>There‘s too many elbows to scrub.</p>
-        <p>I just washed a behind that I‘m sure wasn‘t mine.</p>
-        <p>There‘s too many kids in this tub.</p>`;
+<p>There‘s too many elbows to scrub.</p>
+<p>I just washed a behind that I‘m sure wasn‘t mine.</p>
+<p>There‘s too many kids in this tub.</p>`;
 
       const delta = deltaFromDom(view, root, { notInDom: true });
 
@@ -179,7 +179,7 @@ describe('======== dom ========', () => {
         { insert: '    —Bertrand Russell\n' },
       ]);
 
-      const html = deltaToHTML(view, delta);
+      const html = deltaToHTML(delta);
 
       expect(html).to.equal(`<h1>&lt;Quotes&gt;</h1>` +
         `<p><img src="https://www.example.com/images/bertrand-russle.png"></p>` +

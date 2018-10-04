@@ -207,10 +207,12 @@ describe('======== Editor ========', () => {
       editor.insertText('This is a test!');
       editor.formatText(10, 14, { bold: true, italic: true });
 
-      editor.insertText(1, '#', 'api', [2, 3]);
+      editor.insertText(1, '#', null, 'api', [2, 3]);
       expect(editor.activeFormats).to.deep.equal({});
 
-      editor.insertText(1, '*', 'api', [ 13, 15 ]);
+      editor.insertText(1, '*', null, 'api', [ 13, 15 ]);
+      console.log('-----------')
+      console.log(editor.selection);
       expect(editor.activeFormats).to.deep.equal({ bold: true, italic: true });
 
       editor.deleteText(1, 3, 'api', [ 15, 15 ]);
