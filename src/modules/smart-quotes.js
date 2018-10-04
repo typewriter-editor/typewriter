@@ -82,6 +82,6 @@ function isTextEntry(change) {
     change.ops.length === 1 ||
     (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)
   ) &&
-    change.ops[change.ops.length - 1].insert &&
+    typeof change.ops[change.ops.length - 1].insert === 'string' &&
     change.ops[change.ops.length - 1].insert !== '\n';
 }

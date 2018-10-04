@@ -86,7 +86,7 @@ export default function input() {
       const line = editor.contents.getLine(from);
       let attributes = line.attributes;
       const block = view.paper.blocks.find(attributes);
-      const isDefault = !block;
+      const isDefault = !block || view.paper.blocks.getDefault();
       const length = line.end - line.start - 1;
       const atEnd = to === line.end - 1;
       if (atEnd && !isDefault && block.defaultFollows) {

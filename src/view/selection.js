@@ -81,8 +81,12 @@ export function getNodeAndOffset(view, index) {
       const size = node.nodeValue.length
       if (index <= count + size) return [ node, index - count ];
       count += size;
-    } else if (embeds.matches(node)) {
+    } else if (embeds.matches(node) && !isBRPlaceholder(view, node)) {
       count += 1;
+      // If the selection lands after this embed, and the next node isn't a text node, place the selection
+      if (count === index && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE)) {
+        return [ node.parentNode, indexOf.call(node.parentNode.childNodes, node) + 1 ];
+      }
     } else if (blocks.matches(node)) {
       if (firstBlockSeen) count += 1;
       else firstBlockSeen = true;
@@ -90,12 +94,6 @@ export function getNodeAndOffset(view, index) {
       // If the selection lands at the beginning of a block, and the first node isn't a text node, place the selection
       if (count === index && (!node.firstChild || node.firstChild.nodeType !== Node.TEXT_NODE)) {
         return [ node, 0 ];
-      }
-    } else if (isBRNode(view, node)) {
-      count += 1;
-      // If the selection lands after this br, and the next node isn't a text node, place the selection
-      if (count === index && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE)) {
-        return [ node.parentNode, indexOf.call(node.parentNode.childNodes, node) + 1 ];
       }
     }
   }
@@ -126,20 +124,17 @@ export function getNodeIndex(view, node) {
   let index = node.nodeType === Node.ELEMENT_NODE ? 0 : -1;
   while ((node = walker.previousNode())) {
     if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
-    else if (isBRNode(view, node)) index++;
-    else if (embeds.matches(node)) index++;
+    else if (embeds.matches(node) && !isBRPlaceholder(view, node)) index++;
     else if (node !== root && blocks.matches(node)) index++;
   }
   return index;
 }
 
 // Determines if a node is actually a BR in our content or if is just the placeholder BR which appears in an empty block
-export function isBRNode(view, node) {
-  return node.nodeName === 'BR' && node.parentNode.lastChild !== node &&
-    ( // Check if the next node is an inline node (e.g. not another block such as a list)
-      node.nextSibling.nodeType === Node.TEXT_NODE ||
-      node.nextSibling.nodeName === 'BR' ||
-      view.paper.markups.matches(node.nextSibling) ||
-      view.paper.embeds.matches(node.nextSibling)
-    );
+export function isBRPlaceholder(view, node) {
+  return node.nodeName === 'BR' && (
+    !node.nextSibling || (
+      node.nextSibling.nodeType !== Node.TEXT_NODE && view.paper.blocks.matches(node.nextSibling)
+    )
+  );
 }

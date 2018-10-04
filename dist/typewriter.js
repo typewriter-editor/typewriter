@@ -3420,19 +3420,17 @@ function getNodeAndOffset(view, index) {
       var size = node.nodeValue.length;
       if (index <= count + size) return [node, index - count];
       count += size;
-    } else if (embeds.matches(node)) {
-      count += 1;
+    } else if (embeds.matches(node) && !isBRPlaceholder(view, node)) {
+      count += 1; // If the selection lands after this embed, and the next node isn't a text node, place the selection
+
+      if (count === index && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE)) {
+        return [node.parentNode, indexOf.call(node.parentNode.childNodes, node) + 1];
+      }
     } else if (blocks.matches(node)) {
       if (firstBlockSeen) count += 1;else firstBlockSeen = true; // If the selection lands at the beginning of a block, and the first node isn't a text node, place the selection
 
       if (count === index && (!node.firstChild || node.firstChild.nodeType !== Node.TEXT_NODE)) {
         return [node, 0];
-      }
-    } else if (isBRNode(view, node)) {
-      count += 1; // If the selection lands after this br, and the next node isn't a text node, place the selection
-
-      if (count === index && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE)) {
-        return [node.parentNode, indexOf.call(node.parentNode.childNodes, node) + 1];
       }
     }
   }
@@ -3462,15 +3460,14 @@ function getNodeIndex(view, node) {
   var index = node.nodeType === Node.ELEMENT_NODE ? 0 : -1;
 
   while (node = walker.previousNode()) {
-    if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;else if (isBRNode(view, node)) index++;else if (embeds.matches(node)) index++;else if (node !== root && blocks.matches(node)) index++;
+    if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;else if (embeds.matches(node) && !isBRPlaceholder(view, node)) index++;else if (node !== root && blocks.matches(node)) index++;
   }
 
   return index;
 } // Determines if a node is actually a BR in our content or if is just the placeholder BR which appears in an empty block
 
-function isBRNode(view, node) {
-  return node.nodeName === 'BR' && node.parentNode.lastChild !== node && ( // Check if the next node is an inline node (e.g. not another block such as a list)
-  node.nextSibling.nodeType === Node.TEXT_NODE || node.nextSibling.nodeName === 'BR' || view.paper.markups.matches(node.nextSibling) || view.paper.embeds.matches(node.nextSibling));
+function isBRPlaceholder(view, node) {
+  return node.nodeName === 'BR' && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE && view.paper.blocks.matches(node.nextSibling));
 }
 
 /*!
@@ -3751,8 +3748,9 @@ function deltaToVdom(delta) {
     }); // Merge markups to optimize
 
     inlineChildren = mergeChildren(inlineChildren);
+    var lastChild = inlineChildren[inlineChildren.length - 1];
 
-    if (!inlineChildren.length || inlineChildren[inlineChildren.length - 1] === br$1) {
+    if (!inlineChildren.length || lastChild && lastChild.name === 'br') {
       inlineChildren.push(br$1);
     }
 
@@ -3807,7 +3805,7 @@ function deltaFromDom(view) {
   walker.currentNode = root;
 
   while (node = walker.nextNode()) {
-    if (node.nodeName === 'BR' && !isBRNode(this, node)) continue;
+    if (isBRPlaceholder(this, node)) continue;
 
     if (node.nodeType === Node.TEXT_NODE) {
       var _ret = function () {
@@ -4519,7 +4517,7 @@ function input() {
       var line = editor.contents.getLine(from);
       var attributes = line.attributes;
       var block = view.paper.blocks.find(attributes);
-      var isDefault = !block;
+      var isDefault = !block || view.paper.blocks.getDefault();
       var length = line.end - line.start - 1;
       var atEnd = to === line.end - 1;
 
@@ -5158,7 +5156,7 @@ function smartQuotesDecorator() {
 }
 
 function isTextEntry$1(change) {
-  return (change.ops.length === 1 || change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes) && change.ops[change.ops.length - 1].insert && change.ops[change.ops.length - 1].insert !== '\n';
+  return (change.ops.length === 1 || change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes) && typeof change.ops[change.ops.length - 1].insert === 'string' && change.ops[change.ops.length - 1].insert !== '\n';
 }
 
 function noop() {}

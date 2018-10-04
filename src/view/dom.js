@@ -2,7 +2,7 @@ import Delta from '../delta';
 import { deepEqual } from '../equal';
 import escape from '../escape-html';
 import { h } from './vdom';
-import { isBRNode } from './selection';
+import { isBRPlaceholder } from './selection';
 import { decorateBlock, undecorateBlock } from './dom-utils';
 import defaultPaper from './defaultPaper';
 import Paper from '../paper';
@@ -54,7 +54,8 @@ export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
 
     // Merge markups to optimize
     inlineChildren = mergeChildren(inlineChildren);
-    if (!inlineChildren.length || inlineChildren[inlineChildren.length - 1] === br) {
+    const lastChild = inlineChildren[inlineChildren.length - 1];
+    if (!inlineChildren.length || (lastChild && lastChild.name === 'br')) {
       inlineChildren.push(br);
     }
 
@@ -106,7 +107,7 @@ export function deltaFromDom(view, root = view.root, opts) {
 
   while ((node = walker.nextNode())) {
 
-    if (node.nodeName === 'BR' && !isBRNode(this, node)) continue;
+    if (isBRPlaceholder(this, node)) continue;
 
     if (node.nodeType === Node.TEXT_NODE) {
       // non-breaking spaces are space, and newlines should not exist
