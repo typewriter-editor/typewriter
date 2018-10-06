@@ -3352,7 +3352,7 @@ function setSelection(view, range) {
   if (range == null) {
     if (hasFocus) {
       root.blur();
-      selection.setBaseAndExtent(null, 0, null, 0);
+      selection.removeAllRanges();
     }
   } else {
     var _getNodesForRange = getNodesForRange(view, range),
@@ -3378,8 +3378,12 @@ function getBrowserRange(view, range) {
       focusOffset = _getNodesForRange4[3];
 
   var browserRange = document.createRange();
-  browserRange.setStart(anchorNode, anchorOffset);
-  browserRange.setEnd(focusNode, focusOffset);
+
+  if (anchorNode && focusNode) {
+    browserRange.setStart(anchorNode, anchorOffset);
+    browserRange.setEnd(focusNode, focusOffset);
+  }
+
   return browserRange;
 } // Get the browser nodes and offsets for the range (a tuple of indexes) of this view
 
@@ -3805,7 +3809,7 @@ function deltaFromDom(view) {
   walker.currentNode = root;
 
   while (node = walker.nextNode()) {
-    if (isBRPlaceholder(this, node)) continue;
+    if (isBRPlaceholder(view, node)) continue;
 
     if (node.nodeType === Node.TEXT_NODE) {
       var _ret = function () {
@@ -4224,10 +4228,14 @@ function (_EventDispatcher) {
 
       var vdom = deltaToVdom(contents, this.paper);
       if (!this.enabled) vdom.attributes.contenteditable = undefined;
-      this.fire('rendering', changeEvent);
+      var renderEvent = {
+        changeEvent: changeEvent,
+        vdom: vdom
+      };
+      this.fire('rendering', renderEvent);
       renderChildren(vdom, this.root);
       if (this.hasFocus()) this.updateBrowserSelection();
-      this.fire('render', changeEvent);
+      this.fire('render', renderEvent);
     }
     /**
      * Update the browser's selection to match the editor's selection.

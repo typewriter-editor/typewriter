@@ -107,7 +107,7 @@ export function deltaFromDom(view, root = view.root, opts) {
 
   while ((node = walker.nextNode())) {
 
-    if (isBRPlaceholder(this, node)) continue;
+    if (isBRPlaceholder(view, node)) continue;
 
     if (node.nodeType === Node.TEXT_NODE) {
       // non-breaking spaces are space, and newlines should not exist

@@ -30,7 +30,7 @@ export function setSelection(view, range) {
   if (range == null) {
     if (hasFocus) {
       root.blur();
-      selection.setBaseAndExtent(null, 0, null, 0);
+      selection.removeAllRanges();
     }
   } else {
     const [ anchorNode, anchorOffset, focusNode, focusOffset ] = getNodesForRange(view, range);
@@ -44,8 +44,10 @@ export function getBrowserRange(view, range) {
   if (range[0] > range[1]) range = [ range[1], range[0] ];
   const [ anchorNode, anchorOffset, focusNode, focusOffset ] = getNodesForRange(view, range);
   const browserRange = document.createRange();
-  browserRange.setStart(anchorNode, anchorOffset);
-  browserRange.setEnd(focusNode, focusOffset);
+  if (anchorNode && focusNode) {
+    browserRange.setStart(anchorNode, anchorOffset);
+    browserRange.setEnd(focusNode, focusOffset);
+  }
   return browserRange;
 }
 

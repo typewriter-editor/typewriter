@@ -209,10 +209,11 @@ export default class View extends EventDispatcher {
     }
     const vdom = deltaToVdom(contents, this.paper);
     if (!this.enabled) vdom.attributes.contenteditable = undefined;
-    this.fire('rendering', changeEvent);
+    const renderEvent = { changeEvent, vdom };
+    this.fire('rendering', renderEvent);
     renderChildren(vdom, this.root);
     if (this.hasFocus()) this.updateBrowserSelection();
-    this.fire('render', changeEvent);
+    this.fire('render', renderEvent);
   }
 
   /**
