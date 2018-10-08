@@ -72,7 +72,7 @@ class Types {
   }
 
   matches(node) {
-    if (node instanceof Node) {
+    if (node.nodeType) {
       return this.selector ? node.matches(this.selector) : false;
     } else {
       throw new Error('Cannot match against ' + node);
@@ -80,7 +80,7 @@ class Types {
   }
 
   find(nodeOrAttr) {
-    if (nodeOrAttr instanceof Node) {
+    if (nodeOrAttr.nodeType) {
       let i = this.array.length;
       while (i--) {
         let domType = this.array[i];

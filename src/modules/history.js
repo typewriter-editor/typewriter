@@ -138,7 +138,7 @@ export default function history(options = {}) {
       view.on('shortcut:Cmd+Shift+Z', redo);
     } else {
       view.on('shortcut:Ctrl+Z', undo);
-      view.on('shortcut:Cmd+Y', redo);
+      view.on('shortcut:Ctrl+Y', redo);
     }
 
     return {
@@ -154,7 +154,7 @@ export default function history(options = {}) {
           view.off('shortcut:Cmd+Shift+Z', redo);
         } else {
           view.off('shortcut:Ctrl+Z', undo);
-          view.off('shortcut:Cmd+Y', redo);
+          view.off('shortcut:Ctrl+Y', redo);
         }
       }
     }

@@ -3339,7 +3339,9 @@ function getSelection(view, range) {
     return null;
   } else {
     var anchorIndex = getNodeAndOffsetIndex(view, selection.anchorNode, selection.anchorOffset);
-    var focusIndex = selection.isCollapsed ? anchorIndex : getNodeAndOffsetIndex(view, selection.focusNode, selection.focusOffset);
+    var isCollapsed = selection.anchorNode === selection.focusNode && selection.anchorOffset === selection.focusOffset; // selection.isCollapsed causes a layout on Chrome. ?? Manual detection does not.
+
+    var focusIndex = isCollapsed ? anchorIndex : getNodeAndOffsetIndex(view, selection.focusNode, selection.focusOffset);
     return [anchorIndex, focusIndex];
   }
 } // Set the browser selection to the range (a tuple of indexes) of this view
@@ -3406,12 +3408,13 @@ function getNodesForRange(view, range) {
 }
 function getNodeAndOffset(view, index) {
   var root = view.root;
+  var inDom = root.ownerDocument.contains(root);
   var _view$paper = view.paper,
       blocks = _view$paper.blocks,
       embeds = _view$paper.embeds;
   var walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: function acceptNode(node) {
-      return (node.nodeType === Node.TEXT_NODE || node.offsetParent) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
+      return (node.nodeType === Node.TEXT_NODE || inDom) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
     }
   });
   var count = 0,
@@ -3452,19 +3455,20 @@ function getNodeAndOffsetIndex(view, node, offset) {
 
 function getNodeIndex(view, node) {
   var root = view.root;
+  var inDom = root.ownerDocument.contains(root);
   var _view$paper2 = view.paper,
       blocks = _view$paper2.blocks,
       embeds = _view$paper2.embeds;
   var walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: function acceptNode(node) {
-      return (node.nodeType === Node.TEXT_NODE || node.offsetParent) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
+      return (node.nodeType === Node.TEXT_NODE || inDom) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
     }
   });
   walker.currentNode = node;
   var index = node.nodeType === Node.ELEMENT_NODE ? 0 : -1;
 
   while (node = walker.previousNode()) {
-    if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;else if (embeds.matches(node) && !isBRPlaceholder(view, node)) index++;else if (node !== root && blocks.matches(node)) index++;
+    if (node === root) continue;else if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;else if (embeds.matches(node) && !isBRPlaceholder(view, node)) index++;else if (blocks.matches(node)) index++;
   }
 
   return index;
@@ -3651,7 +3655,7 @@ function () {
   }, {
     key: "matches",
     value: function matches(node) {
-      if (node instanceof Node) {
+      if (node.nodeType) {
         return this.selector ? node.matches(this.selector) : false;
       } else {
         throw new Error('Cannot match against ' + node);
@@ -3662,7 +3666,7 @@ function () {
     value: function find(nodeOrAttr) {
       var _this4 = this;
 
-      if (nodeOrAttr instanceof Node) {
+      if (nodeOrAttr.nodeType) {
         var _i = this.array.length;
 
         while (_i--) {
@@ -3792,13 +3796,14 @@ function deltaToVdom(delta) {
 function deltaFromDom(view) {
   var root = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : view.root;
   var opts = arguments.length > 2 ? arguments[2] : undefined;
+  var inDom = root.ownerDocument.contains(root);
   var paper = view.paper;
   var blocks = paper.blocks,
       markups = paper.markups,
       embeds = paper.embeds;
   var walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: function acceptNode(node) {
-      return (node.nodeType === Node.TEXT_NODE || !opts || opts.notInDom || node.offsetParent) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
+      return (node.nodeType === Node.TEXT_NODE || !opts || opts.notInDom || inDom) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
     }
   });
   var delta = new Delta();
@@ -4311,7 +4316,11 @@ function (_EventDispatcher) {
         });
       }
 
-      setSelection(this, range);
+      var currentRange = getSelection(this);
+
+      if (!shallowEqual(currentRange, range)) {
+        setSelection(this, range);
+      }
     }
     /**
      * Initializes the view, setting up listeners in the DOM and on the editor.
@@ -4462,10 +4471,12 @@ function input() {
     function onMutate(list) {
       var seen = new Set();
       list = list.filter(function (m) {
+        if (m.target === view.root) return false;
         if (seen.has(m.target)) return false;
         seen.add(m.target);
         return true;
       });
+      if (!list.length) return;
       var selection = view.getSelection();
       var mutation = list[0];
       var isTextChange = list.length === 1 && (mutation.type === 'characterData' || mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE); // Only one text node has been altered. Optimize for view most common case.
@@ -4575,7 +4586,7 @@ function input() {
       } else {
         // The "from" block needs to stay the same. The "to" block gets merged into it
         if (from === to) {
-          if (shortcut === 'Alt+Backspace' && view.isMac) {
+          if (shortcut === 'Alt+Backspace' && view.isMac || shortcut === 'Mod+Backspace' && !view.isMac) {
             var match = editor.getText().slice(0, from).match(lastWord);
             if (match) from -= match[0].length;
           } else if (shortcut === 'Mod+Backspace' && view.isMac) {
@@ -4918,7 +4929,7 @@ function history() {
       view.on('shortcut:Cmd+Shift+Z', redo);
     } else {
       view.on('shortcut:Ctrl+Z', undo);
-      view.on('shortcut:Cmd+Y', redo);
+      view.on('shortcut:Ctrl+Y', redo);
     }
 
     return {
@@ -4935,7 +4946,7 @@ function history() {
           view.off('shortcut:Cmd+Shift+Z', redo);
         } else {
           view.off('shortcut:Ctrl+Z', undo);
-          view.off('shortcut:Cmd+Y', redo);
+          view.off('shortcut:Ctrl+Y', redo);
         }
       }
     };

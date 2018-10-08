@@ -268,7 +268,10 @@ export default class View extends EventDispatcher {
     if (range && this.decorators.ops.length) {
       range = range.map(i => this.decorators.transform(i));
     }
-    setSelection(this, range);
+    const currentRange = getSelection(this);
+    if (!shallowEqual(currentRange, range)) {
+      setSelection(this, range);
+    }
   }
 
   /**

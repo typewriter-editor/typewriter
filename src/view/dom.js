@@ -90,12 +90,13 @@ export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
 
 
 export function deltaFromDom(view, root = view.root, opts) {
+  const inDom = root.ownerDocument.contains(root);
   const paper = view.paper;
   const { blocks, markups, embeds } = paper;
 
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
-      return (node.nodeType === Node.TEXT_NODE || (!opts || opts.notInDom) || node.offsetParent) &&
+      return (node.nodeType === Node.TEXT_NODE || (!opts || opts.notInDom) || inDom) &&
         NodeFilter.FILTER_ACCEPT ||
         NodeFilter.FILTER_REJECT;
     }

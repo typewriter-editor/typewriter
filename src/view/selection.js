@@ -13,7 +13,9 @@ export function getSelection(view, range) {
     return null;
   } else {
     const anchorIndex = getNodeAndOffsetIndex(view, selection.anchorNode, selection.anchorOffset);
-    let focusIndex = selection.isCollapsed ?
+    const isCollapsed = selection.anchorNode === selection.focusNode && selection.anchorOffset === selection.focusOffset;
+    // selection.isCollapsed causes a layout on Chrome. ?? Manual detection does not.
+    let focusIndex = isCollapsed ?
       anchorIndex :
       getNodeAndOffsetIndex(view, selection.focusNode, selection.focusOffset);
 
@@ -67,10 +69,11 @@ export function getNodesForRange(view, range) {
 
 export function getNodeAndOffset(view, index) {
   const root = view.root;
+  const inDom = root.ownerDocument.contains(root);
   const { blocks, embeds } = view.paper;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
-      return (node.nodeType === Node.TEXT_NODE || node.offsetParent) &&
+      return (node.nodeType === Node.TEXT_NODE || inDom) &&
         NodeFilter.FILTER_ACCEPT ||
         NodeFilter.FILTER_REJECT;
     }
@@ -113,10 +116,11 @@ export function getNodeAndOffsetIndex(view, node, offset) {
 // Get the index the node starts at in the content
 export function getNodeIndex(view, node) {
   const root = view.root;
+  const inDom = root.ownerDocument.contains(root);
   const { blocks, embeds } = view.paper;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
-      return (node.nodeType === Node.TEXT_NODE || node.offsetParent) &&
+      return (node.nodeType === Node.TEXT_NODE || inDom) &&
         NodeFilter.FILTER_ACCEPT ||
         NodeFilter.FILTER_REJECT;
     }
@@ -125,9 +129,10 @@ export function getNodeIndex(view, node) {
   walker.currentNode = node;
   let index = node.nodeType === Node.ELEMENT_NODE ? 0 : -1;
   while ((node = walker.previousNode())) {
-    if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
+    if (node === root) continue;
+    else if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
     else if (embeds.matches(node) && !isBRPlaceholder(view, node)) index++;
-    else if (node !== root && blocks.matches(node)) index++;
+    else if (blocks.matches(node)) index++;
   }
   return index;
 }

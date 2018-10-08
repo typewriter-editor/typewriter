@@ -24,11 +24,13 @@ export default function input() {
     function onMutate(list) {
       const seen = new Set();
       list = list.filter(m => {
+        if (m.target === view.root) return false;
         if (seen.has(m.target)) return false;
         seen.add(m.target);
         return true;
       });
 
+      if (!list.length) return;
       const selection = view.getSelection();
       const mutation = list[0];
       const isTextChange = list.length === 1 && (mutation.type === 'characterData' ||
@@ -125,7 +127,7 @@ export default function input() {
       } else {
         // The "from" block needs to stay the same. The "to" block gets merged into it
         if (from === to) {
-          if (shortcut === 'Alt+Backspace' && view.isMac) {
+          if ((shortcut === 'Alt+Backspace' && view.isMac) || (shortcut === 'Mod+Backspace' && !view.isMac)) {
             const match = editor.getText().slice(0, from).match(lastWord);
             if (match) from -= match[0].length;
           } else if (shortcut === 'Mod+Backspace' && view.isMac) {
