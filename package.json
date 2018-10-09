@@ -5,8 +5,8 @@
     "start": "rollup --config --watch",
     "build": "rollup --config",
     "prepare": "npm run build",
-    "test": "mocha -r jsdom-global/register -r babel-register",
-    "tdd": "mocha -r jsdom-global/register -r babel-register --watch"
+    "test": "mocha -r jsdom-global/register -r @babel/register",
+    "tdd": "mocha -r jsdom-global/register -r @babel/register --watch"
   },
   "license": "MIT",
   "repository": {
