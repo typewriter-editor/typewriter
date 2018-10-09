@@ -5848,7 +5848,7 @@ function hoverMenu() {
 
         if (menu.get().items.length) {
           requestAnimationFrame(function () {
-            return menu.set({
+            return menu && menu.set({
               active: true
             });
           });

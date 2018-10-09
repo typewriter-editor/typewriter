@@ -14,7 +14,7 @@ export default function hoverMenu() {
           data: { view, range },
         });
         if (menu.get().items.length) {
-          requestAnimationFrame(() => menu.set({ active: true }));
+          requestAnimationFrame(() => menu && menu.set({ active: true }));
         }
       } else {
         menu.set({ range });
