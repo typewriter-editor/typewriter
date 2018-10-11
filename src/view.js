@@ -146,7 +146,9 @@ export default class View extends EventDispatcher {
     }
     const browserRange = getBrowserRange(this, range);
     if (browserRange.endContainer.nodeType === Node.ELEMENT_NODE) {
-      browserRange.setEnd(browserRange.endContainer, browserRange.endOffset + 1);
+      try {
+        browserRange.setEnd(browserRange.endContainer, browserRange.endOffset + 1);
+      } catch(e) {}
     }
     return browserRange.getBoundingClientRect();
   }

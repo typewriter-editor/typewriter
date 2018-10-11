@@ -36,7 +36,9 @@ export function setSelection(view, range) {
     }
   } else {
     const [ anchorNode, anchorOffset, focusNode, focusOffset ] = getNodesForRange(view, range);
-    selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+    if (anchorNode && focusNode) {
+      selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+    }
     if (!hasFocus) root.focus();
   }
 }
