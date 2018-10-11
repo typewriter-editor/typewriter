@@ -3360,7 +3360,10 @@ function setSelection(view, range) {
         focusNode = _getNodesForRange2[2],
         focusOffset = _getNodesForRange2[3];
 
-    selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+    if (anchorNode && focusNode) {
+      selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+    }
+
     if (!hasFocus) root.focus();
   }
 } // Get a browser range object for the given editor range tuple
@@ -4142,7 +4145,9 @@ function (_EventDispatcher) {
       var browserRange = getBrowserRange(this, range);
 
       if (browserRange.endContainer.nodeType === Node.ELEMENT_NODE) {
-        browserRange.setEnd(browserRange.endContainer, browserRange.endOffset + 1);
+        try {
+          browserRange.setEnd(browserRange.endContainer, browserRange.endOffset + 1);
+        } catch (e) {}
       }
 
       return browserRange.getBoundingClientRect();
