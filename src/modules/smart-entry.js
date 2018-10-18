@@ -1,7 +1,4 @@
 const SOURCE_USER = 'user';
-const bullet = /^[-*] $/;
-const ordered = /^(-?\d+)\. $/;
-const header = /^#{1,6} $/;
 
 /**
  * A list of [ RegExp, Function ] tuples to convert text into a formatted block with the attributes returned by the
@@ -10,7 +7,7 @@ const header = /^#{1,6} $/;
 export const blockReplacements = [
   [ /^(#{1,6}) $/, capture => ({ header: capture.length }) ],
   [ /^[-*] $/, () => ({ list: 'bullet' }) ],
-  [ /^1\. $/, () => ({ list: 'ordered' }) ],
+  [ /^1\. $/, () => ({ list: 'ordered' }) ], // Use /^(-?\d+)\. $/ to support lists starting at something other than 1.
   [ /^> $/, () => ({ blockquote: true }) ],
 ];
 

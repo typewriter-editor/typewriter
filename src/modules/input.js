@@ -22,52 +22,20 @@ export default function input() {
 
     // Detects changes from spell-check and the user typing
     function onMutate(list) {
-      const seen = new Set();
-      list = list.filter(m => {
-        if (m.target === view.root) return false;
-        if (seen.has(m.target)) return false;
-        seen.add(m.target);
-        return true;
-      });
-
+      list = list.filter(m => m.target !== view.root);
       if (!list.length) return;
+
       const selection = view.getSelection();
-      const mutation = list[0];
-      const isTextChange = list.length === 1 && (mutation.type === 'characterData' ||
-        (mutation.type === 'childList' && mutation.addedNodes.length === 1 &&
-         mutation.addedNodes[0].nodeType === Node.TEXT_NODE));
+      const textChange = getTextChange(list);
 
-      // Only one text node has been altered. Optimize for view most common case.
-      if (isTextChange) {
-        const change = editor.delta();
-        const node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
-        const index = view.reverseDecorators.transform(getNodeIndex(view, node));
-        change.retain(index);
-
-        if (mutation.type === 'characterData') {
-          const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
-          diffs.forEach(([ action, string ]) => {
-            if (action === diff.EQUAL) change.retain(string.length);
-            else if (action === diff.DELETE) change.delete(string.length);
-            else if (action === diff.INSERT) {
-              change.insert(string, editor.activeFormats);
-            }
-          });
-          change.chop();
-        } else {
-          change.insert(node.nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
-        }
-
-        if (change.ops.length) {
-          // console.log('changing a little', change);
-          if (!editor.updateContents(change, SOURCE_USER, selection)) {
+      // Only one text node has been altered. Optimize for view most common case, which is typing in a paragraph.
+      if (textChange) {
+        if (textChange.ops.length) {
+          // console.log('changing a little', textChange);
+          if (!editor.updateContents(textChange, SOURCE_USER, selection)) {
             view.render();
           }
         }
-      } else if (list.length === 1 && mutation.type === 'childList' &&
-        mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE)
-      {
-
       } else {
         let contents = deltaFromDom(view, view.root, { ignoreAttributes: true });
         contents = contents.compose(view.reverseDecorators);
@@ -198,6 +166,63 @@ export default function input() {
       }, SOURCE_USER);
     }
 
+
+    function getTextChange(mutations) {
+      const mutation = getTextChangeMutation(mutations);
+      if (!mutation) return;
+
+      const change = editor.delta();
+      const node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
+      const index = view.reverseDecorators.transform(getNodeIndex(view, node));
+      change.retain(index);
+
+      if (mutation.type === 'characterData') {
+        const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
+        diffs.forEach(([ action, string ]) => {
+          if (action === diff.EQUAL) change.retain(string.length);
+          else if (action === diff.DELETE) change.delete(string.length);
+          else if (action === diff.INSERT) {
+            change.insert(string, editor.activeFormats);
+          }
+        });
+        change.chop();
+      } else {
+        change.insert(node.nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
+      }
+
+      return change;
+    }
+
+    function getTextChangeMutation(mutations) {
+      const seen = new Set();
+      mutations = mutations.filter(m => {
+        if (seen.has(m.target)) return false;
+        seen.add(m.target);
+        return true;
+      });
+
+      if (mutations.length > 2) return;
+
+      const first = mutations[0];
+      const second = mutations[1];
+      const added = first.addedNodes.length === 1 && first.addedNodes[0];
+
+      if (mutations.length === 1) {
+        if (first.type === 'characterData') {
+          return first;
+        } else if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
+          return first;
+        }
+      } else if (mutations.length === 2) {
+        if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
+          if (second.type === 'characterData' && second.target === added) {
+            return first;
+          }
+        }
+      }
+    }
+
+
     const observer = new MutationObserver(onMutate);
     observer.observe(view.root, mutationOptions);
 
@@ -242,3 +267,5 @@ export default function input() {
     }
   }
 }
+
+
