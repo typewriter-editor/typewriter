@@ -82,10 +82,9 @@ export default class View extends EventDispatcher {
     this.isMac = isMac;
     this._settingEditorSelection = false;
     this._settingBrowserSelection = false;
-    this.init();
     this.modules = {};
-    if (options.modules) Object.keys(options.modules).forEach(key => this.modules[key] = options.modules[key](this));
-    this.render();
+    this.options = options;
+    this.init();
   }
 
   /**
@@ -280,7 +279,9 @@ export default class View extends EventDispatcher {
    * Initializes the view, setting up listeners in the DOM and on the editor.
    */
   init() {
-    this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, this.paper.blocks.getDefault().selector);
+    // already inited
+    if (this.hasOwnProperty('uninit')) return;
+    let defaultParagraphSet = false;
 
     const onKeyDown = event => {
       let shortcut = shortcutFromEvent(event);
@@ -309,6 +310,11 @@ export default class View extends EventDispatcher {
 
     const onSelectionChange = () => {
       this.updateEditorSelection(SOURCE_USER);
+
+      if (!defaultParagraphSet && this.editor.selection) {
+        defaultParagraphSet = true;
+        this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, this.paper.blocks.getDefault().selector);
+      }
     };
 
     const onTextChanging = ({ contents }) => {
@@ -350,6 +356,11 @@ export default class View extends EventDispatcher {
     this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
     this.editor.on('text-changing', onTextChanging);
     this.editor.on('editor-change', onEditorChange);
+
+    if (this.options.modules) {
+      Object.keys(this.options.modules).forEach(key => this.modules[key] = this.options.modules[key](this));
+    }
+
     this.render();
 
     this.uninit = () => {
@@ -359,6 +370,11 @@ export default class View extends EventDispatcher {
       this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
       this.editor.off('text-changing', onTextChanging);
       this.editor.off('editor-change', onEditorChange);
+      Object.keys(this.modules).forEach(key => {
+        const api = this.modules[key];
+        if (api && typeof api.destroy === 'function') api.destroy();
+        delete this.modules[key];
+      });
       delete this.uninit;
     }
   }
@@ -376,9 +392,5 @@ export default class View extends EventDispatcher {
   destroy() {
     this.uninit();
     this.fire('destroy');
-    Object.keys(this.modules).forEach(key => {
-      const api = this.modules[key];
-      if (api && typeof api.destroy === 'function') api.destroy();
-    });
   }
 }

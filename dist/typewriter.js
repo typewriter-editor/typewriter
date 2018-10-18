@@ -4057,15 +4057,10 @@ function (_EventDispatcher) {
     _this.isMac = isMac;
     _this._settingEditorSelection = false;
     _this._settingBrowserSelection = false;
+    _this.modules = {};
+    _this.options = options;
 
     _this.init();
-
-    _this.modules = {};
-    if (options.modules) Object.keys(options.modules).forEach(function (key) {
-      return _this.modules[key] = options.modules[key](_assertThisInitialized(_assertThisInitialized(_this)));
-    });
-
-    _this.render();
 
     return _this;
   }
@@ -4336,7 +4331,9 @@ function (_EventDispatcher) {
     value: function init() {
       var _this8 = this;
 
-      this.root.ownerDocument.execCommand('defaultParagraphSeparator', false, this.paper.blocks.getDefault().selector);
+      // already inited
+      if (this.hasOwnProperty('uninit')) return;
+      var defaultParagraphSet = false;
 
       var onKeyDown = function onKeyDown(event) {
         var shortcut = shortcutFromEvent(event);
@@ -4369,6 +4366,12 @@ function (_EventDispatcher) {
 
       var onSelectionChange = function onSelectionChange() {
         _this8.updateEditorSelection(SOURCE_USER$1);
+
+        if (!defaultParagraphSet && _this8.editor.selection) {
+          defaultParagraphSet = true;
+
+          _this8.root.ownerDocument.execCommand('defaultParagraphSeparator', false, _this8.paper.blocks.getDefault().selector);
+        }
       };
 
       var onTextChanging = function onTextChanging(_ref) {
@@ -4412,6 +4415,13 @@ function (_EventDispatcher) {
       this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
       this.editor.on('text-changing', onTextChanging);
       this.editor.on('editor-change', onEditorChange);
+
+      if (this.options.modules) {
+        Object.keys(this.options.modules).forEach(function (key) {
+          return _this8.modules[key] = _this8.options.modules[key](_this8);
+        });
+      }
+
       this.render();
 
       this.uninit = function () {
@@ -4425,6 +4435,11 @@ function (_EventDispatcher) {
 
         _this8.editor.off('editor-change', onEditorChange);
 
+        Object.keys(_this8.modules).forEach(function (key) {
+          var api = _this8.modules[key];
+          if (api && typeof api.destroy === 'function') api.destroy();
+          delete _this8.modules[key];
+        });
         delete _this8.uninit;
       };
     }
@@ -4443,14 +4458,8 @@ function (_EventDispatcher) {
   }, {
     key: "destroy",
     value: function destroy() {
-      var _this9 = this;
-
       this.uninit();
       this.fire('destroy');
-      Object.keys(this.modules).forEach(function (key) {
-        var api = _this9.modules[key];
-        if (api && typeof api.destroy === 'function') api.destroy();
-      });
     }
   }]);
 
@@ -4474,56 +4483,28 @@ function input() {
     }; // Detects changes from spell-check and the user typing
 
     function onMutate(list) {
-      var seen = new Set();
       list = list.filter(function (m) {
-        if (m.target === view.root) return false;
-        if (seen.has(m.target)) return false;
-        seen.add(m.target);
-        return true;
+        return m.target !== view.root;
       });
       if (!list.length) return;
       var selection = view.getSelection();
-      var mutation = list[0];
-      var isTextChange = list.length === 1 && (mutation.type === 'characterData' || mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE); // Only one text node has been altered. Optimize for view most common case.
+      var textChange = getTextChange(list); // Only one text node has been altered. Optimize for view most common case, which is typing in a paragraph.
 
-      if (isTextChange) {
-        var change = editor.delta();
-        var node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
-        var index = view.reverseDecorators.transform(getNodeIndex(view, node));
-        change.retain(index);
-
-        if (mutation.type === 'characterData') {
-          var diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
-          diffs.forEach(function (_ref) {
-            var _ref2 = _slicedToArray(_ref, 2),
-                action = _ref2[0],
-                string = _ref2[1];
-
-            if (action === diff.EQUAL) change.retain(string.length);else if (action === diff.DELETE) change.delete(string.length);else if (action === diff.INSERT) {
-              change.insert(string, editor.activeFormats);
-            }
-          });
-          change.chop();
-        } else {
-          change.insert(node.nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
-        }
-
-        if (change.ops.length) {
-          // console.log('changing a little', change);
-          if (!editor.updateContents(change, SOURCE_USER$2, selection)) {
+      if (textChange) {
+        if (textChange.ops.length) {
+          // console.log('changing a little', textChange);
+          if (!editor.updateContents(textChange, SOURCE_USER$2, selection)) {
             view.render();
           }
         }
-      } else if (list.length === 1 && mutation.type === 'childList' && mutation.addedNodes.length === 1 && mutation.addedNodes[0].nodeType === Node.TEXT_NODE) ; else {
+      } else {
         var contents = deltaFromDom(view, view.root, {
           ignoreAttributes: true
         });
         contents = contents.compose(view.reverseDecorators);
+        var change = editor.contents.diff(contents); // console.log('changing a lot (possibly)', change);
 
-        var _change = editor.contents.diff(contents); // console.log('changing a lot (possibly)', change);
-
-
-        if (!editor.updateContents(_change, SOURCE_USER$2, selection)) {
+        if (!editor.updateContents(change, SOURCE_USER$2, selection)) {
           view.render();
         }
       }
@@ -4676,6 +4657,60 @@ function input() {
           }
         });
       }, SOURCE_USER$2);
+    }
+
+    function getTextChange(mutations) {
+      var mutation = getTextChangeMutation(mutations);
+      if (!mutation) return;
+      var change = editor.delta();
+      var node = mutation.type === 'characterData' ? mutation.target : mutation.addedNodes[0];
+      var index = view.reverseDecorators.transform(getNodeIndex(view, node));
+      change.retain(index);
+
+      if (mutation.type === 'characterData') {
+        var diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
+        diffs.forEach(function (_ref) {
+          var _ref2 = _slicedToArray(_ref, 2),
+              action = _ref2[0],
+              string = _ref2[1];
+
+          if (action === diff.EQUAL) change.retain(string.length);else if (action === diff.DELETE) change.delete(string.length);else if (action === diff.INSERT) {
+            change.insert(string, editor.activeFormats);
+          }
+        });
+        change.chop();
+      } else {
+        change.insert(node.nodeValue.replace(/\xA0/g, ' '), editor.activeFormats);
+      }
+
+      return change;
+    }
+
+    function getTextChangeMutation(mutations) {
+      var seen = new Set();
+      mutations = mutations.filter(function (m) {
+        if (seen.has(m.target)) return false;
+        seen.add(m.target);
+        return true;
+      });
+      if (mutations.length > 2) return;
+      var first = mutations[0];
+      var second = mutations[1];
+      var added = first.addedNodes.length === 1 && first.addedNodes[0];
+
+      if (mutations.length === 1) {
+        if (first.type === 'characterData') {
+          return first;
+        } else if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
+          return first;
+        }
+      } else if (mutations.length === 2) {
+        if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
+          if (second.type === 'characterData' && second.target === added) {
+            return first;
+          }
+        }
+      }
     }
 
     var observer = new MutationObserver(onMutate);
@@ -5019,7 +5054,8 @@ var blockReplacements = [[/^(#{1,6}) $/, function (capture) {
   return {
     list: 'ordered'
   };
-}], [/^> $/, function () {
+}], // Use /^(-?\d+)\. $/ to support lists starting at something other than 1.
+[/^> $/, function () {
   return {
     blockquote: true
   };
