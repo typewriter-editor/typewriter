@@ -4502,10 +4502,19 @@ function input() {
           ignoreAttributes: true
         });
         contents = contents.compose(view.reverseDecorators);
-        var change = editor.contents.diff(contents); // console.log('changing a lot (possibly)', change);
 
-        if (!editor.updateContents(change, SOURCE_USER$2, selection)) {
-          view.render();
+        if (contents.ops.some(function (op) {
+          return !op.insert;
+        })) {
+          view.render(); // Bad contents, undo the change since we can't save it
+
+          console.error('deltaFromDom produced a non-document');
+        } else {
+          var change = editor.contents.diff(contents); // console.log('changing a lot (possibly)', change);
+
+          if (!editor.updateContents(change, SOURCE_USER$2, selection)) {
+            view.render();
+          }
         }
       }
     }
@@ -4557,7 +4566,7 @@ function input() {
     }
 
     function onBackspace(event, shortcut) {
-      if (event.defaultPrevented) return;
+      if (event.defaultPrevented || shortcut === 'Alt+Backspace' || shortcut === 'Mod+Backspace') return;
       event.preventDefault();
 
       var _editor$getSelectedRa5 = editor.getSelectedRange(),
@@ -4602,7 +4611,7 @@ function input() {
     }
 
     function onDelete(event, shortcut) {
-      if (event.defaultPrevented) return;
+      if (event.defaultPrevented || shortcut === 'Alt+Delete') return;
       event.preventDefault();
 
       var _editor$getSelectedRa7 = editor.getSelectedRange(),

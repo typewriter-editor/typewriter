@@ -39,10 +39,15 @@ export default function input() {
       } else {
         let contents = deltaFromDom(view, view.root, { ignoreAttributes: true });
         contents = contents.compose(view.reverseDecorators);
-        const change = editor.contents.diff(contents);
-        // console.log('changing a lot (possibly)', change);
-        if (!editor.updateContents(change, SOURCE_USER, selection)) {
-          view.render();
+        if (contents.ops.some(op => !op.insert)) {
+          view.render(); // Bad contents, undo the change since we can't save it
+          console.error('deltaFromDom produced a non-document');
+        } else {
+          const change = editor.contents.diff(contents);
+          // console.log('changing a lot (possibly)', change);
+          if (!editor.updateContents(change, SOURCE_USER, selection)) {
+            view.render();
+          }
         }
       }
     }
