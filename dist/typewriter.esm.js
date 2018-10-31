@@ -2305,8 +2305,13 @@ function (_EventDispatcher) {
       if (from === to) return null;
       if (selection == null && this.selection !== null) selection = from;
       var change = this.delta().retain(from).delete(to - from);
-      change = cleanDelete(this, from, to, change);
-      return this.updateContents(change, source, selection);
+      change = cleanDelete(this, from, to, change); // Keep the active format of the text to the right of the cursor when deleting
+
+      var activeFormats;
+      if (selection === from) activeFormats = this.getTextFormat(from, from + 1);
+      var result = this.updateContents(change, source, selection);
+      if (result && activeFormats) this.activeFormats = activeFormats;
+      return result;
     }
     /**
      * Get the line formats for the line that `from` is in to the line that `to` is in. Returns only the common formats
@@ -3472,9 +3477,17 @@ function getNodeIndex(view, node) {
 
   return index;
 } // Determines if a node is actually a BR in our content or if is just the placeholder BR which appears in an empty block
+// or at the end of a block
 
 function isBRPlaceholder(view, node) {
-  return node.nodeName === 'BR' && (!node.nextSibling || node.nextSibling.nodeType !== Node.TEXT_NODE && view.paper.blocks.matches(node.nextSibling));
+  if (node.nodeName !== 'BR') return false;
+  var blocks = view.paper.blocks;
+
+  if (node.nextSibling) {
+    return node.nextSibling.nodeType !== Node.TEXT_NODE && blocks.matches(node.nextSibling);
+  }
+
+  return blocks.matches(node.parentNode);
 }
 
 /*!
@@ -3688,8 +3701,8 @@ function () {
 }();
 
 var nodeMarkup = new WeakMap();
-var br$1 = h("br", null);
-var voidElements = {
+var BR = h("br", null);
+var VOID_ELEMENTS = {
   area: true,
   base: true,
   br: true,
@@ -3704,6 +3717,13 @@ var voidElements = {
   source: true,
   track: true,
   wbr: true
+};
+var SKIP_ELEMENTS = {
+  STYLE: true,
+  SCRIPT: true,
+  LINK: true,
+  META: true,
+  TITLE: true
 }; // const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 
 function deltaToVdom(delta) {
@@ -3758,7 +3778,7 @@ function deltaToVdom(delta) {
     var lastChild = inlineChildren[inlineChildren.length - 1];
 
     if (!inlineChildren.length || lastChild && lastChild.name === 'br') {
-      inlineChildren.push(br$1);
+      inlineChildren.push(BR);
     }
 
     var block = blocks.find(attributes);
@@ -3802,23 +3822,35 @@ function deltaFromDom(view) {
       embeds = paper.embeds;
   var walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: function acceptNode(node) {
-      return (node.nodeType === Node.TEXT_NODE || !opts || opts.notInDom || inDom) && NodeFilter.FILTER_ACCEPT || NodeFilter.FILTER_REJECT;
+      if (SKIP_ELEMENTS[node.nodeName]) {
+        return NodeFilter.FILTER_REJECT;
+      } else if (node.nodeType === Node.TEXT_NODE || !opts || opts.notInDom || inDom) {
+        return NodeFilter.FILTER_ACCEPT;
+      } else {
+        return NodeFilter.FILTER_REJECT;
+      }
     }
   });
   var delta = new Delta();
   var currentBlock,
       firstBlockSeen = false,
       unknownBlock = false,
+      empty = true,
       node;
   walker.currentNode = root;
 
   while (node = walker.nextNode()) {
-    if (isBRPlaceholder(view, node)) continue;
+    if (isBRPlaceholder(view, node)) {
+      empty = false;
+      continue;
+    }
 
     if (node.nodeType === Node.TEXT_NODE) {
       var _ret = function () {
-        // non-breaking spaces are space, and newlines should not exist
-        var text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
+        // non-breaking spaces are a space, newlines may exist with pasted content but should only be acknowledged within
+        // text
+        if (node.nodeValue.replace(/\n+/g, '') === '') return "continue";
+        var text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n+/g, ' ');
         if (!text || text === ' ' && node.parentNode.classList.contains('EOP')) return "continue";
         var parent = node.parentNode,
             attr = {};
@@ -3838,6 +3870,7 @@ function deltaFromDom(view) {
           parent = parent.parentNode;
         }
 
+        empty = false;
         delta.insert(text, attr);
       }();
 
@@ -3858,8 +3891,9 @@ function deltaFromDom(view) {
       }
 
       if (firstBlockSeen) {
-        if (!unknownBlock) {
+        if (!unknownBlock && !empty) {
           delta.insert('\n', currentBlock);
+          empty = true;
         }
       } else {
         firstBlockSeen = true;
@@ -3877,7 +3911,10 @@ function deltaFromDom(view) {
     }
   }
 
-  delta.insert('\n', currentBlock);
+  if (!empty) {
+    delta.insert('\n', currentBlock);
+  }
+
   return delta;
 }
 /**
@@ -3919,7 +3956,7 @@ function nodeToHTML(node) {
     return "".concat(attr, " ").concat(escapeHtml(name), "=\"").concat(escapeHtml(node.attributes[name]), "\"");
   }, '');
   var children = childrenToHTML(node.children);
-  var closingTag = children || !voidElements[node.name] ? "</".concat(node.name, ">") : '';
+  var closingTag = children || !VOID_ELEMENTS[node.name] ? "</".concat(node.name, ">") : '';
   return "<".concat(node.name).concat(attr, ">").concat(children).concat(closingTag);
 } // vdom children to HTML string
 
@@ -4466,6 +4503,7 @@ var SOURCE_USER$2 = 'user';
 var lastWord = /\w+[^\w]*$/;
 var firstWord = /^[^\w]*\w+/;
 var lastLine = /[^\n]*$/;
+var pasteMutation = false; // Basic text input module. Prevent any actions other than typing characters and handle with the API.
 
 function input() {
   return function (view) {
@@ -4497,20 +4535,22 @@ function input() {
         var contents = deltaFromDom(view, view.root, {
           ignoreAttributes: true
         });
-        contents = contents.compose(view.reverseDecorators);
 
-        if (contents.ops.some(function (op) {
-          return !op.insert;
-        })) {
-          view.render(); // Bad contents, undo the change since we can't save it
+        if (pasteMutation) {
+          var from = editor.selection ? editor.selection[0] : undefined;
+          var to = selection ? selection[1] : undefined;
+          contents = contents.clean(from, to);
+        }
 
-          console.error('deltaFromDom produced a non-document');
-        } else {
-          var change = editor.contents.diff(contents); // console.log('changing a lot (possibly)', change);
+        contents = contents.compose(view.reverseDecorators); // Decorators may extend beyond the text, pull those out
 
-          if (!editor.updateContents(change, SOURCE_USER$2, selection)) {
-            view.render();
-          }
+        contents.ops = contents.ops.filter(function (op) {
+          return op.insert;
+        });
+        var change = editor.contents.diff(contents); // console.log('changing a lot (possibly)', change);
+
+        if (!editor.updateContents(change, SOURCE_USER$2, selection)) {
+          view.render();
         }
       }
     }
@@ -4527,7 +4567,7 @@ function input() {
       var line = editor.contents.getLine(from);
       var attributes = line.attributes;
       var block = view.paper.blocks.find(attributes);
-      var isDefault = !block || view.paper.blocks.getDefault();
+      var isDefault = !block || block === view.paper.blocks.getDefault();
       var length = line.end - line.start - 1;
       var atEnd = to === line.end - 1;
 
@@ -4694,14 +4734,17 @@ function input() {
     function getTextChangeMutation(mutations) {
       var seen = new Set();
       mutations = mutations.filter(function (m) {
+        if (m.type !== 'characterData') return true;
         if (seen.has(m.target)) return false;
         seen.add(m.target);
         return true;
       });
-      if (mutations.length > 2) return;
+      if (mutations.length > 3) return;
       var first = mutations[0];
       var second = mutations[1];
-      var added = first.addedNodes.length === 1 && first.addedNodes[0];
+      var third = mutations[2];
+      var added = first.addedNodes[0];
+      var removed = second && second.removedNodes[0];
 
       if (mutations.length === 1) {
         if (first.type === 'characterData') {
@@ -4709,13 +4752,23 @@ function input() {
         } else if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
           return first;
         }
-      } else if (mutations.length === 2) {
+      } else {
         if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
-          if (second.type === 'characterData' && second.target === added) {
+          var textNode = third || second;
+          if (removed && removed.nodeName !== 'BR') return;
+
+          if (textNode.type === 'characterData' && textNode.target === added) {
             return first;
           }
         }
       }
+    }
+
+    function onPaste() {
+      pasteMutation = true;
+      setTimeout(function () {
+        pasteMutation = false;
+      }, 50);
     }
 
     var observer = new MutationObserver(onMutate);
@@ -4742,6 +4795,7 @@ function input() {
     view.on('shortcut:Alt+Delete', onDelete);
     view.on('shortcut:Tab', onTab);
     view.on('shortcut:Shift+Tab', onTab);
+    view.root.addEventListener('paste', onPaste);
     return {
       destroy: function destroy() {
         observer.disconnect();
@@ -4756,6 +4810,7 @@ function input() {
         view.off('shortcut:Alt+Delete', onDelete);
         view.off('shortcut:Tab', onTab);
         view.off('shortcut:Shift+Tab', onTab);
+        view.root.removeEventListener('paste', onPaste);
       }
     };
   };

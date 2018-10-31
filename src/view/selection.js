@@ -140,10 +140,12 @@ export function getNodeIndex(view, node) {
 }
 
 // Determines if a node is actually a BR in our content or if is just the placeholder BR which appears in an empty block
+// or at the end of a block
 export function isBRPlaceholder(view, node) {
-  return node.nodeName === 'BR' && (
-    !node.nextSibling || (
-      node.nextSibling.nodeType !== Node.TEXT_NODE && view.paper.blocks.matches(node.nextSibling)
-    )
-  );
+  if (node.nodeName !== 'BR') return false;
+  const { blocks } = view.paper;
+  if (node.nextSibling) {
+    return node.nextSibling.nodeType !== Node.TEXT_NODE && blocks.matches(node.nextSibling);
+  }
+  return blocks.matches(node.parentNode);
 }
