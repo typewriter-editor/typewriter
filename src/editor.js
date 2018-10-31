@@ -323,7 +323,15 @@ export default class Editor extends EventDispatcher {
     if (selection == null && this.selection !== null) selection = from;
     let change = this.delta().retain(from).delete(to - from);
     change = cleanDelete(this, from, to, change);
-    return this.updateContents(change, source, selection);
+
+    // Keep the active format of the text to the right of the cursor when deleting
+    let activeFormats;
+    if (selection === from) activeFormats = this.getTextFormat(from, from + 1);
+
+    const result = this.updateContents(change, source, selection);
+
+    if (result && activeFormats) this.activeFormats = activeFormats;
+    return result;
   }
 
   /**
