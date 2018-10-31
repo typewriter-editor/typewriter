@@ -8,10 +8,13 @@ import defaultPaper from './defaultPaper';
 import Paper from '../paper';
 const nodeMarkup = new WeakMap();
 
-const br = <br/>;
-const voidElements = {
+const BR = <br/>;
+const VOID_ELEMENTS = {
   area: true, base: true, br: true, col: true, embed: true, hr: true, img: true, input: true,
   link: true, meta: true, param: true, source: true, track: true, wbr: true
+};
+const SKIP_ELEMENTS = {
+  STYLE: true, SCRIPT: true, LINK: true, META: true, TITLE: true
 };
 // const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 
@@ -56,7 +59,7 @@ export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
     inlineChildren = mergeChildren(inlineChildren);
     const lastChild = inlineChildren[inlineChildren.length - 1];
     if (!inlineChildren.length || (lastChild && lastChild.name === 'br')) {
-      inlineChildren.push(br);
+      inlineChildren.push(BR);
     }
 
     let block = blocks.find(attributes);
@@ -96,23 +99,32 @@ export function deltaFromDom(view, root = view.root, opts) {
 
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: node => {
-      return (node.nodeType === Node.TEXT_NODE || (!opts || opts.notInDom) || inDom) &&
-        NodeFilter.FILTER_ACCEPT ||
-        NodeFilter.FILTER_REJECT;
+      if (SKIP_ELEMENTS[node.nodeName]) {
+        return NodeFilter.FILTER_REJECT;
+      } else if (node.nodeType === Node.TEXT_NODE || (!opts || opts.notInDom) || inDom) {
+        return NodeFilter.FILTER_ACCEPT;
+      } else {
+        return NodeFilter.FILTER_REJECT;
+      }
     }
   });
   const delta = new Delta();
-  let currentBlock, firstBlockSeen = false, unknownBlock = false, insertedText = '', node;
+  let currentBlock, firstBlockSeen = false, unknownBlock = false, empty = true, node;
 
   walker.currentNode = root;
 
   while ((node = walker.nextNode())) {
 
-    if (isBRPlaceholder(view, node)) continue;
+    if (isBRPlaceholder(view, node)) {
+      empty = false;
+      continue;
+    }
 
     if (node.nodeType === Node.TEXT_NODE) {
-      // non-breaking spaces are space, and newlines should not exist
-      const text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n/g, '');
+      // non-breaking spaces are a space, newlines may exist with pasted content but should only be acknowledged within
+      // text
+      if (node.nodeValue.replace(/\n+/g, '') === '') continue;
+      const text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n+/g, ' ');
       if (!text || (text === ' ' && node.parentNode.classList.contains('EOP'))) continue;
       let parent = node.parentNode, attr = {};
 
@@ -130,6 +142,7 @@ export function deltaFromDom(view, root = view.root, opts) {
         parent = parent.parentNode;
       }
 
+      empty = false;
       delta.insert(text, attr);
     } else if (embeds.matches(node)) {
       const embed = embeds.find(node);
@@ -145,8 +158,9 @@ export function deltaFromDom(view, root = view.root, opts) {
       }
 
       if (firstBlockSeen) {
-        if (!unknownBlock) {
+        if (!unknownBlock && !empty) {
           delta.insert('\n', currentBlock);
+          empty = true;
         }
       } else {
         firstBlockSeen = true;
@@ -162,7 +176,9 @@ export function deltaFromDom(view, root = view.root, opts) {
       }
     }
   }
-  delta.insert('\n', currentBlock);
+  if (!empty) {
+    delta.insert('\n', currentBlock);
+  }
   return delta;
 }
 
@@ -206,7 +222,7 @@ function nodeToHTML(node) {
     .reduce((attr, name) =>
       `${attr} ${escape(name)}="${escape(node.attributes[name])}"`, '');
   const children = childrenToHTML(node.children);
-  const closingTag = children || !voidElements[node.name] ? `</${node.name}>` : '';
+  const closingTag = children || !VOID_ELEMENTS[node.name] ? `</${node.name}>` : '';
   return `<${node.name}${attr}>${children}${closingTag}`;
 }
 

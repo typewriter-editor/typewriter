@@ -7,6 +7,7 @@ const lastWord = /\w+[^\w]*$/;
 const firstWord = /^[^\w]*\w+/;
 const lastLine = /[^\n]*$/;
 const firstLine = /^[^\n]*/;
+let pasteMutation = false;
 
 // Basic text input module. Prevent any actions other than typing characters and handle with the API.
 export default function input() {
@@ -38,16 +39,18 @@ export default function input() {
         }
       } else {
         let contents = deltaFromDom(view, view.root, { ignoreAttributes: true });
+        if (pasteMutation) {
+          const from = editor.selection ? editor.selection[0] : undefined;
+          const to = selection ? selection[1] : undefined;
+          contents = contents.clean(from, to);
+        }
         contents = contents.compose(view.reverseDecorators);
-        if (contents.ops.some(op => !op.insert)) {
-          view.render(); // Bad contents, undo the change since we can't save it
-          console.error('deltaFromDom produced a non-document');
-        } else {
-          const change = editor.contents.diff(contents);
-          // console.log('changing a lot (possibly)', change);
-          if (!editor.updateContents(change, SOURCE_USER, selection)) {
-            view.render();
-          }
+        // Decorators may extend beyond the text, pull those out
+        contents.ops = contents.ops.filter(op => op.insert);
+        const change = editor.contents.diff(contents);
+        // console.log('changing a lot (possibly)', change);
+        if (!editor.updateContents(change, SOURCE_USER, selection)) {
+          view.render();
         }
       }
     }
@@ -61,7 +64,7 @@ export default function input() {
       const line = editor.contents.getLine(from);
       let attributes = line.attributes;
       const block = view.paper.blocks.find(attributes);
-      const isDefault = !block || view.paper.blocks.getDefault();
+      const isDefault = !block || block === view.paper.blocks.getDefault();
       const length = line.end - line.start - 1;
       const atEnd = to === line.end - 1;
       if (atEnd && !isDefault && block.defaultFollows) {
@@ -89,7 +92,7 @@ export default function input() {
 
 
     function onBackspace(event, shortcut) {
-      if (event.defaultPrevented) return;
+      if (event.defaultPrevented || shortcut === 'Alt+Backspace' || shortcut === 'Mod+Backspace') return;
       event.preventDefault();
 
       let [ from, to ] = editor.getSelectedRange();
@@ -125,7 +128,7 @@ export default function input() {
     }
 
     function onDelete(event, shortcut) {
-      if (event.defaultPrevented) return;
+      if (event.defaultPrevented || shortcut === 'Alt+Delete') return;
       event.preventDefault();
 
       let [ from, to ] = editor.getSelectedRange();
@@ -201,16 +204,19 @@ export default function input() {
     function getTextChangeMutation(mutations) {
       const seen = new Set();
       mutations = mutations.filter(m => {
+        if (m.type !== 'characterData') return true;
         if (seen.has(m.target)) return false;
         seen.add(m.target);
         return true;
       });
 
-      if (mutations.length > 2) return;
+      if (mutations.length > 3) return;
 
       const first = mutations[0];
       const second = mutations[1];
-      const added = first.addedNodes.length === 1 && first.addedNodes[0];
+      const third = mutations[2];
+      const added = first.addedNodes[0];
+      const removed = second && second.removedNodes[0];
 
       if (mutations.length === 1) {
         if (first.type === 'characterData') {
@@ -218,13 +224,22 @@ export default function input() {
         } else if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
           return first;
         }
-      } else if (mutations.length === 2) {
+      } else {
         if (first.type === 'childList' && added && added.nodeType === Node.TEXT_NODE) {
-          if (second.type === 'characterData' && second.target === added) {
+          const textNode = third || second;
+          if (removed && removed.nodeName !== 'BR') return;
+          if (textNode.type === 'characterData' && textNode.target === added) {
             return first;
           }
         }
       }
+    }
+
+    function onPaste() {
+      pasteMutation = true;
+      setTimeout(() => {
+        pasteMutation = false;
+      }, 50);
     }
 
 
@@ -253,6 +268,7 @@ export default function input() {
     view.on('shortcut:Alt+Delete', onDelete);
     view.on('shortcut:Tab', onTab);
     view.on('shortcut:Shift+Tab', onTab);
+    view.root.addEventListener('paste', onPaste);
 
     return {
       destroy() {
@@ -268,6 +284,7 @@ export default function input() {
         view.off('shortcut:Alt+Delete', onDelete);
         view.off('shortcut:Tab', onTab);
         view.off('shortcut:Shift+Tab', onTab);
+        view.root.removeEventListener('paste', onPaste);
       }
     }
   }
