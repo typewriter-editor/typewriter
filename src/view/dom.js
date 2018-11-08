@@ -16,7 +16,7 @@ const VOID_ELEMENTS = {
 const SKIP_ELEMENTS = {
   STYLE: true, SCRIPT: true, LINK: true, META: true, TITLE: true
 };
-// const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
+const BLOCK_ELEMENTS = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 
 
 export function deltaToVdom(delta, paper = new Paper(defaultPaper)) {
@@ -117,10 +117,7 @@ export function deltaFromDom(view, root = view.root, opts) {
 
     if (isBRPlaceholder(view, node)) {
       empty = false;
-      continue;
-    }
-
-    if (node.nodeType === Node.TEXT_NODE) {
+    } else if (node.nodeType === Node.TEXT_NODE) {
       // non-breaking spaces are a space, newlines may exist with pasted content but should only be acknowledged within
       // text
       if (node.nodeValue.replace(/\n+/g, '') === '') continue;
@@ -149,8 +146,20 @@ export function deltaFromDom(view, root = view.root, opts) {
       if (embed) {
         delta.insert({ [embed.name]: embed.dom ? embed.dom(node, paper) : true });
       }
-    } else if (blocks.matches(node)) {// || (node.matches && node.matches(blockElements))) {
+    } else if (blocks.matches(node) || (node.matches && node.matches(BLOCK_ELEMENTS))) {
       unknownBlock = !blocks.matches(node);
+
+      if (!blocks.matches(node)) {
+        let parent = node.parentNode;
+        while (parent && !blocks.matches(parent) && parent !== root) {
+          parent = parent.parentNode;
+        }
+        // If this block element is inside a recognized block, ignore it
+        if (parent !== root && blocks.matches(parent)) {
+          continue;
+        }
+      }
+
       const block = blocks.find(node) || blocks.getDefault();
       // Skip paragraphs/divs inside blockquotes and list items etc.
       if (block === blocks.getDefault() && blocks.matches(node.parentNode)) {
@@ -158,7 +167,7 @@ export function deltaFromDom(view, root = view.root, opts) {
       }
 
       if (firstBlockSeen) {
-        if (!unknownBlock && !empty) {
+        if (!unknownBlock || !empty) {
           delta.insert('\n', currentBlock);
           empty = true;
         }
@@ -176,7 +185,7 @@ export function deltaFromDom(view, root = view.root, opts) {
       }
     }
   }
-  if (!empty) {
+  if (!unknownBlock || !empty) {
     delta.insert('\n', currentBlock);
   }
   return delta;
