@@ -70,6 +70,7 @@ export default function input() {
       if (atEnd && !isDefault && block.defaultFollows) {
         attributes = {};
       }
+      const activeFormats = editor.activeFormats;
       if (!length && !isDefault && !block.defaultFollows && from === to) {
         editor.formatLine(from, to, {}, SOURCE_USER);
       } else {
@@ -80,6 +81,7 @@ export default function input() {
         }
         editor.insertText(from, to, '\n', attributes, SOURCE_USER, selection);
       }
+      editor.activeFormats = activeFormats;
     }
 
 
