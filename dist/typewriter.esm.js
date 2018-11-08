@@ -2218,9 +2218,10 @@ function (_EventDispatcher) {
       }
 
       if (typeof formats === 'string') {
-        formats = null;
-        source = formats;
-        selection = source;
+        var _ref = [null, formats, source];
+        formats = _ref[0];
+        source = _ref[1];
+        selection = _ref[2];
       }
 
       if (selection == null && this.selection !== null) selection = from + text.length;
@@ -2268,9 +2269,10 @@ function (_EventDispatcher) {
       selection = _this$_normalizeRange10[5];
 
       if (typeof formats === 'string') {
-        formats = null;
-        source = formats;
-        selection = source;
+        var _ref2 = [null, formats, source];
+        formats = _ref2[0];
+        source = _ref2[1];
+        selection = _ref2[2];
       }
 
       if (from >= this.length) from = this.length - 1;
@@ -2365,8 +2367,8 @@ function (_EventDispatcher) {
         return this.activeFormats;
       }
 
-      this.contents.getOps(from, to).forEach(function (_ref) {
-        var op = _ref.op;
+      this.contents.getOps(from, to).forEach(function (_ref3) {
+        var op = _ref3.op;
         if (/^\n+$/.test(op.insert)) return;
         if (!op.attributes) formats = {};else if (!formats) formats = _objectSpread({}, op.attributes);else formats = combineFormats(formats, op.attributes);
       });
@@ -2644,8 +2646,8 @@ function (_EventDispatcher) {
       to = _this$_normalizeRange28[1];
       source = _this$_normalizeRange28[2];
       var formats = {};
-      this.contents.getOps(from, to).forEach(function (_ref2) {
-        var op = _ref2.op;
+      this.contents.getOps(from, to).forEach(function (_ref4) {
+        var op = _ref4.op;
         op.attributes && Object.keys(op.attributes).forEach(function (key) {
           return formats[key] = null;
         });
@@ -2730,9 +2732,9 @@ function (_EventDispatcher) {
       if (typeof range === 'number') range = [range, range];
 
       if (range[0] > range[1]) {
-        var _ref3 = [range[1], range[0]];
-        range[0] = _ref3[0];
-        range[1] = _ref3[1];
+        var _ref5 = [range[1], range[0]];
+        range[0] = _ref5[0];
+        range[1] = _ref5[1];
       }
 
       return range.map(function (index) {
@@ -3724,8 +3726,8 @@ var SKIP_ELEMENTS = {
   LINK: true,
   META: true,
   TITLE: true
-}; // const blockElements = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
-
+};
+var BLOCK_ELEMENTS = 'address, article, aside, blockquote, canvas, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 function deltaToVdom(delta) {
   var paper = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new Paper(defaultPaper);
   var blocks = paper.blocks,
@@ -3842,10 +3844,7 @@ function deltaFromDom(view) {
   while (node = walker.nextNode()) {
     if (isBRPlaceholder(view, node)) {
       empty = false;
-      continue;
-    }
-
-    if (node.nodeType === Node.TEXT_NODE) {
+    } else if (node.nodeType === Node.TEXT_NODE) {
       var _ret = function () {
         // non-breaking spaces are a space, newlines may exist with pasted content but should only be acknowledged within
         // text
@@ -3881,9 +3880,22 @@ function deltaFromDom(view) {
       if (embed) {
         delta.insert(_defineProperty({}, embed.name, embed.dom ? embed.dom(node, paper) : true));
       }
-    } else if (blocks.matches(node)) {
-      // || (node.matches && node.matches(blockElements))) {
+    } else if (blocks.matches(node) || node.matches && node.matches(BLOCK_ELEMENTS)) {
       unknownBlock = !blocks.matches(node);
+
+      if (!blocks.matches(node)) {
+        var parent = node.parentNode;
+
+        while (parent && !blocks.matches(parent) && parent !== root) {
+          parent = parent.parentNode;
+        } // If this block element is inside a recognized block, ignore it
+
+
+        if (parent !== root && blocks.matches(parent)) {
+          continue;
+        }
+      }
+
       var block = blocks.find(node) || blocks.getDefault(); // Skip paragraphs/divs inside blockquotes and list items etc.
 
       if (block === blocks.getDefault() && blocks.matches(node.parentNode)) {
@@ -3891,7 +3903,7 @@ function deltaFromDom(view) {
       }
 
       if (firstBlockSeen) {
-        if (!unknownBlock && !empty) {
+        if (!unknownBlock || !empty) {
           delta.insert('\n', currentBlock);
           empty = true;
         }
@@ -3911,7 +3923,7 @@ function deltaFromDom(view) {
     }
   }
 
-  if (!empty) {
+  if (!unknownBlock || !empty) {
     delta.insert('\n', currentBlock);
   }
 
@@ -4575,6 +4587,8 @@ function input() {
         attributes = {};
       }
 
+      var activeFormats = editor.activeFormats;
+
       if (!length && !isDefault && !block.defaultFollows && from === to) {
         editor.formatLine(from, to, {}, SOURCE_USER$2);
       } else {
@@ -4587,6 +4601,8 @@ function input() {
 
         editor.insertText(from, to, '\n', attributes, SOURCE_USER$2, selection);
       }
+
+      editor.activeFormats = activeFormats;
     }
 
     function onShiftEnter(event) {
@@ -5321,12 +5337,12 @@ function createComment() {
 	return document.createComment('');
 }
 
-function addListener(node, event, handler) {
-	node.addEventListener(event, handler, false);
+function addListener(node, event, handler, options) {
+	node.addEventListener(event, handler, options);
 }
 
-function removeListener(node, event, handler) {
-	node.removeEventListener(event, handler, false);
+function removeListener(node, event, handler, options) {
+	node.removeEventListener(event, handler, options);
 }
 
 function setStyle(node, key, value) {
@@ -5466,7 +5482,7 @@ var proto = {
 	_differs
 };
 
-/* src/ui/HoverMenu.html generated by Svelte v2.13.5 */
+/* src/ui/HoverMenu.html generated by Svelte v2.15.3 */
 
 const SOURCE_USER$6 = 'user';
 
@@ -5641,8 +5657,20 @@ function onstate({ changed, current }) {
     this.reposition();
   }
 }
+function click_handler(event) {
+	const { component, ctx } = this._svelte;
+
+	component.onClick(ctx.item);
+}
+
+function get_each_context(ctx, list, i) {
+	const child_ctx = Object.create(ctx);
+	child_ctx.item = list[i];
+	return child_ctx;
+}
+
 function create_main_fragment(component, ctx) {
-	var div, div_1, text_1, div_2, input, input_updating = false, text_2, i, div_class_value;
+	var div2, div0, text0, div1, input, input_updating = false, text1, i, div2_class_value;
 
 	var each_value = ctx.items;
 
@@ -5672,20 +5700,20 @@ function create_main_fragment(component, ctx) {
 
 	return {
 		c() {
-			div = createElement$1("div");
-			div_1 = createElement$1("div");
+			div2 = createElement$1("div");
+			div0 = createElement$1("div");
 
 			for (var i_1 = 0; i_1 < each_blocks.length; i_1 += 1) {
 				each_blocks[i_1].c();
 			}
 
-			text_1 = createText("\n  ");
-			div_2 = createElement$1("div");
+			text0 = createText("\n  ");
+			div1 = createElement$1("div");
 			input = createElement$1("input");
-			text_2 = createText("\n    ");
+			text1 = createText("\n    ");
 			i = createElement$1("i");
 			i.textContent = "×";
-			div_1.className = "items svelte-1wig6bq";
+			div0.className = "items svelte-1wig6bq";
 			addListener(input, "input", input_input_handler);
 			addListener(input, "keydown", keydown_handler);
 			addListener(input, "blur", blur_handler);
@@ -5693,30 +5721,30 @@ function create_main_fragment(component, ctx) {
 			input.className = "svelte-1wig6bq";
 			addListener(i, "click", click_handler_1);
 			i.className = "close svelte-1wig6bq";
-			div_2.className = "link-input svelte-1wig6bq";
-			setStyle(div, "top", "" + ctx.pos.top + "px");
-			setStyle(div, "left", "" + ctx.pos.left + "px");
-			div.className = div_class_value = "menu" + (ctx.active ? ' active' : '') + (ctx.inputMode ? ' input-mode' : '') + " svelte-1wig6bq";
+			div1.className = "link-input svelte-1wig6bq";
+			setStyle(div2, "top", "" + ctx.pos.top + "px");
+			setStyle(div2, "left", "" + ctx.pos.left + "px");
+			div2.className = div2_class_value = "menu" + (ctx.active ? ' active' : '') + (ctx.inputMode ? ' input-mode' : '') + " svelte-1wig6bq";
 		},
 
 		m(target, anchor) {
-			insert(target, div, anchor);
-			append(div, div_1);
+			insert(target, div2, anchor);
+			append(div2, div0);
 
 			for (var i_1 = 0; i_1 < each_blocks.length; i_1 += 1) {
-				each_blocks[i_1].m(div_1, null);
+				each_blocks[i_1].m(div0, null);
 			}
 
-			append(div, text_1);
-			append(div, div_2);
-			append(div_2, input);
+			append(div2, text0);
+			append(div2, div1);
+			append(div1, input);
 			component.refs.input = input;
 
 			input.value = ctx.href;
 
-			append(div_2, text_2);
-			append(div_2, i);
-			component.refs.menu = div;
+			append(div1, text1);
+			append(div1, i);
+			component.refs.menu = div2;
 		},
 
 		p(changed, ctx) {
@@ -5731,7 +5759,7 @@ function create_main_fragment(component, ctx) {
 					} else {
 						each_blocks[i_1] = create_each_block(component, child_ctx);
 						each_blocks[i_1].c();
-						each_blocks[i_1].m(div_1, null);
+						each_blocks[i_1].m(div0, null);
 					}
 				}
 
@@ -5743,18 +5771,18 @@ function create_main_fragment(component, ctx) {
 
 			if (!input_updating && changed.href) input.value = ctx.href;
 			if (changed.pos) {
-				setStyle(div, "top", "" + ctx.pos.top + "px");
-				setStyle(div, "left", "" + ctx.pos.left + "px");
+				setStyle(div2, "top", "" + ctx.pos.top + "px");
+				setStyle(div2, "left", "" + ctx.pos.left + "px");
 			}
 
-			if ((changed.active || changed.inputMode) && div_class_value !== (div_class_value = "menu" + (ctx.active ? ' active' : '') + (ctx.inputMode ? ' input-mode' : '') + " svelte-1wig6bq")) {
-				div.className = div_class_value;
+			if ((changed.active || changed.inputMode) && div2_class_value !== (div2_class_value = "menu" + (ctx.active ? ' active' : '') + (ctx.inputMode ? ' input-mode' : '') + " svelte-1wig6bq")) {
+				div2.className = div2_class_value;
 			}
 		},
 
 		d(detach) {
 			if (detach) {
-				detachNode(div);
+				detachNode(div2);
 			}
 
 			destroyEach(each_blocks, detach);
@@ -5764,49 +5792,30 @@ function create_main_fragment(component, ctx) {
 			removeListener(input, "blur", blur_handler);
 			if (component.refs.input === input) component.refs.input = null;
 			removeListener(i, "click", click_handler_1);
-			if (component.refs.menu === div) component.refs.menu = null;
+			if (component.refs.menu === div2) component.refs.menu = null;
 		}
 	};
 }
 
-// (6:4) {#each items as item}
-function create_each_block(component, ctx) {
-	var if_block_anchor;
-
-	function select_block_type(ctx) {
-		if (ctx.item) return create_if_block;
-		return create_if_block_1;
-	}
-
-	var current_block_type = select_block_type(ctx);
-	var if_block = current_block_type(component, ctx);
+// (11:6) {:else}
+function create_else_block(component, ctx) {
+	var div;
 
 	return {
 		c() {
-			if_block.c();
-			if_block_anchor = createComment();
+			div = createElement$1("div");
+			div.className = "typewriter-separator svelte-1wig6bq";
 		},
 
 		m(target, anchor) {
-			if_block.m(target, anchor);
-			insert(target, if_block_anchor, anchor);
+			insert(target, div, anchor);
 		},
 
-		p(changed, ctx) {
-			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
-				if_block.p(changed, ctx);
-			} else {
-				if_block.d(1);
-				if_block = current_block_type(component, ctx);
-				if_block.c();
-				if_block.m(if_block_anchor.parentNode, if_block_anchor);
-			}
-		},
+		p: noop,
 
 		d(detach) {
-			if_block.d(detach);
 			if (detach) {
-				detachNode(if_block_anchor);
+				detachNode(div);
 			}
 		}
 	};
@@ -5860,48 +5869,54 @@ function create_if_block(component, ctx) {
 	};
 }
 
-// (11:6) {:else}
-function create_if_block_1(component, ctx) {
-	var div;
+// (6:4) {#each items as item}
+function create_each_block(component, ctx) {
+	var if_block_anchor;
+
+	function select_block_type(ctx) {
+		if (ctx.item) return create_if_block;
+		return create_else_block;
+	}
+
+	var current_block_type = select_block_type(ctx);
+	var if_block = current_block_type(component, ctx);
 
 	return {
 		c() {
-			div = createElement$1("div");
-			div.className = "typewriter-separator svelte-1wig6bq";
+			if_block.c();
+			if_block_anchor = createComment();
 		},
 
 		m(target, anchor) {
-			insert(target, div, anchor);
+			if_block.m(target, anchor);
+			insert(target, if_block_anchor, anchor);
 		},
 
-		p: noop,
+		p(changed, ctx) {
+			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+				if_block.p(changed, ctx);
+			} else {
+				if_block.d(1);
+				if_block = current_block_type(component, ctx);
+				if_block.c();
+				if_block.m(if_block_anchor.parentNode, if_block_anchor);
+			}
+		},
 
 		d(detach) {
+			if_block.d(detach);
 			if (detach) {
-				detachNode(div);
+				detachNode(if_block_anchor);
 			}
 		}
 	};
-}
-
-function get_each_context(ctx, list, i) {
-	const child_ctx = Object.create(ctx);
-	child_ctx.item = list[i];
-	child_ctx.each_value = list;
-	child_ctx.item_index = i;
-	return child_ctx;
-}
-
-function click_handler(event) {
-	const { component, ctx } = this._svelte;
-
-	component.onClick(ctx.item);
 }
 
 function HoverMenu(options) {
 	init(this, options);
 	this.refs = {};
 	this._state = assign(data(), options.data);
+
 	this._recompute({ view: 1, range: 1 }, this._state);
 	this._intro = true;
 

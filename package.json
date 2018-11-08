@@ -22,23 +22,23 @@
     "escape-html": "^1.0.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.1.0",
+    "@babel/core": "^7.1.5",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/plugin-syntax-dynamic-import": "^7.0.0",
     "@babel/plugin-transform-react-jsx": "^7.0.0",
-    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-env": "^7.1.5",
     "@babel/register": "^7.0.0",
-    "chai": "^4.1.2",
-    "jsdom": "^12.0.0",
+    "chai": "^4.2.0",
+    "jsdom": "^13.0.0",
     "jsdom-global": "^3.0.2",
     "mocha": "^5.2.0",
-    "rollup": "^0.66.2",
+    "rollup": "^0.67.0",
     "rollup-plugin-babel": "^4.0.3",
-    "rollup-plugin-commonjs": "^9.1.8",
+    "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-livereload": "^0.6.0",
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-plugin-serve": "^0.6.0",
-    "rollup-plugin-svelte": "^4.3.1",
-    "svelte": "^2.13.5"
+    "rollup-plugin-svelte": "^4.3.2",
+    "svelte": "^2.15.3"
   }
 }
