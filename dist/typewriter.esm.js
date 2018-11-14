@@ -4551,7 +4551,16 @@ function input() {
         if (pasteMutation) {
           var from = editor.selection ? editor.selection[0] : undefined;
           var to = selection ? selection[1] : undefined;
-          contents = contents.clean(from, to);
+          var event = {
+            contents: contents,
+            from: from,
+            to: to
+          };
+          view.fire('paste', event);
+
+          if (event.contents !== contents && event.contents.ops) {
+            contents.ops = event.contents.ops;
+          }
         }
 
         contents = contents.compose(view.reverseDecorators); // Decorators may extend beyond the text, pull those out
