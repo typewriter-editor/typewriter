@@ -3744,12 +3744,17 @@ function deltaToVdom(delta) {
         attributes = _ref.attributes;
     var inlineChildren = []; // Collect block children
 
-    ops.forEach(function (op) {
+    ops.forEach(function (op, i, array) {
       if (op.insert) {
         var children = [];
 
         if (typeof op.insert === 'string') {
-          children.push(op.insert.replace(/  /g, '\xA0 ').replace(/^ | $/g, '\xA0'));
+          var prev = array[i - 1];
+          var next = array[i + 1];
+          var text = op.insert.replace(/  /g, '\xA0 ');
+          if (!prev) text = text.replace(/^ /, '\xA0');
+          if (!next || typeof next.insert === 'string' && next.insert[0] === ' ') text = text.replace(/ $/, '\xA0');
+          children.push(text);
         } else {
           var embed = embeds.find(op.insert);
 
