@@ -26,15 +26,14 @@ export default {
     babel({
       exclude: 'node_modules/**',
       babelrc: false,
-      "presets": [
-        "stage-2",
-        ["env", {
-          "modules": false
+      presets: [
+        ['@babel/preset-env', {
+          modules: false
         }]
       ],
-      "plugins": [
-        [ "transform-react-jsx", { "pragma": "h" }],
-        "external-helpers"
+      plugins: [
+        [ '@babel/plugin-transform-react-jsx', { 'pragma': 'h' }],
+        '@babel/plugin-proposal-object-rest-spread',
       ]
     }),
     serve(),
