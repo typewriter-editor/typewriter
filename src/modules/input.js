@@ -79,10 +79,6 @@ export default function input() {
         editor.formatLine(from, to, {}, SOURCE_USER);
       } else {
         let selection = from + 1;
-        if (from === to && atEnd) {
-          from++;
-          to++;
-        }
         editor.insertText(from, to, '\n', attributes, SOURCE_USER, selection);
       }
       editor.activeFormats = activeFormats;

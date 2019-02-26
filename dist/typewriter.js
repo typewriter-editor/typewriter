@@ -4611,12 +4611,6 @@ function input() {
         editor.formatLine(from, to, {}, SOURCE_USER$2);
       } else {
         var selection = from + 1;
-
-        if (from === to && atEnd) {
-          from++;
-          to++;
-        }
-
         editor.insertText(from, to, '\n', attributes, SOURCE_USER$2, selection);
       }
 

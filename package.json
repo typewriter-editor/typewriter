@@ -1,8 +1,8 @@
 {
   "name": "typewriter-editor",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "scripts": {
-    "start": "rollup --config --watch",
+    "start": "rollup --config rollup.config.dev.js --watch",
     "build": "rollup --config",
     "prepare": "npm run build",
     "test": "mocha -r jsdom-global/register -r @babel/register",
