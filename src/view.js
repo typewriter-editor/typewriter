@@ -93,7 +93,8 @@ export default class View extends EventDispatcher {
    * @returns {Boolean} Whether the view has focus
    */
   hasFocus() {
-    return this.root.contains(this.root.ownerDocument.activeElement);
+    const selection = this.root.ownerDocument.getSelection();
+    return selection.anchorNode && this.root.contains(selection.anchorNode);
   }
 
   /**

@@ -1359,7 +1359,13 @@ function () {
             var attributes = composeAttributes(thisOp.attributes, otherOp.attributes, typeof thisOp.retain === 'number');
             if (attributes) newOp.attributes = attributes;
 
-            delta._push(newOp); // Other op should be delete, we could be an insert or retain
+            delta._push(newOp); // Optimization if rest of other is just retain
+
+
+            if (!otherIter.hasNext() && deepEqual(delta.ops[delta.ops.length - 1], newOp)) {
+              var rest = new Delta(thisIter.rest());
+              return delta.concat(rest).chop();
+            } // Other op should be delete, we could be an insert or retain
             // Insert + delete cancels out
 
           } else if (typeof otherOp.delete === 'number' && typeof thisOp.retain === 'number') {
@@ -1853,6 +1859,23 @@ function () {
       }
 
       return 'retain';
+    }
+  }, {
+    key: "rest",
+    value: function rest() {
+      if (!this.hasNext()) {
+        return [];
+      } else if (this.offset === 0) {
+        return this.ops.slice(this.index);
+      } else {
+        var offset = this.offset;
+        var index = this.index;
+        var next = this.next();
+        var rest = this.ops.slice(this.index);
+        this.offset = offset;
+        this.index = index;
+        return [next].concat(rest);
+      }
     }
   }]);
 
@@ -3330,7 +3353,7 @@ var indexOf = [].indexOf; // Get the range (a tuple of indexes) for this view fr
 
 function getSelection(view, range) {
   var root = view.root;
-  var selection = !range ? root.ownerDocument.defaultView.getSelection() : {
+  var selection = !range ? root.ownerDocument.getSelection() : {
     anchorNode: range.startContainer,
     anchorOffset: range.startOffset,
     focusNode: range.endContainer,
@@ -3351,8 +3374,8 @@ function getSelection(view, range) {
 
 function setSelection(view, range) {
   var root = view.root;
-  var selection = root.ownerDocument.defaultView.getSelection();
-  var hasFocus = root.contains(root.ownerDocument.activeElement);
+  var selection = root.ownerDocument.getSelection();
+  var hasFocus = selection.anchorNode && root.contains(selection.anchorNode);
 
   if (range == null) {
     if (hasFocus) {
@@ -4124,7 +4147,8 @@ function (_EventDispatcher) {
   _createClass(View, [{
     key: "hasFocus",
     value: function hasFocus() {
-      return this.root.contains(this.root.ownerDocument.activeElement);
+      var selection = this.root.ownerDocument.getSelection();
+      return selection.anchorNode && this.root.contains(selection.anchorNode);
     }
     /**
      * Focuses the view using the last known selection.

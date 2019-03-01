@@ -3,7 +3,7 @@ const indexOf = [].indexOf;
 // Get the range (a tuple of indexes) for this view from the browser selection
 export function getSelection(view, range) {
   const root = view.root;
-  const selection = !range ? root.ownerDocument.defaultView.getSelection() : {
+  const selection = !range ? root.ownerDocument.getSelection() : {
     anchorNode: range.startContainer, anchorOffset: range.startOffset,
     focusNode: range.endContainer, focusOffset: range.endOffset,
     isCollapsed: range.collapsed,
@@ -26,8 +26,8 @@ export function getSelection(view, range) {
 // Set the browser selection to the range (a tuple of indexes) of this view
 export function setSelection(view, range) {
   const root = view.root;
-  const selection = root.ownerDocument.defaultView.getSelection();
-  const hasFocus = root.contains(root.ownerDocument.activeElement);
+  const selection = root.ownerDocument.getSelection();
+  const hasFocus = selection.anchorNode && root.contains(selection.anchorNode);
 
   if (range == null) {
     if (hasFocus) {

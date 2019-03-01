@@ -261,6 +261,13 @@ export default class Delta {
           var attributes = composeAttributes(thisOp.attributes, otherOp.attributes, typeof thisOp.retain === 'number');
           if (attributes) newOp.attributes = attributes;
           delta._push(newOp);
+
+          // Optimization if rest of other is just retain
+          if (!otherIter.hasNext() && deepEqual(delta.ops[delta.ops.length - 1], newOp)) {
+            var rest = new Delta(thisIter.rest());
+            return delta.concat(rest).chop();
+          }
+
         // Other op should be delete, we could be an insert or retain
         // Insert + delete cancels out
         } else if (typeof otherOp.delete === 'number' && typeof thisOp.retain === 'number') {
@@ -668,5 +675,21 @@ export class Iterator {
       }
     }
     return 'retain';
+  }
+
+  rest() {
+    if (!this.hasNext()) {
+      return [];
+    } else if (this.offset === 0) {
+      return this.ops.slice(this.index);
+    } else {
+      var offset = this.offset;
+      var index = this.index;
+      var next = this.next();
+      var rest = this.ops.slice(this.index);
+      this.offset = offset;
+      this.index = index;
+      return [next].concat(rest);
+    }
   }
 }
