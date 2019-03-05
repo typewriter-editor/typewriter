@@ -4014,6 +4014,7 @@ var modifierKeys = {
   Shift: true,
   Alt: true
 };
+var isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
 /**
  * Returns the textual representation of a shortcut given a keyboard event. Examples of shortcuts:
  * Cmd+L
@@ -4038,7 +4039,12 @@ function shortcutFromEvent(event) {
   if (event.shiftKey) shortcutArray.push('Shift');
 
   if (!modifierKeys[key]) {
-    // a and A, b and B, should be the same shortcut
+    if (isMac && event.altKey && event.code && event.code.startsWith('Key')) {
+      // The altKey on mac can change the key value (e.g. Cmd+Alt+R will show up as Cmd+Alt+® if we don't do this)
+      key = event.code.replace('Key');
+    } // a and A, b and B, should be the same shortcut
+
+
     if (key.length === 1) key = key.toUpperCase();
     shortcutArray.push(key);
   }
@@ -4048,8 +4054,8 @@ function shortcutFromEvent(event) {
 
 var SOURCE_API$1 = 'api';
 var SOURCE_USER$1 = 'user';
-var isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
-var modExpr = isMac ? /Cmd/ : /Ctrl/;
+var isMac$1 = navigator.userAgent.indexOf('Macintosh') !== -1;
+var modExpr = isMac$1 ? /Cmd/ : /Ctrl/;
 /**
  * Triggers before each render inside an editor transaction. Use this event to alter the contents of the editor with
  * decorators which will only be visible in the view and will not save to the editor. To add decorators, simply use the
@@ -4127,7 +4133,7 @@ function (_EventDispatcher) {
 
     _this.enable();
 
-    _this.isMac = isMac;
+    _this.isMac = isMac$1;
     _this._settingEditorSelection = false;
     _this._settingBrowserSelection = false;
     _this.modules = {};
