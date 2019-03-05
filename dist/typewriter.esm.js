@@ -4041,7 +4041,7 @@ function shortcutFromEvent(event) {
   if (!modifierKeys[key]) {
     if (isMac && event.altKey && event.code && event.code.startsWith('Key')) {
       // The altKey on mac can change the key value (e.g. Cmd+Alt+R will show up as Cmd+Alt+® if we don't do this)
-      key = event.code.replace('Key');
+      key = event.code.replace('Key', '');
     } // a and A, b and B, should be the same shortcut
 
 
