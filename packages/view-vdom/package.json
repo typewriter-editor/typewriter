@@ -1,0 +1,39 @@
+{
+  "name": "@typewriter/view-vdom",
+  "version": "0.5.0",
+  "description": "A view powered by a light-weight virtual DOM to render editor contents to the DOM.",
+  "keywords": [
+    "typewriter",
+    "rich text editor",
+    "wysiwyg",
+    "contenteditable"
+  ],
+  "author": "Jacob Wright <jacwright@gmail.com>",
+  "homepage": "https://github.com/typewriter-editor/typewriter#readme",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "lib/index.esm.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/typewriter-editor/typewriter.git"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/typewriter-editor/typewriter/issues"
+  },
+  "dependencies": {
+    "@typewriter/editor": "^0.5.0",
+    "@typewriter/view": "^0.5.0"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@typewriter/view",
+  "version": "0.5.0",
+  "description": "General utilities for use in modules and views.",
+  "keywords": [],
+  "author": "Jacob Wright <jacwright@gmail.com>",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "lib/index.esm.js",
+  "types": "./lib/index.d.ts",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/typewriter-editor/typewriter.git"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "echo \"Error: run tests from root\" && exit 1"
+  },
+  "bugs": {
+    "url": "https://github.com/typewriter-editor/typewriter/issues"
+  },
+  "homepage": "https://github.com/typewriter-editor/typewriter#readme",
+  "dependencies": {
+    "@typewriter/editor": "^0.5.0"
+  }
+}
