@@ -21,6 +21,9 @@ export default {
 		svelte({
       dev: !production,
       immutable: true,
+			css: css => {
+				css.write('lib/bundle.css');
+			}
 		}),
 		resolve(),
 		commonjs(),
