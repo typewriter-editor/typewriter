@@ -1,8 +1,8 @@
 import { EventDispatcher, Editor, Delta, shallowEqual } from '@typewriter/editor';
 import { Paper, decorate, getSelection, setSelection, getBounds, getAllBounds, deltaFromHTML } from '@typewriter/view';
 
-import { renderChildren } from './view/vdom';
-import { deltaToVdom, deltaToHTML } from './view/dom';
+import { renderChildren } from './vdom';
+import { deltaToVdom, deltaToHTML } from './dom';
 
 const SOURCE_API = 'api';
 const SOURCE_USER = 'user';
