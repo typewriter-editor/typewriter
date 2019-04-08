@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/view",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "General utilities for use in modules and views.",
   "keywords": [],
   "author": "Jacob Wright <jacwright@gmail.com>",
@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/typewriter-editor/typewriter#readme",
   "dependencies": {
-    "@typewriter/editor": "^0.5.0"
+    "@typewriter/editor": "^0.5.1"
   },
   "gitHead": "b063ae6b4f3270abd336e05bef057a62ad040074"
 }
