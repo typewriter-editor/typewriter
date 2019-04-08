@@ -586,6 +586,13 @@ export default class Editor extends EventDispatcher {
     return range.map(index => Math.max(0, Math.min(max, index))) as Selection;
   }
 
+  /**
+   * Tells the view(s) if any are attached to re-render.
+   */
+  render() {
+    this.fire('render');
+  }
+
   _queueEvents(events) {
     const alreadyRunning = this._queuedEvents.length;
     this._queuedEvents.push(...events);

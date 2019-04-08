@@ -264,8 +264,11 @@ export default class View extends EventDispatcher {
       this.updateBrowserSelection();
     };
 
+    const rerender = () => this.render();
+
     this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
     this.editor.on('editor-change', onEditorChange);
+    this.editor.on('render', rerender);
 
     if (this.options.modules) {
       Object.keys(this.options.modules).forEach(key => this.modules[key] = this.options.modules[key](this.editor, this.root, this.paper));
@@ -276,6 +279,7 @@ export default class View extends EventDispatcher {
     this.uninit = () => {
       this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
       this.editor.off('editor-change', onEditorChange);
+      this.editor.off('render', rerender);
       Object.keys(this.modules).forEach(key => {
         const api = this.modules[key];
         if (api && typeof api.onDestroy === 'function') api.onDestroy();
