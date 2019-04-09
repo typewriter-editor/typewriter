@@ -224,7 +224,7 @@ export default class View extends EventDispatcher {
     this._settingEditorSelection = false;
 
     // If the selection was adjusted when set then update the browser's selection
-    if (!shallowEqual(range, this.editor.selection) || (range[0] === range[1] && this.root.ownerDocument.getSelection().type === 'Range')) {
+    if (!shallowEqual(range, this.editor.selection) || (range && range[0] === range[1] && this.root.ownerDocument.getSelection().type === 'Range')) {
       this.updateBrowserSelection();
     }
   }
