@@ -24,7 +24,7 @@
 <svelte:options accessors/>
 
 <script>
-import { onMount } from 'svelte';
+import { onMount, tick } from 'svelte';
 import { getBounds } from '@typewriter/view';
 
 const SOURCE_USER = 'user';
@@ -38,6 +38,7 @@ export let active = false;
 export let inputMode = false;
 export let pos = { left: 0, top: 0 };
 export let href = '';
+let lastSelection;
 let input;
 
 $: if (menu && root && range) reposition();
@@ -121,7 +122,7 @@ function reposition() {
 function exitInput() {
   inputMode = false;
   href = '';
-  root.focus();
+  editor.setSelection(lastSelection);
 }
 
 function createLink() {
@@ -141,6 +142,7 @@ function onClick(item) {
 function onKeyDown(event) {
   if (event.keyCode === 27) {
     event.preventDefault();
+    event.stopPropagation();
     exitInput();
   } else if (event.keyCode === 13) {
     event.preventDefault();
@@ -150,9 +152,11 @@ function onKeyDown(event) {
 
 // Actions
 
-function inputLink() {
+async function inputLink() {
+  lastSelection = editor.selection;
   inputMode = true;
   href = '';
+  await tick();
   input.focus();
 }
 
