@@ -1,6 +1,7 @@
 import { Editor, Delta, Selection } from '@typewriter/editor';
 
 const SOURCE_USER = 'user';
+const SOURCE_SILENT = 'silent';
 const defaultOptions = {
   delay: 0,
   maxStack: 500,
@@ -128,7 +129,7 @@ export default function history(options: Options = {}) {
       if (ignoreChange) return;
       if (source === SOURCE_USER) {
         record(change, contents, oldContents, selection, oldSelection);
-      } else {
+      } else if (source !== SOURCE_SILENT) {
         transform(change);
       }
     }
