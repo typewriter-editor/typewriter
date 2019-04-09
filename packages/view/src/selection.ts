@@ -168,7 +168,7 @@ export function getNodeIndex(root: Element, paper: Paper, node: Node): number {
   });
 
   walker.currentNode = node;
-  let index = node.nodeType === Node.ELEMENT_NODE ? 0 : -1;
+  let index = -1;
   while ((node = walker.previousNode())) {
     if (node === root) continue;
     else if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
