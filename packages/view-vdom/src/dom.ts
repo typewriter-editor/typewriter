@@ -134,5 +134,5 @@ function childrenToHTML(children) {
 }
 
 function isDecoratorEmbed(node) {
-  return node.name === 'span' && node.attributes.class && node.attributes.class.indexOf('decorator');
+  return node.name === 'span' && node.attributes.class && node.attributes.class.indexOf('decorator') > -1;
 }
