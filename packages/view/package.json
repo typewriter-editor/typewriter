@@ -33,6 +33,5 @@
   "homepage": "https://github.com/typewriter-editor/typewriter#readme",
   "dependencies": {
     "@typewriter/editor": "^0.5.1"
-  },
-  "gitHead": "b063ae6b4f3270abd336e05bef057a62ad040074"
+  }
 }

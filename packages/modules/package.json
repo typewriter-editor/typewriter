@@ -39,6 +39,5 @@
     "@typewriter/editor": "^0.5.1",
     "@typewriter/ui": "^0.5.3",
     "@typewriter/view": "^0.5.3"
-  },
-  "gitHead": "b063ae6b4f3270abd336e05bef057a62ad040074"
+  }
 }
