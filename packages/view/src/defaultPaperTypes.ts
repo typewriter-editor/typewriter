@@ -83,7 +83,15 @@ export const link = {
 export const image = {
   name: 'image',
   selector: 'img',
-  fromDom: (node: HTMLImageElement) => node.src,
+  fromDom: (node: HTMLImageElement) => {
+    const image = {};
+    node.getAttributeNames().forEach(name => {
+      const value = name in node ? node[name] : node.getAttribute(name);
+      if (name === 'src') name = 'image';
+      image[name] = value;
+    });
+    return image;
+  },
 };
 
 export const br = {

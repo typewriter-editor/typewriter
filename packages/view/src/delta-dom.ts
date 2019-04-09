@@ -66,7 +66,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
       const embed = embeds.findByNode(node);
       if (embed) {
         const attributes = gatherMarks(node.parentNode as Element, root, paper);
-        delta.insert({ [embed.name]: embed.fromDom ? embed.fromDom(node, paper) : true }, attributes);
+        delta.insert(embed.fromDom ? embed.fromDom(node, paper) : { [embed.name]: true }, attributes);
       }
     } else if (blocks.matches(node) || (node.nodeType === Node.ELEMENT_NODE && (node as Element).matches(BLOCK_ELEMENTS))) {
       unknownBlock = !blocks.matches(node);
