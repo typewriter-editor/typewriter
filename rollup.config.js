@@ -1,7 +1,6 @@
 import svelte from 'rollup-plugin-svelte';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
-// import { terser } from 'rollup-plugin-terser';
 import typescript from 'rollup-plugin-typescript';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 
@@ -12,7 +11,15 @@ export default {
   output: [
     { file: 'lib/index.js', format: 'cjs', sourcemap: true },
     { file: 'lib/index.esm.js', format: 'es', sourcemap: true }
-  ],
+	],
+	external: [
+		'@typewriter/editor',
+		'@typewriter/modules',
+		'@typewriter/ui',
+		'@typewriter/view',
+		'@typewriter/view-svelte',
+		'@typewriter/view-vdom',
+	],
 	plugins: [
 		sourcemaps(),
 		typescript({
@@ -27,6 +34,5 @@ export default {
 		}),
 		resolve(),
 		commonjs(),
-		// production && terser()
 	]
 };
