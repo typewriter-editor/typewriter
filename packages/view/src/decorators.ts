@@ -18,11 +18,13 @@ export function decorate(root: HTMLElement, contents: Delta) {
 
 
 class Decorators {
+  public contents: Delta;
   private change: Delta;
   private delta: Delta;
   private position: number;
 
-  constructor(public contents: Delta) {
+  constructor(contents: Delta) {
+    this.contents = contents;
     this.change;
     this.delta = new Delta();
     this.position = 0;
@@ -36,8 +38,16 @@ class Decorators {
   }
 
   embed(at: number, attributes: { [name: string]: any }) {
-    at = this.updatePosition(at);
+    this.updatePosition(at);
     this.delta.insert({ decorator: attributes });
+    this.position += 1;
+  }
+
+  line(at: number, attributes: { [name: string]: any }) {
+    const line = this.contents.getLines(at, at)[0];
+    if (!line) return;
+    this.updatePosition(line.end - 1);
+    this.delta.retain(1, { decorator: attributes });
     this.position += 1;
   }
 

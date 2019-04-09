@@ -1,9 +1,9 @@
 import { h } from './vdom';
 
 
-export const paragraph = (attr, children) => h('p', null, children);
+export const paragraph = (attr, children) => h('p', attr.decorator, children);
 
-export const header = (attr, children) => h(`h${attr.header}`, null, children);
+export const header = (attr, children) => h(`h${attr.header}`, attr.decorator, children);
 
 export const list = lists => {
   const topLevelChildren = [];
@@ -13,10 +13,10 @@ export const list = lists => {
   lists.forEach(([attr, children]) => {
     const name = attr.list === 'ordered' ? 'ol' : 'ul';
     const index = attr.indent || 0;
-    const item = h('li', null, children);
+    const item = h('li', attr.decorator, children);
 
     while (index >= levels.length) {
-      const newLevel = h(name, { start: attr.start, type: attr. type });
+      const newLevel = h(name, { start: attr.start, type: attr.type });
       const childrenArray = levels.length ? levels[levels.length - 1].children : topLevelChildren;
       const lastChild = childrenArray[childrenArray.length - 1];
       if (lastChild && lastChild.name === 'li') {
@@ -28,7 +28,7 @@ export const list = lists => {
     }
 
     if (!compare(levels[index], name, attr)) {
-      const newLevel = h(name, { start: attr.start, type: attr. type });
+      const newLevel = h(name, { start: attr.start, type: attr.type });
       const childrenArray = index ? levels[index - 1].children : topLevelChildren;
       childrenArray.push(newLevel);
       levels[index] = newLevel;
@@ -42,7 +42,7 @@ export const list = lists => {
   return topLevelChildren;
 };
 
-export const blockquote = quotes => h('blockquote', null, quotes.map(([attr, children]) => h('p', null, children)));
+export const blockquote = quotes => h('blockquote', null, quotes.map(([attr, children]) => h('p', attr.decorator, children)));
 
 export const codeblock = lines => h('pre', null, lines.map(([attr, children]) => [children, '\n']));
 

@@ -52,6 +52,7 @@ const modules = {
       while ((match = exp.exec(text))) {
         decorators.mark(exp.lastIndex - match[0].length, exp.lastIndex, { class: 'highlight' });
       }
+      decorators.line(45, { 'data-testing': 123 });
     }
     root.addEventListener('decorate', onDecorate);
     return {
