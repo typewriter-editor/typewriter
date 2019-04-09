@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/view-vdom",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A view powered by a light-weight virtual DOM to render editor contents to the DOM.",
   "keywords": [
     "typewriter",
@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@typewriter/editor": "^0.5.1",
-    "@typewriter/view": "^0.5.1"
+    "@typewriter/view": "^0.5.3"
   },
   "gitHead": "b063ae6b4f3270abd336e05bef057a62ad040074"
 }
