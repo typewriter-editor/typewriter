@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/view-vdom",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "A view powered by a light-weight virtual DOM to render editor contents to the DOM.",
   "keywords": [
     "typewriter",
@@ -33,7 +33,7 @@
     "url": "https://github.com/typewriter-editor/typewriter/issues"
   },
   "dependencies": {
-    "@typewriter/editor": "^0.5.1",
-    "@typewriter/view": "^0.5.3"
+    "@typewriter/editor": "^0.5.2",
+    "@typewriter/view": "^0.5.4"
   }
 }
