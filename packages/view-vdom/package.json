@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/view-vdom",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "A view powered by a light-weight virtual DOM to render editor contents to the DOM.",
   "keywords": [
     "typewriter",
