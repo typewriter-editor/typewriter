@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/modules",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Common modules that may be used with typewriter views.",
   "keywords": [
     "typewriter",
@@ -36,8 +36,8 @@
     "url": "https://github.com/typewriter-editor/typewriter/issues"
   },
   "dependencies": {
-    "@typewriter/editor": "^0.5.2",
-    "@typewriter/ui": "^0.5.4",
-    "@typewriter/view": "^0.5.4"
+    "@typewriter/editor": "^0.5.3",
+    "@typewriter/ui": "^0.5.5",
+    "@typewriter/view": "^0.5.5"
   }
 }
