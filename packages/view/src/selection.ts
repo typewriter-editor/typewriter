@@ -152,9 +152,13 @@ export function getNodeAndOffset(root: HTMLElement, paper: Paper, index: number)
 }
 
 export function getNodeAndOffsetIndex(root: Element, paper: Paper, node: Node, offset: number): number {
-  if (node.nodeType === Node.ELEMENT_NODE && offset > 0) {
-    node = node.childNodes[offset - 1];
-    offset = node.nodeType === Node.ELEMENT_NODE ? 0 : node.nodeValue.length;
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    if (offset) {
+      node = node.childNodes[offset - 1];
+      offset = node.nodeType === Node.ELEMENT_NODE ? 0 : node.nodeValue.length;
+    } else {
+      offset = 1;
+    }
   }
   return getNodeIndex(root, paper, node) + offset;
 }

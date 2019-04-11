@@ -85,7 +85,8 @@ export default function input(options = {}) {
         editor.formatLine(from, to, {}, SOURCE_USER);
       } else {
         const selection = from + 1;
-        if (from === to) from = to = from + 1;
+        // Insert the newline after the current newline, not before it
+        if (atEnd && from === to) from = to = from + 1;
         editor.insertText(from, to, '\n', attributes, SOURCE_USER, selection);
       }
       editor.activeFormats = activeFormats;

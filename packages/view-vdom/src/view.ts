@@ -188,7 +188,7 @@ export default class View extends EventDispatcher {
   /**
    * Re-render the current editor state to the DOM.
    */
-  render(changeEvent?: any) {
+  render() {
     const contents = decorate(this.root, this.editor.contents);
     const vdom = deltaToVdom(contents, this.paper);
     this.root.dispatchEvent(new Event('rendering'));
@@ -252,15 +252,20 @@ export default class View extends EventDispatcher {
    */
   init() {
     // already inited
+    let renderQueued = false;
     if (this.hasOwnProperty('uninit')) return;
 
     const onSelectionChange = () => {
       this.updateEditorSelection(SOURCE_USER);
     };
 
-    const onEditorChange = event => {
-      if (event.change) this.render(event);
-      this.updateBrowserSelection();
+    const onEditorChange = async event => {
+      if (renderQueued) return;
+      renderQueued = true;
+      await Promise.resolve();
+      if (event.change) this.render();
+      else this.updateBrowserSelection();
+      renderQueued = false;
     };
 
     const rerender = () => this.render();

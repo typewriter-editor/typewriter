@@ -412,7 +412,7 @@ export default class Delta {
       } else {
         currentIndex += 1;
         var attributes = iter.next(1).attributes || {};
-        var line = { ops, attributes, start: lineStart, end: currentIndex, index: index };
+        var line = { ops, attributes, start: lineStart, end: currentIndex, index };
         if (predicate(line, index) === false) {
           return;
         }
