@@ -91,14 +91,22 @@ export default class View extends EventDispatcher {
     this.init();
   }
 
+  get doc() {
+    return this.root.ownerDocument;
+  }
+
+  getBrowserSelection() {
+    return this.doc.getSelection();
+  }
+
   /**
    * Returns whether or not the view has browser focus.
    *
    * @returns {Boolean} Whether the view has focus
    */
   hasFocus(): boolean {
-    const selection = this.root.ownerDocument.getSelection();
-    return selection.anchorNode && this.root.contains(selection.anchorNode);
+    const selection = this.getBrowserSelection();
+    return selection && selection.anchorNode && this.root.contains(selection.anchorNode);
   }
 
   /**
@@ -224,7 +232,8 @@ export default class View extends EventDispatcher {
     this._settingEditorSelection = false;
 
     // If the selection was adjusted when set then update the browser's selection
-    if (!shallowEqual(range, this.editor.selection) || (range && range[0] === range[1] && this.root.ownerDocument.getSelection().type === 'Range')) {
+    const selection = this.getBrowserSelection();
+    if (!shallowEqual(range, this.editor.selection) || (range && range[0] === range[1] && selection && selection.type === 'Range')) {
       this.updateBrowserSelection();
     }
   }
@@ -270,7 +279,7 @@ export default class View extends EventDispatcher {
 
     const rerender = () => this.render();
 
-    this.root.ownerDocument.addEventListener('selectionchange', onSelectionChange);
+    this.doc.addEventListener('selectionchange', onSelectionChange);
     this.editor.on('editor-change', onEditorChange);
     this.editor.on('render', rerender);
 
@@ -281,7 +290,7 @@ export default class View extends EventDispatcher {
     this.render();
 
     this.uninit = () => {
-      this.root.ownerDocument.removeEventListener('selectionchange', onSelectionChange);
+      this.doc.removeEventListener('selectionchange', onSelectionChange);
       this.editor.off('editor-change', onEditorChange);
       this.editor.off('render', rerender);
       Object.keys(this.modules).forEach(key => {
