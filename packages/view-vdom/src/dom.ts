@@ -96,7 +96,7 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
  * Converts a delta object into an HTML string based off of the supplied Paper definition.
  */
 export function deltaToHTML(delta, paper: Paper) {
-  return childrenToHTML(deltaToVdom(delta, paper).children);
+  return childrenToHTML(deltaToVdom(delta, paper));
 }
 
 
