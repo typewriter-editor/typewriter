@@ -1,9 +1,11 @@
+import { Editor } from '@typewriter/editor';
+import { Paper } from '@typewriter/view';
 import HoverMenu from '../ui/HoverMenu.svelte';
 
 
 export function hoverMenu() {
 
-  return function(editor, root, paper) {
+  return function(editor: Editor, root: HTMLElement, paper: Paper) {
     let menu = null, mousedown = false;
 
     function show(range = editor.selection) {

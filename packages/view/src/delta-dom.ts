@@ -60,7 +60,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
 
       empty = false;
       delta.insert(text, attributes);
-    } else if (node.className.indexOf('decorator') !== -1) {
+    } else if ((node as HTMLElement).className.indexOf('decorator') !== -1) {
       continue;
     } else if (embeds.matches(node)) {
       const embed = embeds.findByNode(node);

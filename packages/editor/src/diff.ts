@@ -29,9 +29,9 @@
  * [[DIFF_DELETE, 'Hello'], [DIFF_INSERT, 'Goodbye'], [DIFF_EQUAL, ' world.']]
  * which means: delete 'Hello', add 'Goodbye' and keep ' world.'
  */
-var DIFF_DELETE = -1;
-var DIFF_INSERT = 1;
-var DIFF_EQUAL = 0;
+export const DIFF_DELETE = -1;
+export const DIFF_INSERT = 1;
+export const DIFF_EQUAL = 0;
 
 
 /**
@@ -57,19 +57,19 @@ export default function diff(text1: string, text2: string, cursor_pos?: number):
   }
 
   // Trim off common prefix (speedup).
-  var commonlength = diff_commonPrefix(text1, text2);
-  var commonprefix = text1.substring(0, commonlength);
+  let commonlength = diff_commonPrefix(text1, text2);
+  let commonprefix = text1.substring(0, commonlength);
   text1 = text1.substring(commonlength);
   text2 = text2.substring(commonlength);
 
   // Trim off common suffix (speedup).
   commonlength = diff_commonSuffix(text1, text2);
-  var commonsuffix = text1.substring(text1.length - commonlength);
+  let commonsuffix = text1.substring(text1.length - commonlength);
   text1 = text1.substring(0, text1.length - commonlength);
   text2 = text2.substring(0, text2.length - commonlength);
 
   // Compute the diff on the middle block.
-  var diffs = diff_compute_(text1, text2);
+  let diffs = diff_compute_(text1, text2);
 
   // Restore the prefix and suffix.
   if (commonprefix) {
@@ -95,7 +95,7 @@ export default function diff(text1: string, text2: string, cursor_pos?: number):
  * @return {Array} Array of diff tuples.
  */
 function diff_compute_(text1, text2) {
-  var diffs;
+  let diffs;
 
   if (!text1) {
     // Just add some text (speedup).
@@ -107,9 +107,9 @@ function diff_compute_(text1, text2) {
     return [[DIFF_DELETE, text1]];
   }
 
-  var longtext = text1.length > text2.length ? text1 : text2;
-  var shorttext = text1.length > text2.length ? text2 : text1;
-  var i = longtext.indexOf(shorttext);
+  let longtext = text1.length > text2.length ? text1 : text2;
+  let shorttext = text1.length > text2.length ? text2 : text1;
+  let i = longtext.indexOf(shorttext);
   if (i != -1) {
     // Shorter text is inside the longer text (speedup).
     diffs = [[DIFF_INSERT, longtext.substring(0, i)],
@@ -129,17 +129,17 @@ function diff_compute_(text1, text2) {
   }
 
   // Check to see if the problem can be split in two.
-  var hm = diff_halfMatch_(text1, text2);
+  let hm = diff_halfMatch_(text1, text2);
   if (hm) {
     // A half-match was found, sort out the return data.
-    var text1_a = hm[0];
-    var text1_b = hm[1];
-    var text2_a = hm[2];
-    var text2_b = hm[3];
-    var mid_common = hm[4];
+    let text1_a = hm[0];
+    let text1_b = hm[1];
+    let text2_a = hm[2];
+    let text2_b = hm[3];
+    let mid_common = hm[4];
     // Send both pairs off for separate processing.
-    var diffs_a = diff(text1_a, text2_a);
-    var diffs_b = diff(text1_b, text2_b);
+    let diffs_a = diff(text1_a, text2_a);
+    let diffs_b = diff(text1_b, text2_b);
     // Merge the results.
     return diffs_a.concat([[DIFF_EQUAL, mid_common]], diffs_b);
   }
@@ -159,42 +159,42 @@ function diff_compute_(text1, text2) {
  */
 function diff_bisect_(text1, text2) {
   // Cache the text lengths to prevent multiple calls.
-  var text1_length = text1.length;
-  var text2_length = text2.length;
-  var max_d = Math.ceil((text1_length + text2_length) / 2);
-  var v_offset = max_d;
-  var v_length = 2 * max_d;
-  var v1 = new Array(v_length);
-  var v2 = new Array(v_length);
+  let text1_length = text1.length;
+  let text2_length = text2.length;
+  let max_d = Math.ceil((text1_length + text2_length) / 2);
+  let v_offset = max_d;
+  let v_length = 2 * max_d;
+  let v1 = new Array(v_length);
+  let v2 = new Array(v_length);
   // Setting all elements to -1 is faster in Chrome & Firefox than mixing
   // integers and undefined.
-  for (var x = 0; x < v_length; x++) {
+  for (let x = 0; x < v_length; x++) {
     v1[x] = -1;
     v2[x] = -1;
   }
   v1[v_offset + 1] = 0;
   v2[v_offset + 1] = 0;
-  var delta = text1_length - text2_length;
+  let delta = text1_length - text2_length;
   // If the total number of characters is odd, then the front path will collide
   // with the reverse path.
-  var front = (delta % 2 != 0);
+  let front = (delta % 2 != 0);
   // Offsets for start and end of k loop.
   // Prevents mapping of space beyond the grid.
-  var k1start = 0;
-  var k1end = 0;
-  var k2start = 0;
-  var k2end = 0;
-  for (var d = 0; d < max_d; d++) {
+  let k1start = 0;
+  let k1end = 0;
+  let k2start = 0;
+  let k2end = 0;
+  for (let d = 0; d < max_d; d++) {
     // Walk the front path one step.
-    for (var k1 = -d + k1start; k1 <= d - k1end; k1 += 2) {
-      var k1_offset = v_offset + k1;
-      var x1;
+    for (let k1 = -d + k1start; k1 <= d - k1end; k1 += 2) {
+      let k1_offset = v_offset + k1;
+      let x1;
       if (k1 == -d || (k1 != d && v1[k1_offset - 1] < v1[k1_offset + 1])) {
         x1 = v1[k1_offset + 1];
       } else {
         x1 = v1[k1_offset - 1] + 1;
       }
-      var y1 = x1 - k1;
+      let y1 = x1 - k1;
       while (x1 < text1_length && y1 < text2_length &&
              text1.charAt(x1) == text2.charAt(y1)) {
         x1++;
@@ -208,10 +208,10 @@ function diff_bisect_(text1, text2) {
         // Ran off the bottom of the graph.
         k1start += 2;
       } else if (front) {
-        var k2_offset = v_offset + delta - k1;
+        let k2_offset = v_offset + delta - k1;
         if (k2_offset >= 0 && k2_offset < v_length && v2[k2_offset] != -1) {
           // Mirror x2 onto top-left coordinate system.
-          var x2 = text1_length - v2[k2_offset];
+          let x2 = text1_length - v2[k2_offset];
           if (x1 >= x2) {
             // Overlap detected.
             return diff_bisectSplit_(text1, text2, x1, y1);
@@ -221,15 +221,15 @@ function diff_bisect_(text1, text2) {
     }
 
     // Walk the reverse path one step.
-    for (var k2 = -d + k2start; k2 <= d - k2end; k2 += 2) {
-      var k2_offset = v_offset + k2;
-      var x2;
+    for (let k2 = -d + k2start; k2 <= d - k2end; k2 += 2) {
+      let k2_offset = v_offset + k2;
+      let x2;
       if (k2 == -d || (k2 != d && v2[k2_offset - 1] < v2[k2_offset + 1])) {
         x2 = v2[k2_offset + 1];
       } else {
         x2 = v2[k2_offset - 1] + 1;
       }
-      var y2 = x2 - k2;
+      let y2 = x2 - k2;
       while (x2 < text1_length && y2 < text2_length &&
              text1.charAt(text1_length - x2 - 1) ==
              text2.charAt(text2_length - y2 - 1)) {
@@ -244,10 +244,10 @@ function diff_bisect_(text1, text2) {
         // Ran off the top of the graph.
         k2start += 2;
       } else if (!front) {
-        var k1_offset = v_offset + delta - k2;
+        let k1_offset = v_offset + delta - k2;
         if (k1_offset >= 0 && k1_offset < v_length && v1[k1_offset] != -1) {
-          var x1 = v1[k1_offset];
-          var y1 = v_offset + x1 - k1_offset;
+          let x1 = v1[k1_offset];
+          let y1 = v_offset + x1 - k1_offset;
           // Mirror x2 onto top-left coordinate system.
           x2 = text1_length - x2;
           if (x1 >= x2) {
@@ -274,14 +274,14 @@ function diff_bisect_(text1, text2) {
  * @return {Array} Array of diff tuples.
  */
 function diff_bisectSplit_(text1, text2, x, y) {
-  var text1a = text1.substring(0, x);
-  var text2a = text2.substring(0, y);
-  var text1b = text1.substring(x);
-  var text2b = text2.substring(y);
+  let text1a = text1.substring(0, x);
+  let text2a = text2.substring(0, y);
+  let text1b = text1.substring(x);
+  let text2b = text2.substring(y);
 
   // Compute both diffs serially.
-  var diffs = diff(text1a, text2a);
-  var diffsb = diff(text1b, text2b);
+  let diffs = diff(text1a, text2a);
+  let diffsb = diff(text1b, text2b);
 
   return diffs.concat(diffsb);
 };
@@ -301,10 +301,10 @@ function diff_commonPrefix(text1, text2) {
   }
   // Binary search.
   // Performance analysis: http://neil.fraser.name/news/2007/10/09/
-  var pointermin = 0;
-  var pointermax = Math.min(text1.length, text2.length);
-  var pointermid = pointermax;
-  var pointerstart = 0;
+  let pointermin = 0;
+  let pointermax = Math.min(text1.length, text2.length);
+  let pointermid = pointermax;
+  let pointerstart = 0;
   while (pointermin < pointermid) {
     if (text1.substring(pointerstart, pointermid) ==
         text2.substring(pointerstart, pointermid)) {
@@ -333,10 +333,10 @@ function diff_commonSuffix(text1, text2) {
   }
   // Binary search.
   // Performance analysis: http://neil.fraser.name/news/2007/10/09/
-  var pointermin = 0;
-  var pointermax = Math.min(text1.length, text2.length);
-  var pointermid = pointermax;
-  var pointerend = 0;
+  let pointermin = 0;
+  let pointermax = Math.min(text1.length, text2.length);
+  let pointermid = pointermax;
+  let pointerend = 0;
   while (pointermin < pointermid) {
     if (text1.substring(text1.length - pointermid, text1.length - pointerend) ==
         text2.substring(text2.length - pointermid, text2.length - pointerend)) {
@@ -362,8 +362,8 @@ function diff_commonSuffix(text1, text2) {
  *     text2 and the common middle.  Or null if there was no match.
  */
 function diff_halfMatch_(text1, text2) {
-  var longtext = text1.length > text2.length ? text1 : text2;
-  var shorttext = text1.length > text2.length ? text2 : text1;
+  let longtext = text1.length > text2.length ? text1 : text2;
+  let shorttext = text1.length > text2.length ? text2 : text1;
   if (longtext.length < 4 || shorttext.length * 2 < longtext.length) {
     return null;  // Pointless.
   }
@@ -382,14 +382,14 @@ function diff_halfMatch_(text1, text2) {
    */
   function diff_halfMatchI_(longtext, shorttext, i) {
     // Start with a 1/4 length substring at position i as a seed.
-    var seed = longtext.substring(i, i + Math.floor(longtext.length / 4));
-    var j = -1;
-    var best_common = '';
-    var best_longtext_a, best_longtext_b, best_shorttext_a, best_shorttext_b;
+    let seed = longtext.substring(i, i + Math.floor(longtext.length / 4));
+    let j = -1;
+    let best_common = '';
+    let best_longtext_a, best_longtext_b, best_shorttext_a, best_shorttext_b;
     while ((j = shorttext.indexOf(seed, j + 1)) != -1) {
-      var prefixLength = diff_commonPrefix(longtext.substring(i),
+      let prefixLength = diff_commonPrefix(longtext.substring(i),
                                            shorttext.substring(j));
-      var suffixLength = diff_commonSuffix(longtext.substring(0, i),
+      let suffixLength = diff_commonSuffix(longtext.substring(0, i),
                                            shorttext.substring(0, j));
       if (best_common.length < suffixLength + prefixLength) {
         best_common = shorttext.substring(j - suffixLength, j) +
@@ -409,12 +409,12 @@ function diff_halfMatch_(text1, text2) {
   }
 
   // First check if the second quarter is the seed for a half-match.
-  var hm1 = diff_halfMatchI_(longtext, shorttext,
+  let hm1 = diff_halfMatchI_(longtext, shorttext,
                              Math.ceil(longtext.length / 4));
   // Check again based on the third quarter.
-  var hm2 = diff_halfMatchI_(longtext, shorttext,
+  let hm2 = diff_halfMatchI_(longtext, shorttext,
                              Math.ceil(longtext.length / 2));
-  var hm;
+  let hm;
   if (!hm1 && !hm2) {
     return null;
   } else if (!hm2) {
@@ -427,7 +427,7 @@ function diff_halfMatch_(text1, text2) {
   }
 
   // A half-match was found, sort out the return data.
-  var text1_a, text1_b, text2_a, text2_b;
+  let text1_a, text1_b, text2_a, text2_b;
   if (text1.length > text2.length) {
     text1_a = hm[0];
     text1_b = hm[1];
@@ -439,7 +439,7 @@ function diff_halfMatch_(text1, text2) {
     text1_a = hm[2];
     text1_b = hm[3];
   }
-  var mid_common = hm[4];
+  let mid_common = hm[4];
   return [text1_a, text1_b, text2_a, text2_b, mid_common];
 };
 
@@ -451,12 +451,12 @@ function diff_halfMatch_(text1, text2) {
  */
 function diff_cleanupMerge(diffs) {
   diffs.push([DIFF_EQUAL, '']);  // Add a dummy entry at the end.
-  var pointer = 0;
-  var count_delete = 0;
-  var count_insert = 0;
-  var text_delete = '';
-  var text_insert = '';
-  var commonlength;
+  let pointer = 0;
+  let count_delete = 0;
+  let count_insert = 0;
+  let text_delete = '';
+  let text_insert = '';
+  let commonlength;
   while (pointer < diffs.length) {
     switch (diffs[pointer][0]) {
       case DIFF_INSERT:
@@ -535,7 +535,7 @@ function diff_cleanupMerge(diffs) {
   // Second pass: look for single edits surrounded on both sides by equalities
   // which can be shifted sideways to eliminate an equality.
   // e.g: A<ins>BA</ins>C -> <ins>AB</ins>AC
-  var changes = false;
+  let changes = false;
   pointer = 1;
   // Intentionally ignore the first and last element (don't need checking).
   while (pointer < diffs.length - 1) {
@@ -570,11 +570,6 @@ function diff_cleanupMerge(diffs) {
   }
 };
 
-
-diff.INSERT = DIFF_INSERT;
-diff.DELETE = DIFF_DELETE;
-diff.EQUAL = DIFF_EQUAL;
-
 /*
  * Modify a diff such that the cursor position points to the start of a change:
  * E.g.
@@ -591,19 +586,19 @@ function cursor_normalize_diff (diffs, cursor_pos) {
   if (cursor_pos === 0) {
     return [DIFF_EQUAL, diffs];
   }
-  for (var current_pos = 0, i = 0; i < diffs.length; i++) {
-    var d = diffs[i];
+  for (let current_pos = 0, i = 0; i < diffs.length; i++) {
+    let d = diffs[i];
     if (d[0] === DIFF_DELETE || d[0] === DIFF_EQUAL) {
-      var next_pos = current_pos + d[1].length;
+      let next_pos = current_pos + d[1].length;
       if (cursor_pos === next_pos) {
         return [i + 1, diffs];
       } else if (cursor_pos < next_pos) {
         // copy to prevent side effects
         diffs = diffs.slice();
         // split d into two diff changes
-        var split_pos = cursor_pos - current_pos;
-        var d_left = [d[0], d[1].slice(0, split_pos)];
-        var d_right = [d[0], d[1].slice(split_pos)];
+        let split_pos = cursor_pos - current_pos;
+        let d_left = [d[0], d[1].slice(0, split_pos)];
+        let d_right = [d[0], d[1].slice(split_pos)];
         diffs.splice(i, 1, d_left, d_right);
         return [i + 1, diffs];
       } else {
@@ -633,11 +628,11 @@ function cursor_normalize_diff (diffs, cursor_pos) {
  * @return {Array} Array of diff tuples
  */
 function fix_cursor (diffs, cursor_pos) {
-  var norm = cursor_normalize_diff(diffs, cursor_pos);
-  var ndiffs = norm[1];
-  var cursor_pointer = norm[0];
-  var d = ndiffs[cursor_pointer];
-  var d_next = ndiffs[cursor_pointer + 1];
+  let norm = cursor_normalize_diff(diffs, cursor_pos);
+  let ndiffs = norm[1];
+  let cursor_pointer = norm[0];
+  let d = ndiffs[cursor_pointer];
+  let d_next = ndiffs[cursor_pointer + 1];
 
   if (d == null) {
     // Text was deleted from end of original string,
@@ -659,7 +654,7 @@ function fix_cursor (diffs, cursor_pos) {
       // We can assume that d_next[0] !== 0, since d[0] === 0
       // Shift edit locations..
       ndiffs.splice(cursor_pointer, 2, [d_next[0], d[1]], [0, d[1]]);
-      var suffix = d_next[1].slice(d[1].length);
+      let suffix = d_next[1].slice(d[1].length);
       if (suffix.length > 0) {
         ndiffs.splice(cursor_pointer + 2, 0, [d_next[0], suffix]);
       }
@@ -680,14 +675,14 @@ function fix_cursor (diffs, cursor_pos) {
  * @return {Array} Array of diff tuples
  */
 function fix_emoji (diffs) {
-  var compact = false;
-  var starts_with_pair_end = function(str) {
+  let compact = false;
+  let starts_with_pair_end = function(str) {
     return str.charCodeAt(0) >= 0xDC00 && str.charCodeAt(0) <= 0xDFFF;
   }
-  var ends_with_pair_start = function(str) {
+  let ends_with_pair_start = function(str) {
     return str.charCodeAt(str.length-1) >= 0xD800 && str.charCodeAt(str.length-1) <= 0xDBFF;
   }
-  for (var i = 2; i < diffs.length; i += 1) {
+  for (let i = 2; i < diffs.length; i += 1) {
     if (diffs[i-2][0] === DIFF_EQUAL && ends_with_pair_start(diffs[i-2][1]) &&
         diffs[i-1][0] === DIFF_DELETE && starts_with_pair_end(diffs[i-1][1]) &&
         diffs[i][0] === DIFF_INSERT && starts_with_pair_end(diffs[i][1])) {
@@ -702,8 +697,8 @@ function fix_emoji (diffs) {
   if (!compact) {
     return diffs;
   }
-  var fixed_diffs = [];
-  for (var i = 0; i < diffs.length; i += 1) {
+  let fixed_diffs = [];
+  for (let i = 0; i < diffs.length; i += 1) {
     if (diffs[i][1].length > 0) {
       fixed_diffs.push(diffs[i]);
     }
@@ -722,10 +717,10 @@ function fix_emoji (diffs) {
  */
 function merge_tuples (diffs, start, length) {
   // Check from (start-1) to (start+length).
-  for (var i = start + length - 1; i >= 0 && i >= start - 1; i--) {
+  for (let i = start + length - 1; i >= 0 && i >= start - 1; i--) {
     if (i + 1 < diffs.length) {
-      var left_d = diffs[i];
-      var right_d = diffs[i+1];
+      let left_d = diffs[i];
+      let right_d = diffs[i+1];
       if (left_d[0] === right_d[1]) {
         diffs.splice(i, 2, [left_d[0], left_d[1] + right_d[1]]);
       }

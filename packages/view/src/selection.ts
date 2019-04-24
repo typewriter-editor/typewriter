@@ -127,7 +127,7 @@ export function getNodeAndOffset(root: HTMLElement, paper: Paper, index: number)
       const size = node.nodeValue.length
       if (index <= count + size) return [ node, index - count ];
       count += size;
-    } else if (node.className.indexOf('decorator') !== -1) {
+    } else if ((node as HTMLElement).className.indexOf('decorator') !== -1) {
       continue;
     } else if (embeds.matches(node) && !isBRPlaceholder(paper, node)) {
       count += 1;
@@ -176,7 +176,7 @@ export function getNodeIndex(root: Element, paper: Paper, node: Node): number {
   while ((node = walker.previousNode())) {
     if (node === root) continue;
     else if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
-    else if (node.className.indexOf('decorator') !== -1) index;
+    else if ((node as HTMLElement).className.indexOf('decorator') !== -1) index;
     else if (embeds.matches(node) && !isBRPlaceholder(paper, node)) index++;
     else if (blocks.matches(node)) index++;
   }

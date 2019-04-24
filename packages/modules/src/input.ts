@@ -1,7 +1,6 @@
-import { Editor, Delta, diff } from '@typewriter/editor';
+import { Editor, EditorRange, Delta, diff, Line, SOURCE_USER, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from '@typewriter/editor';
 import { Paper, getSelection, deltaFromDom, getNodeIndex, getNodeAndOffset } from '@typewriter/view';
 
-const SOURCE_USER = 'user';
 const mutationOptions = {
   characterData: true,
   characterDataOldValue: true,
@@ -9,8 +8,13 @@ const mutationOptions = {
   childList: true
 };
 
+interface InputOptions {
+  forceTextUpdates?: boolean;
+}
+
+
 // Basic text input module. Prevent any actions other than typing characters and handle with the API.
-export default function input(options = {}) {
+export default function input(options: InputOptions = {}) {
 
   return function(editor: Editor, root: HTMLElement, paper: Paper) {
 
@@ -21,14 +25,16 @@ export default function input(options = {}) {
       const selection = getSelection(root, paper);
 
       if (textChange) {
-        undoMutation(list, !options.forceTextUpdates);
-        editor.updateContents(textChange, SOURCE_USER, selection);
+        const committed = !!editor.updateContents(textChange, SOURCE_USER, selection);
+        undoMutation(list, !options.forceTextUpdates && committed);
+        if (!committed) editor.render();
       } else {
         // Handle everything else, pasted content, cut, spellcheck replacements
         const delta = deltaFromDom(root, paper);
         const change = editor.contents.diff(delta);
         undoMutation(list);
-        editor.updateContents(change, SOURCE_USER, selection);
+        const committed = editor.updateContents(change, SOURCE_USER, selection);
+        if (!committed) editor.render();
       }
     }
 
@@ -42,9 +48,9 @@ export default function input(options = {}) {
       change.retain(index);
       const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
       diffs.forEach(([ action, string ]) => {
-        if (action === diff.EQUAL) change.retain(string.length);
-        else if (action === diff.DELETE) change.delete(string.length);
-        else if (action === diff.INSERT) {
+        if (action === DIFF_EQUAL) change.retain(string.length);
+        else if (action === DIFF_DELETE) change.delete(string.length);
+        else if (action === DIFF_INSERT) {
           change.insert(string, editor.activeFormats);
         }
       });
@@ -67,27 +73,28 @@ export default function input(options = {}) {
     function onEnter(event: KeyboardEvent) {
       if (event.defaultPrevented) return;
       event.preventDefault();
-      let [ from, to ] = editor.getSelectedRange();
+      const range = editor.getSelectedRange();
+      const isCollapsed = range[0] === range[1];
 
-      const line = editor.contents.getLine(from);
+      const line = editor.contents.getLine(range[0]);
       let attributes = line.attributes;
       const block = paper.blocks.findByAttributes(attributes, true);
       const isDefault = block === paper.blocks.getDefault();
       const length = line.end - line.start - 1;
-      const atEnd = to === line.end - 1;
+      const atEnd = range[1] === line.end - 1;
       if (atEnd && !isDefault && block.defaultFollows) {
         attributes = {};
       } else if (typeof block.getNextLineAttributes === 'function') {
         attributes = block.getNextLineAttributes(attributes);
       }
       const activeFormats = editor.activeFormats;
-      if (!length && !isDefault && !block.defaultFollows && from === to) {
-        editor.formatLine(from, to, {}, SOURCE_USER);
+      if (!length && !isDefault && !block.defaultFollows && isCollapsed) {
+        editor.formatLine(range, {}, SOURCE_USER);
       } else {
-        const selection = from + 1;
+        const selection: EditorRange = [ range[0] + 1, range[0] + 1 ];
         // Insert the newline after the current newline, not before it
-        if (atEnd && from === to) from = to = from + 1;
-        editor.insertText(from, to, '\n', attributes, SOURCE_USER, selection);
+        if (atEnd && isCollapsed) range[0] = range[1] = range[0] + 1;
+        editor.insertText(range, '\n', attributes, SOURCE_USER, selection);
       }
       editor.activeFormats = activeFormats;
     }
@@ -97,8 +104,8 @@ export default function input(options = {}) {
       if (event.defaultPrevented) return;
       event.preventDefault();
       if (!paper.embeds.get('br')) return;
-      const [ from, to ] = editor.getSelectedRange();
-      editor.insertEmbed(from, to, 'br', true, null, SOURCE_USER);
+      const range = editor.getSelectedRange();
+      editor.insertEmbed(range, 'br', true, null, SOURCE_USER);
     }
 
 
@@ -106,33 +113,34 @@ export default function input(options = {}) {
       if (event.defaultPrevented) return;
       event.preventDefault();
 
-      function flattenBlock(line, force?: boolean) {
+      const range = editor.getSelectedRange();
+
+      function flattenBlock(line: Line, force?: boolean) {
         const block = paper.blocks.findByAttributes(line.attributes, true);
         if (block.indentable && line.attributes.indent) {
           onTab(new CustomEvent('shortcut', { detail: 'Shift+Tab' }));
           return true;
         }
         if (block && (force || block !== paper.blocks.getDefault() && !block.defaultFollows)) {
-          editor.formatLine(from, {}, SOURCE_USER);
+          editor.formatLine([ range[0], range[0] ], {}, SOURCE_USER);
           return true;
         }
       }
 
-      let [ from, to ] = editor.getSelectedRange();
-      if (from + to === 0) {
-        const line = editor.contents.getLine(from);
+      if (range[0] + range[1] === 0) {
+        const line = editor.contents.getLine(range[0]);
         if (flattenBlock(line, true)) return true;
       } else {
         // The "from" block needs to stay the same. The "to" block gets merged into it
-        if (from === to) {
-          const line = editor.contents.getLine(from);
-          if (from === line.start && flattenBlock(line)) {
+        if (range[0] === range[1]) {
+          const line = editor.contents.getLine(range[0]);
+          if (range[0] === line.start && flattenBlock(line)) {
             return;
           }
 
-          from--;
+          range[0]--;
         }
-        editor.deleteText(from, to, SOURCE_USER);
+        editor.deleteText(range, SOURCE_USER);
       }
     }
 
@@ -141,13 +149,14 @@ export default function input(options = {}) {
       if (event.defaultPrevented) return;
       event.preventDefault();
 
-      let [ from, to ] = editor.getSelectedRange();
-      if (from === to && from === editor.length) return;
+      const range = editor.getSelectedRange();
+      const isCollapsed = range[0] === range[1];
+      if (isCollapsed && range[0] >= editor.length - 1) return;
 
-      if (from === to) {
-        to++;
+      if (isCollapsed) {
+        range[1]++;
       }
-      editor.deleteText(from, to, SOURCE_USER);
+      editor.deleteText(range, SOURCE_USER);
     }
 
 
@@ -158,18 +167,19 @@ export default function input(options = {}) {
 
       const direction = shortcut === 'Tab' || shortcut === 'Mod+]' ? 1 : -1;
       const [ from, to ] = editor.getSelectedRange();
-      const lines = editor.contents.getLines(from, to);
+      const lines: Line[] = editor.contents.getLines(from, to);
 
       editor.transaction(() => {
-        lines.forEach(line => {
+        lines.forEach((line: Line) => {
           const block = paper.blocks.findByAttributes(line.attributes, true);
           if (block.indentable) {
             const indent = (line.attributes.indent || 0) + direction;
+            const range: EditorRange = [ line.start, line.start ];
             if (indent < 0) {
-              editor.formatLine(line.start, {});
+              editor.formatLine(range, {});
             } else {
               const attributes = { ...line.attributes, indent };
-              editor.formatLine(line.start, attributes);
+              editor.formatLine(range, attributes);
             }
           }
         });

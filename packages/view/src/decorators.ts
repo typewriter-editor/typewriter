@@ -1,4 +1,4 @@
-import { Delta } from '@typewriter/editor';
+import { Delta, Embed } from '@typewriter/editor';
 
 export function decorate(root: HTMLElement, contents: Delta) {
   const decorators = new Decorators(contents);
@@ -7,7 +7,7 @@ export function decorate(root: HTMLElement, contents: Delta) {
 
   if (change.ops.length) {
     change.forEach(op => {
-      if (op.delete || (op.retain && op.attributes && !op.attributes.decorator) || (op.insert && !op.insert.decorator)) {
+      if (op.delete || (op.retain && op.attributes && !op.attributes.decorator) || (op.insert && !(op.insert as Embed).decorator)) {
         throw new Error('Decorators may not insert text or delete contents.');
       }
     });

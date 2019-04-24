@@ -12,7 +12,6 @@
   "homepage": "https://github.com/typewriter-editor/typewriter#readme",
   "license": "MIT",
   "main": "lib/index.js",
-  "module": "lib/index.esm.js",
   "directories": {
     "lib": "lib",
     "test": "test"
@@ -25,8 +24,8 @@
     "url": "git+https://github.com/typewriter-editor/typewriter.git"
   },
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "build": "tsc",
+    "dev": "tsc -w",
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "bugs": {

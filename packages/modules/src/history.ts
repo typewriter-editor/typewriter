@@ -1,4 +1,4 @@
-import { Editor, Delta, Selection } from '@typewriter/editor';
+import { Editor, Delta, EditorRange } from '@typewriter/editor';
 
 const SOURCE_USER = 'user';
 const SOURCE_SILENT = 'silent';
@@ -7,9 +7,16 @@ const defaultOptions = {
   maxStack: 500,
 };
 
+interface StackEntry {
+  redo: Delta;
+  undo: Delta;
+  redoSelection: EditorRange;
+  undoSelection: EditorRange;
+}
+
 interface Stack {
-  undo: Delta[],
-  redo: Delta[],
+  undo: StackEntry[],
+  redo: StackEntry[],
 }
 
 interface Options {
@@ -80,7 +87,7 @@ export default function history(options: Options = {}) {
       ignoreChange = false;
     }
 
-    function record(change: Delta, contents: Delta, oldContents: Delta, selection: Selection, oldSelection: Selection) {
+    function record(change: Delta, contents: Delta, oldContents: Delta, selection: EditorRange, oldSelection: EditorRange) {
       const timestamp = Date.now();
       const action = getAction(change);
       stack.redo.length = 0;
@@ -114,13 +121,13 @@ export default function history(options: Options = {}) {
 
 
     function transform(change: Delta) {
-      stack.undo.forEach(function(entry) {
-        entry.undo = change.transform(entry.undo, true);
-        entry.redo = change.transform(entry.redo, true);
+      stack.undo.forEach(entry => {
+        entry.undo = change.transform(entry.undo, true) as Delta;
+        entry.redo = change.transform(entry.redo, true) as Delta;
       });
-      stack.redo.forEach(function(entry) {
-        entry.undo = change.transform(entry.undo, true);
-        entry.redo = change.transform(entry.redo, true);
+      stack.redo.forEach(entry => {
+        entry.undo = change.transform(entry.undo, true) as Delta;
+        entry.redo = change.transform(entry.redo, true) as Delta;
       });
     }
 

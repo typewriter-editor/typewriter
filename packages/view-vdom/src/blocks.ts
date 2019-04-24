@@ -1,4 +1,4 @@
-import { h } from './vdom';
+import { h, VDomNode } from './vdom';
 
 
 export const paragraph = (attr, children) => h('p', attr.decorator, children);

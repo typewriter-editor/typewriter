@@ -1,4 +1,4 @@
-import { Editor } from '@typewriter/editor';
+import { Editor, Delta } from '@typewriter/editor';
 const SOURCE_USER = 'user';
 
 export type Replacement = [RegExp, Function];
@@ -31,16 +31,17 @@ export const textReplacements: Replacement[] = [
 /**
  * Allow text representations to format a block
  */
-export function blockReplace(editor: Editor, index, prefix) {
+export function blockReplace(editor: Editor, index: number, prefix: string) {
   return blockReplacements.some(([ regexp, getAttributes ]) => {
     const match = prefix.match(regexp);
     if (match) {
       const attributes = getAttributes(match[1]);
       const change = editor.getChange(() => {
-        editor.formatLine(index, attributes);
-        editor.deleteText(index - prefix.length, index);
+        editor.formatLine([ index, index ], attributes);
+        editor.deleteText([ index - prefix.length, index ]);
       });
-      editor.updateContents(change, SOURCE_USER, index - prefix.length);
+      const end = index - prefix.length;
+      editor.updateContents(change, SOURCE_USER, [ end, end ]);
       return true;
     }
   });
@@ -50,7 +51,7 @@ export function textReplace(editor: Editor, index: number, prefix: string) {
   return textReplacements.some(([ regexp, replaceWith ]) => {
     const match = prefix.match(regexp);
     if (match) {
-      editor.insertText(index - match[0].length, index, replaceWith(match[1]), null, SOURCE_USER);
+      editor.insertText([ index - match[0].length, index ], replaceWith(match[1]), null, SOURCE_USER);
       return true;
     }
   });
@@ -87,7 +88,7 @@ export default function(handlers = defaultHandlers) {
 }
 
 
-function isTextEntry(change) {
+function isTextEntry(change: Delta) {
   return (
     change.ops.length === 1 ||
     (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)
@@ -106,7 +107,7 @@ const DIGIT_VALUES = {
   M: 1000
 };
 
-function fromRomanNumeral(romanNumeral) {
+function fromRomanNumeral(romanNumeral: string): number {
   romanNumeral = romanNumeral.toUpperCase();
   let result = 0;
   for (let i = 0; i < romanNumeral.length; i++) {

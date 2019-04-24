@@ -1,16 +1,25 @@
 // Based off of https://github.com/jorgebucaran/ultradom/ MIT licensed
+interface VDomAttributes {
+  [name: string]: any
+}
 
-export function h(name, attributes) {
-  var rest = [];
-  var children = [];
-  var length = arguments.length;
+interface ModifiedHTMLElement extends HTMLElement {
+  events: { [name: string]: Function };
+}
 
-  while (length-- > 2) rest.push(arguments[length]);
+export interface VDomNode {
+  name: string;
+  attributes: VDomAttributes;
+  children: VDomNode[];
+}
+
+export function h(name: string | Function, attributes?: VDomAttributes, ...rest: any[]): VDomNode {
+  const children: VDomNode[] = [];
 
   while (rest.length) {
-    var node = rest.pop();
+    const node = rest.pop();
     if (node && node.pop) {
-      for (length = node.length; length--; ) {
+      for (let length = node.length; length--; ) {
         rest.push(node[length]);
       }
     } else if (node != null && node !== true && node !== false) {
@@ -27,19 +36,19 @@ export function h(name, attributes) {
       };
 }
 
-export function render(node, element) {
+export function render(node: VDomNode, element: HTMLElement) {
   element = element ?
-    patch(element.parentNode, element, node) :
+    patch(element.parentNode as HTMLElement, element, node) :
     patch(null, null, node);
   return element;
 }
 
-export function renderChildren(children, element) {
+export function renderChildren(children: VDomNode[], element: HTMLElement) {
   patchChildren(element, children);
 }
 
 
-function clone(target, source) {
+function clone(target: VDomAttributes, source: VDomAttributes) {
   var obj = {};
 
   for (var i in target) obj[i] = target[i];
@@ -48,13 +57,13 @@ function clone(target, source) {
   return obj;
 }
 
-function eventListener(event) {
-  return event.currentTarget.events[event.type](event);
+function eventListener(event: Event) {
+  return (event.currentTarget as ModifiedHTMLElement).events[event.type](event);
 }
 
-function updateAttribute(element, name, value, isSvg) {
+function updateAttribute(element: ModifiedHTMLElement, name: string, value: any, isSvg?: boolean) {
   if (name[0] === "o" && name[1] === "n") {
-    if (!element.events) {
+    if (!(element as any).events) {
       element.events = {};
     }
     name = name.slice(2);
@@ -78,8 +87,8 @@ function updateAttribute(element, name, value, isSvg) {
   }
 }
 
-function createElement(node, isSvg) {
-  var element =
+function createElement(node: VDomNode, isSvg?: boolean): HTMLElement {
+  const element =
     typeof node === "string" || typeof node === "number"
       ? document.createTextNode(node)
       : (isSvg = isSvg || node.name === "svg")
@@ -89,24 +98,24 @@ function createElement(node, isSvg) {
           )
         : document.createElement(node.name);
 
-  var attributes = node.attributes;
+  const attributes = node.attributes;
   if (attributes) {
-    for (var i = 0; i < node.children.length; i++) {
+    for (let i = 0; i < node.children.length; i++) {
       element.appendChild(createElement(node.children[i], isSvg));
     }
 
-    for (var name in attributes) {
-      updateAttribute(element, name, attributes[name], isSvg);
+    for (let name in attributes) {
+      updateAttribute(element as ModifiedHTMLElement, name, attributes[name], isSvg);
     }
   }
 
-  return element;
+  return element as HTMLElement;
 }
 
-function getElementAttributes(element, isSvg) {
-  var attributes = {};
-  for (var i = 0; i < element.attributes.length; i++) {
-    var { name, value } = element.attributes[i];
+function getElementAttributes(element: HTMLElement, isSvg?: boolean): VDomAttributes {
+  const attributes: VDomAttributes = {};
+  for (let i = 0; i < element.attributes.length; i++) {
+    const { name, value } = element.attributes[i];
     if (name in element && name !== "list" && !isSvg) {
       attributes[name] = element[name];
     } else {
@@ -116,9 +125,9 @@ function getElementAttributes(element, isSvg) {
   return attributes;
 }
 
-function updateElement(element, attributes, isSvg) {
+function updateElement(element: HTMLElement, attributes: VDomAttributes, isSvg?: boolean) {
   var oldAttributes = getElementAttributes(element);
-  for (var name in clone(oldAttributes, attributes)) {
+  for (let name in clone(oldAttributes, attributes)) {
     if (
       attributes[name] !==
       (name === "value" || name === "checked"
@@ -126,7 +135,7 @@ function updateElement(element, attributes, isSvg) {
         : oldAttributes[name])
     ) {
       updateAttribute(
-        element,
+        element as ModifiedHTMLElement,
         name,
         attributes[name],
         isSvg
@@ -135,15 +144,15 @@ function updateElement(element, attributes, isSvg) {
   }
 }
 
-function removeElement(parent, element) {
+function removeElement(parent: HTMLElement, element: Node) {
   parent.removeChild(element);
 }
 
-function patchChildren(element, children, isSvg) {
-  var i = 0;
+function patchChildren(element: HTMLElement, children: VDomNode[], isSvg?: boolean) {
+  let i = 0;
 
   while (i < children.length) {
-    patch(element, element.childNodes[i], children[i], isSvg);
+    patch(element, element.childNodes[i] as HTMLElement, children[i], isSvg);
     i++;
   }
 
@@ -152,10 +161,10 @@ function patchChildren(element, children, isSvg) {
   }
 }
 
-function patch(parent, element, node, isSvg) {
-  var name = element && element.nodeName !== '#text' ? element.nodeName.toLowerCase() : undefined;
+function patch(parent: HTMLElement, element: HTMLElement, node: VDomNode, isSvg?: boolean) {
+  const name = element && element.nodeName !== '#text' ? element.nodeName.toLowerCase() : undefined;
   if (element == null || name !== node.name) {
-    var newElement = createElement(node, isSvg);
+    const newElement = createElement(node, isSvg);
 
     if (parent) {
       parent.insertBefore(newElement, element);
@@ -166,7 +175,7 @@ function patch(parent, element, node, isSvg) {
 
     element = newElement;
   } else if (name == null) {
-    if (element.nodeValue !== node) element.nodeValue = node;
+    if (element.nodeValue !== ''+node) element.nodeValue = ''+node;
   } else {
     updateElement(
       element,

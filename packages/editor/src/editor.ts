@@ -2,12 +2,12 @@ import EventDispatcher from './event-dispatcher';
 import Delta, { Attributes, DeltaOp } from './delta';
 import { shallowEqual, deepEqual } from './equal';
 
-const SOURCE_API = 'api';
-const SOURCE_USER = 'user';
-const SOURCE_SILENT = 'silent';
+export const SOURCE_API = 'api';
+export const SOURCE_USER = 'user';
+export const SOURCE_SILENT = 'silent';
 const empty = {};
 
-type Selection = [number, number];
+export type EditorRange = [number, number];
 
 /**
  * Event for text changes, called before the change has occurred. If a listener returns false the change will be
@@ -68,7 +68,7 @@ type Selection = [number, number];
 export default class Editor extends EventDispatcher {
   contents: Delta;
   length: number;
-  selection: Selection;
+  selection: EditorRange;
   activeFormats: Attributes;
   private _queuedEvents: any[];
 
@@ -105,9 +105,9 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to   The ending index
    * @returns {Delta}     The contents of this editor
    */
-  getContents(from: number = 0, to: number = this.length): Delta {
-    [ from, to ] = this._normalizeRange(from, to);
-    return this.contents.slice(from, to);
+  getContents(range: EditorRange = [ 0, this.length ]): Delta {
+    range = this._normalizeRange(range);
+    return this.contents.slice(range[0], range[1]);
   }
 
   /**
@@ -117,26 +117,26 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to   The ending index
    * @returns {String}    The text in the editor
    */
-  getText(from: number = 0, to: number = this.length - 1): string {
-    [ from, to ] = this._normalizeRange(from, to);
-    return this.getContents(from, to)
+  getText(range: EditorRange = [ 0, this.length - 1 ]): string {
+    range = this._normalizeRange(range);
+    return this.getContents(range)
       .filter(op => typeof op.insert === 'string')
       .map(op => op.insert)
       .join('');
   }
 
   /**
-   * Returns the text for the editor with null characters in place of embeds. This can be used to determine the index of
-   * given words or lines of text within the contents.
+   * Returns the text for the editor with space characters in place of embeds. This can be used to determine the index
+   * of given words or lines of text within the contents.
    *
    * @param {Number} from The starting index
    * @param {Number} to   The ending index
    * @returns {String}    The text in the editor with embed spaces
    */
-  getExactText(from: number = 0, to: number = this.length - 1): string {
-    [ from, to ] = this._normalizeRange(from, to);
-    return this.getContents(from, to)
-      .map(op => typeof op.insert === 'string' ? op.insert : '\0')
+  getExactText(range: EditorRange = [ 0, this.length - 1 ]): string {
+    range = this._normalizeRange(range);
+    return this.getContents(range)
+      .map(op => typeof op.insert === 'string' ? op.insert : ' ')
       .join('');
   }
 
@@ -150,22 +150,14 @@ export default class Editor extends EventDispatcher {
    * @param {String} source    The source of the change, user, api, or silent
    * @returns {Boolean}        Whether the selection changed or not
    */
-  setSelection(from: number, to: number, source: string = SOURCE_USER): boolean {
+  setSelection(selection: EditorRange, source: string = SOURCE_USER): boolean {
     const oldSelection = this.selection;
-    let selection: Selection;
-
-    if (from === null) {
-      selection = null;
-      if (typeof to === 'string') source = to;
-    } else {
-      [from, to, source ] = this._normalizeSelection(from, to, source);
-      selection = [ from, to ].map(i => Math.min(i, this.length - 1)) as Selection;
-    }
+    selection = this._normalizeSelection(selection, this.length - 1);
 
     if (shallowEqual(oldSelection, selection)) return false;
 
     // Reset the active formats when selection changes (do this before setting selection)
-    this.activeFormats = selection ? this.getTextFormat(Math.min(selection[0], selection[1])) : empty;
+    this.activeFormats = selection ? this.getTextFormat([ selection[1], selection[1] ]) : empty;
     this.selection = selection;
     const event = { selection, oldSelection, source };
 
@@ -187,7 +179,7 @@ export default class Editor extends EventDispatcher {
    * @param {Array} selection Optional selection after the change has been applied
    * @returns {Delta}         Returns the change when successful, or null if not
    */
-  updateContents(change: Delta, source: string = SOURCE_API, selection?: Selection): Delta {
+  updateContents(change: Delta, source: string = SOURCE_USER, selection?: EditorRange): Delta {
     if (!change.chop().ops.length) return null;
     if (typeof selection === 'number') selection = [selection, selection];
 
@@ -195,8 +187,8 @@ export default class Editor extends EventDispatcher {
     const contents = normalizeContents(oldContents.compose(change));
     const length = contents.length();
     const oldSelection = this.selection;
-    if (!selection) selection = oldSelection ? oldSelection.map(i => change.transform(i)) as Selection : oldSelection;
-    selection = selection && this.getSelectedRange(selection, length - 1);
+    if (!selection) selection = oldSelection ? oldSelection.map(i => change.transform(i)) as EditorRange : null;
+    selection = selection && this._normalizeSelection(selection, length - 1);
 
     const changeEvent = { contents, oldContents, change, selection, oldSelection, source };
     const selectionChanged = !shallowEqual(oldSelection, selection);
@@ -207,7 +199,7 @@ export default class Editor extends EventDispatcher {
 
     if (selection) {
       // Reset the active formats when selection changes (do this before setting selection)
-      this.activeFormats = selection ? this.getTextFormat(Math.min(selection[0], selection[1])) : empty;
+      this.activeFormats = selection ? this.getTextFormat([ selection[1], selection[1] ]) : empty;
       this.selection = selection;
     }
 
@@ -230,7 +222,7 @@ export default class Editor extends EventDispatcher {
    * @param {Array} selection   Optional selection after the change has been applied
    * @returns {Delta}           Returns the change when successful, or null if not
    */
-  setContents(newContents: Delta, source: string, selection?: Selection): Delta {
+  setContents(newContents: Delta, source: string = SOURCE_USER, selection?: EditorRange): Delta {
     const change = this.contents.diff(normalizeContents(newContents));
     return this.updateContents(change, source, selection);
   }
@@ -243,7 +235,7 @@ export default class Editor extends EventDispatcher {
    * @param {Array} selection Optional selection after the change has been applied
    * @returns {Delta}         Returns the change when successful, or null if not
    */
-  setText(text: string, source: string, selection?: Selection): Delta {
+  setText(text: string, source: string = SOURCE_USER, selection?: EditorRange): Delta {
     return this.setContents(this.delta().insert(text + '\n'), source, selection);
   }
 
@@ -260,29 +252,31 @@ export default class Editor extends EventDispatcher {
    * @param {Array}  selection Optional selection after the change has been applied
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  insertText(from: number, to: number, text: string, formats: Attributes, source: string, selection?: Selection): Delta {
-    [ from, to, text, formats, source, selection ] =
-      this._normalizeRange(from, to, text, formats, source, selection);
+  insertText(at: EditorRange, text: string, formats?: Attributes, source?: string, selection?: EditorRange): Delta {
+    at = this._normalizeRange(at);
 
     // If we are not inserting a newline, make sure from and to are within the selectable range
-    if (text !== '\n') [ from, to ] = this.getSelectedRange([ from, to ]);
+    if (text !== '\n') at = this.getSelectedRange(at);
 
-    if (typeof formats === 'string') [ formats, source, selection ] = [ null, formats, source ];
-    if (selection == null && this.selection !== null) selection = from + text.length;
-    let change = this.delta().retain(from).delete(to - from);
+    if (!selection && this.selection) {
+      const end = at[0] + text.length;
+      selection = [ end, end ];
+    }
+    let change = this.delta().retain(at[0]).delete(at[1] - at[0]);
+    const start: EditorRange = [ at[0], at[0] ];
 
     if (text === '\n') {
-      change.insert('\n', formats || this.getLineFormat(from));
+      change.insert('\n', formats || this.getLineFormat(start));
     } else {
-      const lineFormat = text.indexOf('\n') === -1 ? null : this.getLineFormat(from);
-      const textFormat = formats || this.getTextFormat(from);
+      const lineFormat = text.indexOf('\n') === -1 ? null : this.getLineFormat(start);
+      const textFormat = formats || this.getTextFormat(start);
       text.split('\n').forEach((line, i) => {
         if (i) change.insert('\n', lineFormat);
         line.length && change.insert(line, textFormat);
       });
     }
 
-    change = cleanDelete(this, from, to, change);
+    change = cleanDelete(this, at, change);
     return this.updateContents(change, source, selection);
   }
 
@@ -293,21 +287,20 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to        If provided and not equal to `from` will delete the text between `from` and `to`
    * @param {String} embed     Insert the text into the editor's contents
    * @param {mixed}  value     Insert the text into the editor's contents
-   * @param {String} formats   The formats of the inserted text. If null the formats at `from` will be used.
+   * @param {Object} formats   The formats of the inserted text. If null the formats at `from` will be used.
    * @param {String} source    The source of the change, user, api, or silent
    * @param {Array}  selection Optional selection after the change has been applied
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  insertEmbed(from: number, to: number, embed: string, value: mixed, formats: string, source: string, selection?: Selection): Delta {
-    [ from, to, embed, value, source, selection ] =
-      this._normalizeRange(from, to, embed, value, source, selection);
-    if (typeof formats === 'string') [ formats, source, selection ] = [ null, formats, source ];
-    if (from >= this.length) from = this.length - 1;
-    if (to >= this.length) to = this.length - 1;
-    if (selection == null && this.selection !== null) selection = from + 1;
-    const textFormat = formats || this.getTextFormat(from);
-    let change = this.delta().retain(from).delete(to - from).insert({ [embed]: value }, textFormat);
-    change = cleanDelete(this, from, to, change);
+  insertEmbed(at: EditorRange, embed: string, value: any, formats?: Attributes, source: string = SOURCE_USER, selection?: EditorRange): Delta {
+    at = this.getSelectedRange(at);
+    if (!selection && this.selection) {
+      const end = at[0] + 1;
+      selection = [ end, end ];
+    }
+    const textFormat = formats || this.getTextFormat([ at[0], at[0] ]);
+    let change = this.delta().retain(at[0]).delete(at[1] - at[0]).insert({ [embed]: value }, textFormat);
+    change = cleanDelete(this, at, change);
     return this.updateContents(change, source, selection);
   }
 
@@ -320,16 +313,18 @@ export default class Editor extends EventDispatcher {
    * @param {Array}  selection Optional selection after the change has been applied
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  deleteText(from: number, to: number, source: string, selection?: Selection): Delta {
-    [ from, to, source, selection ] = this._normalizeRange(from, to, source, selection);
-    if (from === to) return null;
-    if (selection == null && this.selection !== null) selection = from;
-    let change = this.delta().retain(from).delete(to - from);
-    change = cleanDelete(this, from, to, change);
+  deleteText(range: EditorRange, source: string = SOURCE_USER, selection?: EditorRange): Delta {
+    range = this._normalizeRange(range);
+    if (range[0] === range[1]) return null;
+    if (!selection && this.selection) selection = [ range[0], range[0] ];
+    let change = this.delta().retain(range[0]).delete(range[1] - range[0]);
+    change = cleanDelete(this, range, change);
 
     // Keep the active format of the text to the right of the cursor when deleting
-    let activeFormats;
-    if (selection === from) activeFormats = this.getTextFormat(from, from + 1);
+    let activeFormats: Attributes;
+    if (selection[0] === range[0] && selection[1] === range[0]) {
+      activeFormats = this.getTextFormat([ range[0], range[0] + 1 ]);
+    }
 
     const result = this.updateContents(change, source, selection);
 
@@ -346,11 +341,11 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to   Getting line formats ending at `to`
    * @returns {Object}    An object with all the common formats among the lines which intersect from and to
    */
-  getLineFormat(from: number, to?: number): Attributes {
-    [ from, to ] = this._normalizeRange(from, to);
-    let formats;
+  getLineFormat(range: EditorRange): Attributes {
+    range = this._normalizeRange(range);
+    let formats: Attributes;
 
-    this.contents.getLines(from, to).forEach(line => {
+    this.contents.getLines(range[0], range[1]).forEach(line => {
       if (!line.attributes) formats = {};
       else if (!formats) formats = { ...line.attributes };
       else formats = combineFormats(formats, line.attributes);
@@ -368,18 +363,18 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to   Getting text formats ending at `to`
    * @returns {Object}    An object with all the common formats among the text
    */
-  getTextFormat(from: number, to?: number): Attributes {
-    [ from, to ] = this._normalizeRange(from, to);
-    let formats;
+  getTextFormat(range: EditorRange): Attributes {
+    range = this._normalizeRange(range);
 
     // optimize for current selection
-    const seleciton = this.selection;
-    if (from === to && shallowEqual(this.selection, [ from, to ])) {
-      return this.activeFormats;
+    if (range[0] === range[1] && shallowEqual(this.selection, range)) {
+      return { ...this.activeFormats };
     }
 
-    this.contents.getOps(from, to).forEach(({ op }) => {
-      if (/^\n+$/.test(op.insert)) return;
+    let formats: Attributes;
+
+    this.contents.getOps(range[0], range[1]).forEach(({ op }) => {
+      if (typeof op.insert === 'string' && /^\n+$/.test(op.insert)) return;
       if (!op.attributes) formats = {};
       else if (!formats) formats = { ...op.attributes };
       else formats = combineFormats(formats, op.attributes);
@@ -397,8 +392,8 @@ export default class Editor extends EventDispatcher {
    * @param {Number} to   Getting line and text formats ending at `to`
    * @returns {Object}    An object with all the common formats among the lines and text which intersect from and to
    */
-  getFormat(from: number, to: number): object {
-    return { ...this.getTextFormat(from, to), ...this.getLineFormat(from, to) };
+  getFormat(range: EditorRange): object {
+    return { ...this.getTextFormat(range), ...this.getLineFormat(range) };
   }
 
   /**
@@ -411,11 +406,11 @@ export default class Editor extends EventDispatcher {
    * @param {String} source    The source of the change, user, api, or silent
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  formatLine(from: number, to: number, formats: Attributes, source: string): Delta {
-    [ from, to, formats, source ] = this._normalizeRange(from, to, formats, source);
+  formatLine(range: EditorRange, formats: Attributes, source: string = SOURCE_USER): Delta {
+    range = this._normalizeRange(range);
     const change = this.delta();
 
-    this.contents.getLines(from, to).forEach(line => {
+    this.contents.getLines(range[0], range[1]).forEach(line => {
       if (!change.ops.length) change.retain(line.end - 1);
       else change.retain(line.end - line.start - 1);
       // Clear out old formats on the line
@@ -437,9 +432,9 @@ export default class Editor extends EventDispatcher {
    * @param {String} source    The source of the change, user, api, or silent
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  formatText(from: number, to: number, formats: Attributes, source: string): Delta {
-    [ from, to, formats, source ] = this._normalizeRange(from, to, formats, source);
-    if (from === to) {
+  formatText(range: EditorRange, formats: Attributes, source: string = SOURCE_USER): Delta {
+    range = this._normalizeRange(range);
+    if (range[0] === range[1]) {
       if (this.activeFormats === empty) this.activeFormats = {};
       Object.keys(formats).forEach(key => {
         const value = formats[key];
@@ -449,8 +444,8 @@ export default class Editor extends EventDispatcher {
       return;
     }
     Object.keys(formats).forEach(name => formats[name] === false && (formats[name] = null));
-    const change = this.delta().retain(from);
-    this.getText(from, to).split('\n').forEach(line => {
+    const change = this.delta().retain(range[0]);
+    this.getText(range).split('\n').forEach(line => {
       line.length && change.retain(line.length, formats);
       change.retain(1);
     });
@@ -469,13 +464,13 @@ export default class Editor extends EventDispatcher {
    * @param {String} source    The source of the change, user, api, or silent
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  toggleLineFormat(from: number, to: number, formats: Attributes, source: string): Delta {
-    [ from, to, formats, source ] = this._normalizeRange(from, to, formats, source);
-    const existing = this.getLineFormat(from, to);
+  toggleLineFormat(range: EditorRange, formats: Attributes, source: string = SOURCE_USER): Delta {
+    range = this._normalizeRange(range);
+    const existing = this.getLineFormat(range);
     if (deepEqual(existing, formats)) {
       Object.keys(formats).forEach(key => formats[key] = null);
     }
-    return this.formatLine(from, to, formats, source);
+    return this.formatLine(range, formats, source);
   }
 
   /**
@@ -488,14 +483,14 @@ export default class Editor extends EventDispatcher {
    * @param {String} source    The source of the change, user, api, or silent
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  toggleTextFormat(from: number, to: number, formats: Attributes, source: string): Delta {
-    [ from, to, formats, source ] = this._normalizeRange(from, to, formats, source);
-    const existing = this.getTextFormat(from, to);
+  toggleTextFormat(range: EditorRange, formats: Attributes, source: string = SOURCE_USER): Delta {
+    range = this._normalizeRange(range);
+    const existing = this.getTextFormat(range);
     const isSame = Object.keys(formats).every(key => formats[key] === existing[key]);
     if (isSame) {
       Object.keys(formats).forEach(key => formats[key] = null);
     }
-    return this.formatText(from, to, formats, source);
+    return this.formatText(range, formats, source);
   }
 
   /**
@@ -506,18 +501,18 @@ export default class Editor extends EventDispatcher {
    * @param {String} source    The source of the change, user, api, or silent
    * @returns {Delta}          Returns the change when successful, or null if not
    */
-  removeFormats(from: number, to: number, source: string): Delta {
-    [ from, to, source ] = this._normalizeRange(from, to, source);
+  removeFormats(range: EditorRange, source: string = SOURCE_USER): Delta {
+    range = this._normalizeRange(range);
     const formats = {};
 
-    this.contents.getOps(from, to).forEach(({ op }) => {
+    this.contents.getOps(range[0], range[1]).forEach(({ op }) => {
       op.attributes && Object.keys(op.attributes).forEach(key => formats[key] = null);
     });
 
-    let change = this.delta().retain(from).retain(to - from, formats);
+    let change = this.delta().retain(range[0]).retain(range[1] - range[0], formats);
 
     // If the last block was not captured be sure to clear that too
-    this.contents.getLines(from, to).forEach(line => {
+    this.contents.getLines(range[0], range[1]).forEach(line => {
       const formats = {};
       Object.keys(line.attributes).forEach(key => formats[key] = null);
       change = change.compose(this.delta().retain(line.end - 1).retain(1, formats));
@@ -567,7 +562,7 @@ export default class Editor extends EventDispatcher {
    * @param {Array} selection   Optional selection after the change has been applied
    * @returns {Delta}           Returns the change when successful, or null if not
    */
-  transaction(producer: Function, source: string, selection?: Selection): Delta {
+  transaction(producer: Function, source: string = SOURCE_USER, selection?: EditorRange): Delta {
     const change = this.getChange(producer);
     return this.updateContents(change, source, selection);
   }
@@ -579,11 +574,8 @@ export default class Editor extends EventDispatcher {
    * @param {Array} range Optional range, defaults to current selection
    * @param {Number} max  The maxium number the range can be
    */
-  getSelectedRange(range: Selection = this.selection, max: number = this.length - 1): Selection {
-    if (range == null) return range;
-    if (typeof range === 'number') range = [ range, range ];
-    if (range[0] > range[1]) [range[0], range[1]] = [range[1], range[0]];
-    return range.map(index => Math.max(0, Math.min(max, index))) as Selection;
+  getSelectedRange(range: EditorRange = this.selection, max: number = this.length - 1): EditorRange {
+    return this._normalizeRange(range, max);
   }
 
   /**
@@ -598,7 +590,7 @@ export default class Editor extends EventDispatcher {
     this._queuedEvents.push(...events);
     if (alreadyRunning) return;
     while (this._queuedEvents.length) {
-      const event = this._queuedEvents.shift();
+      const event = this._queuedEvents.shift() as [ string, ];
       this.fire(...event);
     }
   }
@@ -606,51 +598,42 @@ export default class Editor extends EventDispatcher {
   /**
    * Normalizes range values to a proper range if it is not already. A range is a `from` and a `to` index, e.g. 0, 4.
    * This will ensure the lower index is first. Example usage:
-   * editor._normalizeRange(5); // [5, 5]
-   * editor._normalizeRange(-4, 100); // for a doc with length 10, [0, 10]
-   * editor._normalizeRange(25, 18); // [18, 25]
+   * editor._normalizeRange([ -4, 100 ]); // for a doc with length 10, [0, 10]
+   * editor._normalizeRange([ 25, 18 ]); // [18, 25]
    * editor._normalizeRange([12, 13]); // [12, 13]
-   * editor._normalizeRange(5, { bold: true }); // [5, 5, { bold: true }]
    */
-  _normalizeRange(from, to, ...rest) {
-    [ from, to, ...rest ] = this._normalizeSelection(from, to, ...rest);
-    if (from > to) {
-      const toValue = from;
-      from = to;
-      to = toValue;
-    }
-    return [from, to].concat(rest);
+  _normalizeRange(range: EditorRange, maxLength?: number): EditorRange {
+    if (!range) return range;
+    range = this._normalizeSelection(range, maxLength);
+    if (range[0] > range[1]) range = [ range[1], range[0] ];
+    return range;
   }
 
-  _normalizeSelection(from, to, ...rest) {
-    if (Array.isArray(from)) {
-      if (to !== undefined || rest.length) rest.unshift(to);
-      [from, to] = from;
-      if (to === undefined) to = from;
-    } else if (typeof from !== 'number') {
-      if (to !== undefined || rest.length) rest.unshift(to);
-      if (from !== undefined || rest.length) rest.unshift(from);
-      from = to = 0;
-    } else if (typeof to !== 'number') {
-      if (to !== undefined || rest.length) rest.unshift(to);
-      to = from;
+  _normalizeSelection(range: EditorRange, maxLength = this.length): EditorRange {
+    if (!range) return range;
+    if (range.length !== 2) throw new TypeError('Editor Selection must be an array with 2 numbers');
+    if (range[0] < 0 || range[0] > maxLength) {
+      range = [ Math.max(0, Math.min(maxLength, Math.floor(range[0]))), range[1] ];
     }
-    from = Math.max(0, Math.min(this.length, Math.floor(from)));
-    to = Math.max(0, Math.min(this.length, Math.floor(to)));
-    return [from, to].concat(rest);
+    if (range[1] < 0 || range[1] > maxLength) {
+      range = [ range[0], Math.max(0, Math.min(maxLength, Math.floor(range[1]))) ];
+    }
+    return range;
   }
 }
 
 // Ensures the format for the current line in a delete remains the same when multiple lines are deleted. This is needed
 // because the last line holds the formatting after a delete, but the first line is expected to be the retained format
-function cleanDelete(editor, from, to, change) {
-  if (from !== to) {
-    const line = editor.contents.getLine(from);
-    if (!line.ops.length() && to === from + 1) return change;
-    const lineFormat = editor.getLineFormat(from);
-    if (!deepEqual(lineFormat, editor.getLineFormat(to))) {
-      const lineChange = editor.getChange(() => editor.formatLine(to, lineFormat))
-      change = change.compose(change.transform(lineChange));
+function cleanDelete(editor: Editor, range: EditorRange, change: Delta) {
+  if (range[0] !== range[1]) {
+    const line = editor.contents.getLine(range[0]);
+    if (!line.ops.length() && range[1] === range[0] + 1) return change;
+    const fromRange: EditorRange = [ range[0], range[0] ];
+    const toRange: EditorRange = [ range[1], range[1] ];
+    const lineFormat = editor.getLineFormat(fromRange);
+    if (!deepEqual(lineFormat, editor.getLineFormat(toRange))) {
+      const lineChange = editor.getChange(() => editor.formatLine(toRange, lineFormat))
+      change = change.compose(change.transform(lineChange) as Delta);
     }
   }
   return change;

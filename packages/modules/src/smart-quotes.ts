@@ -1,4 +1,10 @@
-import { Editor } from '@typewriter/editor';
+import { Editor, Delta, EditorRange, SOURCE_USER } from '@typewriter/editor';
+
+type ChangeHandlerArg = {
+  change: Delta,
+  source: string,
+  selection: EditorRange
+};
 
 /**
  * Replaces regular quotes with smart quotes as they are typed. Does not affect pasted content.
@@ -9,12 +15,12 @@ import { Editor } from '@typewriter/editor';
 export default function smartQuotes() {
   return (editor: Editor) => {
 
-    function onTextChange({ change, source, selection }) {
-      if (source !== 'user' || !editor.selection || !isTextEntry(change)) return;
+    function onTextChange({ change, source, selection }: ChangeHandlerArg) {
+      if (source !== SOURCE_USER || !editor.selection || !isTextEntry(change)) return;
 
       const index = editor.selection[1];
       const lastOp = change.ops[change.ops.length - 1];
-      const lastChars = editor.getText(index - 1, index) + lastOp.insert.slice(-1);
+      const lastChars = editor.getText([ index - 1, index ]) + lastOp.insert.slice(-1);
 
       const replaced = lastChars.replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, '“')
               .replace(/"$/, '”')
@@ -39,7 +45,7 @@ export default function smartQuotes() {
   }
 }
 
-function isTextEntry(change) {
+function isTextEntry(change: Delta): boolean {
   return (
     change.ops.length === 1 ||
     (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)

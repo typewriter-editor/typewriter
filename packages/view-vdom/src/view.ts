@@ -1,4 +1,4 @@
-import { EventDispatcher, Editor, Delta, shallowEqual } from '@typewriter/editor';
+import { EventDispatcher, Editor, EditorRange, shallowEqual } from '@typewriter/editor';
 import { Paper, decorate, getSelection, setSelection, getBounds, getAllBounds, deltaFromHTML } from '@typewriter/view';
 
 import { renderChildren } from './vdom';
@@ -6,8 +6,6 @@ import { deltaToVdom, deltaToHTML } from './dom';
 
 const SOURCE_API = 'api';
 const SOURCE_USER = 'user';
-
-type Selection = [number, number];
 
 /**
  * Triggers before each render inside an editor transaction. Respond to this event to add decorations (span elements
@@ -60,8 +58,7 @@ export default class View extends EventDispatcher {
   modules: { [name: string]: any };
   options: any;
   enabled: boolean;
-  private decorators: Delta;
-  private lastSelection: Selection;
+  private lastSelection: EditorRange;
   private _settingEditorSelection: boolean;
   private _settingBrowserSelection: boolean;
 
@@ -69,10 +66,10 @@ export default class View extends EventDispatcher {
    * Create a new View to display an Editor's contents.
    *
    * @param {Editor} editor  A Typewriter editor this View will display the contents for
+   * @param {Paper}  paper   The blocks, marks, embeds, and/or container to be used in this editor
    * @param {Object} options Options include:
    *   @param {HTMLElement} root   The root HTML element of this view. If not provided, you must append view.root to the
    *                               DOM yourself
-   *   @param {Object} paper       The blocks, marks, embeds, and/or container to be used in this editor
    *   @param {Object} modules     Modules which can be used with this view
    */
   constructor(editor: Editor, paper: Paper, options: any = {}) {
@@ -87,7 +84,6 @@ export default class View extends EventDispatcher {
     this._settingBrowserSelection = false;
     this.modules = {};
     this.options = options;
-    this.decorators = null;
     this.init();
   }
 
@@ -150,8 +146,7 @@ export default class View extends EventDispatcher {
    * @param {Number} to   The end of the range
    * @returns {DOMRect}   A native DOMRect object with the bounds of the range
    */
-  getBounds(from: number, to: number): ClientRect | DOMRect {
-    let range = this.editor._normalizeRange(from, to);
+  getBounds(range: EditorRange): ClientRect | DOMRect {
     range = this.editor.getSelectedRange(range);
     return getBounds(this.root, this.paper, range);
   }
@@ -166,14 +161,13 @@ export default class View extends EventDispatcher {
    * @param {Number} to   The end of the range
    * @returns {DOMRectList}   A native DOMRect object with the bounds of the range
    */
-  getAllBounds(from: number, to: number): DOMRectList {
-    let range = this.editor._normalizeRange(from, to);
+  getAllBounds(range: EditorRange): ClientRectList | DOMRectList {
     range = this.editor.getSelectedRange(range);
     return getAllBounds(this.root, this.paper, range);
   }
 
   /**
-   * Get the HTML text of the View (minus any decorators). You could use this to store the HTML contents rather than
+   * Get the HTML text of the View. You could use this to store the HTML contents rather than
    * storing the editor contents. If you don't care about collaborative editing this may be easier than storing Deltas.
    *
    * @returns {String} A string of HTML
@@ -190,7 +184,7 @@ export default class View extends EventDispatcher {
    * @param {*} source    The source of the change being made, api, user, or silent
    */
   setHTML(html: string, source: any) {
-    this.editor.setContents(deltaFromHTML(this, html), source);
+    this.editor.setContents(deltaFromHTML(this.paper, html), source);
   }
 
   /**
@@ -243,8 +237,8 @@ export default class View extends EventDispatcher {
    *
    * @returns {Array} A range (or null) that represents the current browser selection
    */
-  getSelection(nativeRange?: Range): Selection {
-    return getSelection(this.root, this.paper, nativeRange) as Selection;
+  getSelection(nativeRange?: Range): EditorRange {
+    return getSelection(this.root, this.paper, nativeRange) as EditorRange;
   }
 
   /**
@@ -252,7 +246,7 @@ export default class View extends EventDispatcher {
    *
    * @param {Array} range The range to set selection to
    */
-  setSelection(range: Selection) {
+  setSelection(range: EditorRange) {
     setSelection(this.root, this.paper, range);
   }
 

@@ -1,4 +1,4 @@
-import diff from './diff';
+import diff, { DIFF_INSERT, DIFF_DELETE, DIFF_EQUAL} from './diff';
 import { deepEqual } from './equal';
 
 export interface Attributes {
@@ -30,6 +30,12 @@ export interface Line {
   start: number;
   end: number;
   index: number;
+}
+
+export interface OpInfo {
+  op: DeltaOp;
+  start: number;
+  end: number;
 }
 
 const NULL_CHARACTER = String.fromCharCode(0);  // Placeholder char for embed in diff()
@@ -355,16 +361,16 @@ export default class Delta {
       while (length > 0) {
         var opLength = 0;
         switch (component[0]) {
-          case diff.INSERT:
+          case DIFF_INSERT:
             opLength = Math.min(otherIter.peekLength(), length);
             delta._push(otherIter.next(opLength));
             break;
-          case diff.DELETE:
+          case DIFF_DELETE:
             opLength = Math.min(length, thisIter.peekLength());
             thisIter.next(opLength);
             delta.delete(opLength);
             break;
-          case diff.EQUAL:
+          case DIFF_EQUAL:
             opLength = Math.min(thisIter.peekLength(), otherIter.peekLength(), length);
             var thisOp = thisIter.next(opLength);
             var otherOp = otherIter.next(opLength);
@@ -388,7 +394,7 @@ export default class Delta {
    * @param {Function} predicate Function to call on each line group
    * @param {String} newline Newline character, defaults to \n
    */
-  eachLine(predicate: Function, newline: string = '\n') {
+  eachLine(predicate: (line: Line, index?: number) => any, newline: string = '\n') {
     var iter = this.iterator();
     var ops = new Delta();
     var index = 0;
@@ -428,7 +434,7 @@ export default class Delta {
   }
 
   // Extends Delta, get the lines from `from` to `to`.
-  getLines(from = 0, to = Infinity, newline?: string) {
+  getLines(from = 0, to = Infinity, newline?: string): Line[] {
     const lines = [];
     this.eachLine((line: Line) => {
       if (line.start > to || (line.start === to && from !== to)) return false;
@@ -440,14 +446,14 @@ export default class Delta {
   }
 
   // Extends Delta, get the line at `at`.
-  getLine(at: number, newline?: string) {
+  getLine(at: number, newline?: string): Line {
     return this.getLines(at, at, newline)[0];
   }
 
   // Extends Delta, get the ops from `from` to `to`.
-  getOps(from: number, to: number) {
+  getOps(from: number, to: number): OpInfo[] {
     let start = 0;
-    const ops = [];
+    const ops: OpInfo[] = [];
     this.ops.some(op => {
       if (start >= to) return true;
       const end = start + getOpLength(op);
