@@ -2,18 +2,18 @@ import { isBRPlaceholder } from './br';
 import { Paper } from './paper';
 
 type Selection = [number, number];
-const indexOf = [].indexOf;
 
 
 // Get the range (a tuple of indexes) for this view from the browser selection
-export function getSelection(root: HTMLElement, paper: Paper, range?: Range): Selection {
+export function getSelection(root: HTMLElement, paper: Paper, range?: Range): Selection | null {
+  if (!root.ownerDocument) return null;
   const selection = !range ? root.ownerDocument.getSelection() : {
     anchorNode: range.startContainer, anchorOffset: range.startOffset,
     focusNode: range.endContainer, focusOffset: range.endOffset,
     isCollapsed: range.collapsed,
   };
 
-  if (!root.contains(selection.anchorNode)) {
+  if (selection == null || selection.anchorNode == null || selection.focusNode == null || !root.contains(selection.anchorNode)) {
     return null;
   } else {
     const anchorIndex = getNodeAndOffsetIndex(root, paper, selection.anchorNode, selection.anchorOffset);
@@ -29,7 +29,9 @@ export function getSelection(root: HTMLElement, paper: Paper, range?: Range): Se
 
 // Set the browser selection to the range (a tuple of indexes) of this view
 export function setSelection(root: HTMLElement, paper: Paper, range: Selection) {
+  if (!root.ownerDocument) return;
   const selection = root.ownerDocument.getSelection();
+  if (!selection) return;
   const hasFocus = selection.anchorNode && root.contains(selection.anchorNode);
 
   if (range == null) {
@@ -101,7 +103,7 @@ export function getBrowserRange(root: HTMLElement, paper: Paper, range: Selectio
 
 
 // Get the browser nodes and offsets for the range (a tuple of indexes) of this view
-export function getNodesForRange(root: HTMLElement, paper: Paper, range: Selection) {
+export function getNodesForRange(root: HTMLElement, paper: Paper, range: Selection): [Node | null, number, Node | null, number] {
   if (range == null) {
     return [ null, 0, null, 0 ];
   } else {
@@ -113,28 +115,32 @@ export function getNodesForRange(root: HTMLElement, paper: Paper, range: Selecti
   }
 }
 
-export function getNodeAndOffset(root: HTMLElement, paper: Paper, index: number) {
+export function getNodeAndOffset(root: HTMLElement, paper: Paper, index: number): [Node | null, number] {
+  if (!root.ownerDocument) return [ null, 0 ];
   const inDom = root.ownerDocument.contains(root);
   const { blocks, embeds } = paper;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: inDom ? acceptNodeInDom : acceptNode
   });
 
-  let count = 0, node: Node, firstBlockSeen = false;
+  let count = 0, node: Node | null, firstBlockSeen = false;
   walker.currentNode = root;
   while ((node = walker.nextNode())) {
     if (node.nodeType === Node.TEXT_NODE) {
-      const size = node.nodeValue.length
+      const size = node.nodeValue ? node.nodeValue.length : 0;
       if (index <= count + size) return [ node, index - count ];
       count += size;
-    } else if ((node as HTMLElement).className.indexOf('decorator') !== -1) {
-      continue;
     } else if (embeds.matches(node) && !isBRPlaceholder(paper, node)) {
+      const embed = embeds.findByNode(node);
+      if (!embed || embed.fromDom === false) {
+        continue;
+      }
       count += 1;
       // If the selection lands after this embed, and the next node isn't a text node, place the selection
       const next = nextNonEmptyTextSibling(node);
       if (count === index && (!next || next.nodeType !== Node.TEXT_NODE)) {
-        return [ node.parentNode, indexOf.call(node.parentNode.childNodes, node) + 1 ];
+        const children = node.parentNode ? Array.from(node.parentNode.childNodes) : [];
+        return [ node.parentNode, children.indexOf(node as ChildNode) + 1 ];
       }
     } else if (blocks.matches(node)) {
       if (firstBlockSeen) count += 1;
@@ -144,7 +150,10 @@ export function getNodeAndOffset(root: HTMLElement, paper: Paper, index: number)
       if (count === index) {
         const first = firstNonEmptyTextChild(node);
         if (!first) return [ node, 0 ];
-        else if (first.nodeType !== Node.TEXT_NODE) return [ node, indexOf.call(node.childNodes, first) ];
+        else if (first.nodeType !== Node.TEXT_NODE) {
+          const children = Array.from(node.childNodes);
+          return [ node, children.indexOf(first as ChildNode) ];
+        }
       }
     }
   }
@@ -155,7 +164,7 @@ export function getNodeAndOffsetIndex(root: Element, paper: Paper, node: Node, o
   if (node.nodeType === Node.ELEMENT_NODE) {
     if (offset) {
       node = node.childNodes[offset - 1];
-      offset = node.nodeType === Node.ELEMENT_NODE ? 0 : node.nodeValue.length;
+      offset = node.nodeType === Node.ELEMENT_NODE ? 0 : (node.nodeValue ? node.nodeValue.length : 0);
     } else {
       offset = 1;
     }
@@ -164,18 +173,20 @@ export function getNodeAndOffsetIndex(root: Element, paper: Paper, node: Node, o
 }
 
 // Get the index the node starts at in the content
-export function getNodeIndex(root: Element, paper: Paper, node: Node): number {
+export function getNodeIndex(root: Element, paper: Paper, startNode: Node): number {
+  if (!root.ownerDocument) return -1;
   const inDom = root.ownerDocument.contains(root);
   const { blocks, embeds } = paper;
   const walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode: inDom ? acceptNodeInDom : acceptNode
   });
 
-  walker.currentNode = node;
+  walker.currentNode = startNode;
+  let node: Node | null;
   let index = -1;
   while ((node = walker.previousNode())) {
     if (node === root) continue;
-    else if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue.length;
+    else if (node.nodeType === Node.TEXT_NODE) index += node.nodeValue ? node.nodeValue.length : 0;
     else if ((node as HTMLElement).className.indexOf('decorator') !== -1) index;
     else if (embeds.matches(node) && !isBRPlaceholder(paper, node)) index++;
     else if (blocks.matches(node)) index++;
@@ -185,20 +196,20 @@ export function getNodeIndex(root: Element, paper: Paper, node: Node): number {
 
 function acceptNode(node: Node) {
   if (node.nodeType === Node.TEXT_NODE) {
-    return node.nodeValue.length ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    return node.nodeValue && node.nodeValue.length ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
   }
   return NodeFilter.FILTER_REJECT;
 }
 
 function acceptNodeInDom(node: Node) {
   if (node.nodeType === Node.TEXT_NODE) {
-    return node.nodeValue.length ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    return node.nodeValue && node.nodeValue.length ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
   }
   return NodeFilter.FILTER_ACCEPT;
 }
 
-function firstNonEmptyTextChild(parent: Node): Node {
-  let node: Node = parent.firstChild, index = 0;
+function firstNonEmptyTextChild(parent: Node): Node | null {
+  let node: Node | null = parent.firstChild as Node, index = 0;
   if (!node) return null;
 
   while (node && node.nodeValue === '') {
@@ -208,8 +219,8 @@ function firstNonEmptyTextChild(parent: Node): Node {
   return node;
 }
 
-function nextNonEmptyTextSibling(node: Node): Node {
-  let nextSibling: Node = node.nextSibling;
+function nextNonEmptyTextSibling(node: Node): Node | null {
+  let nextSibling: Node | null = node.nextSibling;
   while (nextSibling && nextSibling.nodeValue === '') {
     nextSibling = nextSibling.nextSibling;
   }

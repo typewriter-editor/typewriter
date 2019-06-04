@@ -7,9 +7,10 @@ const BLOCK_ELEMENTS = 'address, article, aside, blockquote, canvas, dd, div, dl
 const defaultOptions = { notInDom: false, };
 
 
-export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
-  const inDom = root.ownerDocument.contains(root);
-  const { blocks, marks, embeds } = paper;
+export function deltaFromDom(root: Element, paper: Paper, options: any = {}): Delta {
+  if (!root.ownerDocument) return new Delta();
+  const inDom: boolean = root.ownerDocument && root.ownerDocument.contains(root);
+  const { blocks, embeds } = paper;
   if (!options) options = defaultOptions;
 
   var walker = root.ownerDocument.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
@@ -17,7 +18,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
       if (SKIP_ELEMENTS[node.nodeName]) {
         return NodeFilter.FILTER_REJECT;
       } else if (node.nodeType === Node.TEXT_NODE && node.nodeValue === '') {
-        node.nodeType === Node.TEXT_NODE;
+        return NodeFilter.FILTER_REJECT;
       } else if (node.nodeType === Node.TEXT_NODE || options.notInDom || inDom) {
         return NodeFilter.FILTER_ACCEPT;
       } else {
@@ -26,7 +27,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
     }
   });
   const delta = new Delta();
-  let currentBlock: any, firstBlockSeen = false, unknownBlock = false, empty = true, node: Node;
+  let currentBlock: any, firstBlockSeen = false, unknownBlock = false, empty = true, node: Node | null;
   let lastNode = false;
 
   if (options.startNode) {
@@ -47,7 +48,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
       let parent = node.parentNode as Element;
 
       // If all newlines, we can ignore
-      if (node.nodeValue.replace(/\n+/g, '') === '') continue;
+      if (node.nodeValue == null || node.nodeValue.replace(/\n+/g, '') === '') continue;
 
       // non-breaking spaces (&nbsp;) are spaces in a delta
       const text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n+/g, ' ');
@@ -60,13 +61,13 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
 
       empty = false;
       delta.insert(text, attributes);
-    } else if ((node as HTMLElement).className.indexOf('decorator') !== -1) {
-      continue;
     } else if (embeds.matches(node)) {
       const embed = embeds.findByNode(node);
       if (embed) {
         const attributes = gatherMarks(node.parentNode as Element, root, paper);
-        delta.insert(embed.fromDom ? embed.fromDom(node, paper) : { [embed.name]: true }, attributes);
+        if (embed.fromDom !== false) {
+          delta.insert(embed.fromDom ? embed.fromDom(node, paper) : { [embed.name]: true }, attributes);
+        }
       }
     } else if (blocks.matches(node) || (node.nodeType === Node.ELEMENT_NODE && (node as Element).matches(BLOCK_ELEMENTS))) {
       unknownBlock = !blocks.matches(node);
@@ -85,7 +86,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
       const block = blocks.findByNode(node, true);
 
       // Skip paragraphs/divs inside blockquotes and list items etc.
-      if (block === blocks.getDefault() && blocks.matches(node.parentNode)) {
+      if (block === blocks.getDefault() && (!node.parentNode || blocks.matches(node.parentNode))) {
         continue;
       }
 
@@ -100,7 +101,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}) {
 
       if (unknownBlock) {
         currentBlock = { unknownBlock };
-      } else if (block !== blocks.getDefault()) {
+      } else if (block && block !== blocks.getDefault()) {
         currentBlock = block.fromDom ? block.fromDom(node, paper) : { [block.name]: true };
       } else {
         currentBlock = {};
@@ -125,7 +126,7 @@ function gatherMarks(parent: Element, root: Element, paper: Paper) {
   while (parent && !blocks.matches(parent) && parent !== root) {
     if (marks.matches(parent)) {
       const mark = marks.findByNode(parent);
-      if (mark.name !== 'decorator') {
+      if (mark && mark.fromDom !== false) {
         attributes[mark.name] = mark.fromDom ? mark.fromDom(parent, paper) : true;
       }
     } else if (parent.hasAttribute('style')) {

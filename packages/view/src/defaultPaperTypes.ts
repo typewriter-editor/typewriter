@@ -26,7 +26,7 @@ export const list = {
   indentable: true,
   fromDom(node: Node) {
     let indent = -1, parent = node.parentNode;
-    const list = parent.nodeName === 'OL' ? 'ordered' : 'bullet';
+    const list = parent && parent.nodeName === 'OL' ? 'ordered' : 'bullet';
     while (parent) {
       if (/^UL|OL$/.test(parent.nodeName)) indent++;
       else if (parent.nodeName !== 'LI') break;
@@ -103,4 +103,5 @@ export const br = {
 export const decorator = {
   name: 'decorator',
   selector: 'span.decorator',
+  fromDom: false,
 };

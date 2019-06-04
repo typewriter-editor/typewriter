@@ -1,11 +1,11 @@
 import { h } from './vdom';
 
 
-export const bold = (attr, children) => h('strong', null, children);
+export const bold = (attr, children) => h('strong', undefined, children);
 
-export const italic = (attr, children) => h('em', null, children);
+export const italic = (attr, children) => h('em', undefined, children);
 
-export const code = (attr, children) => h('code', null, children);
+export const code = (attr, children) => h('code', undefined, children);
 
 export const link = (attr, children) => h('a', { href: attr.link, target: '_blank' }, children);
 

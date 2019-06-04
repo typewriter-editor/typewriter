@@ -19,7 +19,7 @@ const isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
  * Space
  */
 export function shortcutFromEvent(event) {
-  const shortcutArray = [];
+  const shortcutArray: string[] = [];
   let key = event.key;
   if (!key) return '';
   if (key === ' ') key = 'Space';

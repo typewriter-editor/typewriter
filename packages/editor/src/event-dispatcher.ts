@@ -13,7 +13,7 @@ export default class EventDispatcher {
   }
 
   once(type: string, listener: Function) {
-    function once(...args) {
+    const once = (...args) => {
       this.off(type, once);
       listener.apply(this, args);
     }

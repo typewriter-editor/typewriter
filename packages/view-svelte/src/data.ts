@@ -26,7 +26,7 @@ export interface DeltaDocEmbedOp extends DeltaDocOp {
 
 export function fromDelta(ops: DeltaDocOp[]): Block[] {
   const blocks: Block[] = [];
-  let contents: DeltaDocOp[];
+  let contents: DeltaDocOp[] | undefined;
 
   ops.forEach(op => {
     if (typeof op.insert === 'string') {
@@ -68,7 +68,7 @@ export function fromDelta(ops: DeltaDocOp[]): Block[] {
   return blocks;
 }
 
-function getBlocks(op: DeltaDocOp, contents: DeltaDocOp[]): Block[] {
+function getBlocks(op: DeltaDocOp, contents?: DeltaDocOp[]): Block[] {
   const blocks: Block[] = [];
   blocks.push(getBlock(op.attributes, contents));
 
@@ -84,7 +84,7 @@ function getBlock(attributes?: Attributes, contents: DeltaDocOp[] = []): Block {
   else return { contents }
 }
 
-function getContent(insert: string | Embed, attributes: Attributes): DeltaDocOp {
+function getContent(insert: string | Embed, attributes?: Attributes): DeltaDocOp {
   if (attributes) return { insert, attributes };
   else return { insert };
 }

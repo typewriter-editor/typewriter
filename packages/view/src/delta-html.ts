@@ -1,5 +1,6 @@
 import { deltaFromDom } from './delta-dom';
 import { Paper } from './paper';
+import { Delta } from '@typewriter/editor';
 
 
 // export function deltaToHTML(delta, paper) {
@@ -9,7 +10,7 @@ import { Paper } from './paper';
 /**
  * Converts an HTML string into a delta object based off of the supplied Paper definition.
  */
-export function deltaFromHTML(paper: Paper, html: string) {
+export function deltaFromHTML(paper: Paper, html: string): Delta {
   const template = document.createElement('template');
   template.innerHTML = '<div>' + html + '</div>';
   return deltaFromDom(template.content.firstChild as Element, paper, { notInDom: true });

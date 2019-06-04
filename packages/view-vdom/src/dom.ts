@@ -1,7 +1,7 @@
-import { deepEqual, Delta } from '@typewriter/editor';
-import { Paper } from '@typewriter/view';
+import { deepEqual, Delta, AttributeMap } from '@typewriter/editor';
+import { Paper, Type } from '@typewriter/view';
 import { escapeHtml } from './escape-html';
-import { h } from './vdom';
+import { h, VDomNode, VDomChild } from './vdom';
 import { getComponent } from './components';
 
 const nodeMarks = new WeakMap();
@@ -11,22 +11,23 @@ const VOID_ELEMENTS = {
   link: true, meta: true, param: true, source: true, track: true, wbr: true
 };
 
+type BlockData = [Type, VDomChild[], AttributeMap];
 
 export function deltaToVdom(delta: Delta, paper: Paper) {
   const { blocks, marks, embeds } = paper;
-  const blockData = [];
+  const blockData: BlockData[] = [];
 
-  delta.eachLine(({ ops, attributes }) => {
-    let inlineChildren = [];
+  delta.eachLine((line: Delta, attributes: AttributeMap) => {
+    let inlineChildren: VDomChild[] = [];
 
     // Collect block children
-    ops.forEach((op, i, array) => {
+    line.ops.forEach((op, i, array) => {
       if (op.insert) {
-        let children = [];
+        let children: VDomChild[] = [];
         if (typeof op.insert === 'string') {
           const prev = array[i - 1];
           const next = array[i + 1];
-          let text = op.insert.replace(/  /g, '\xA0 ');
+          let text: string = op.insert.replace(/  /g, '\xA0 ');
           if (!prev) text = text.replace(/^ /, '\xA0');
           if (!next || (typeof next.insert === 'string' && next.insert[0] === ' ')) text = text.replace(/ $/, '\xA0');
           children.push(text);
@@ -58,7 +59,7 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
     // Merge marks to optimize
     inlineChildren = mergeChildren(inlineChildren);
     const lastChild = inlineChildren[inlineChildren.length - 1];
-    if (!inlineChildren.length || (lastChild && (lastChild.name === 'br' || (inlineChildren.length === 1 && isDecoratorEmbed(lastChild))))) {
+    if (!inlineChildren.length || (lastChild && ((lastChild as VDomNode).name === 'br' || (inlineChildren.length === 1 && isDecoratorEmbed(lastChild))))) {
       inlineChildren.push(BR);
     }
 
@@ -69,8 +70,8 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
   });
 
   // If a block has optimize=true on it, vdom will be called with all sibling nodes of the same block
-  let blockChildren = [], prevBlock;
-  let collect = [];
+  let blockChildren: VDomChild[] = [], prevBlock;
+  let collect: [AttributeMap, VDomChild[]][] = [];
   blockData.forEach((data, i) => {
     const [ block, children, attr ] = data;
     const component = getComponent(block.name);
@@ -83,7 +84,7 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
         collect = [];
       }
     } else if (component) {
-      const node = component(attr, children);
+      const node = component(attr, children) as VDomChild;
       blockChildren.push(node);
     }
   });
@@ -102,7 +103,7 @@ export function deltaToHTML(delta, paper: Paper) {
 
 // Joins adjacent mark nodes
 function mergeChildren(oldChildren) {
-  const children = [];
+  const children: VDomChild[] = [];
   oldChildren.forEach((next, i) => {
     const prev = children[children.length - 1];
 
@@ -112,8 +113,17 @@ function mergeChildren(oldChildren) {
       prev.children = prev.children.concat(next.children);
     } else {
       children.push(next);
+      if (prev && typeof prev !== 'string' && prev.children) {
+        prev.children = mergeChildren(prev.children);
+      }
     }
   });
+  if (children.length) {
+    const last = children[children.length - 1];
+    if (last && typeof last !== 'string' && last.children) {
+      last.children = mergeChildren(last.children);
+    }
+  }
   return children;
 }
 

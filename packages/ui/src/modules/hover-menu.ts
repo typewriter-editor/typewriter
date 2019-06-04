@@ -6,12 +6,12 @@ import HoverMenu from '../ui/HoverMenu.svelte';
 export function hoverMenu() {
 
   return function(editor: Editor, root: HTMLElement, paper: Paper) {
-    let menu = null, mousedown = false;
+    let menu: any = null, mousedown = false;
 
     function show(range = editor.selection) {
       if (!menu) {
         menu = new HoverMenu({
-          target: root.parentNode,
+          target: root.parentNode as HTMLElement,
           props: { editor, root, paper, range },
         });
         if (menu.items.length) {
@@ -45,7 +45,7 @@ export function hoverMenu() {
     }
 
     function onMouseDown() {
-      root.ownerDocument.addEventListener('mouseup', onMouseUp);
+      root.ownerDocument && root.ownerDocument.addEventListener('mouseup', onMouseUp);
       mousedown = true;
     }
 
@@ -63,7 +63,7 @@ export function hoverMenu() {
       onDestroy() {
         editor.off('editor-change', onEditorChange);
         root.removeEventListener('mousedown', onMouseDown);
-        root.ownerDocument.removeEventListener('mouseup', onMouseUp);
+        root.ownerDocument && root.ownerDocument.removeEventListener('mouseup', onMouseUp);
         hide();
       }
     }

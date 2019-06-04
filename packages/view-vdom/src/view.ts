@@ -58,7 +58,7 @@ export default class View extends EventDispatcher {
   modules: { [name: string]: any };
   options: any;
   enabled: boolean;
-  private lastSelection: EditorRange;
+  private lastSelection?: EditorRange;
   private _settingEditorSelection: boolean;
   private _settingBrowserSelection: boolean;
 
@@ -79,7 +79,9 @@ export default class View extends EventDispatcher {
     this.root = options.root || document.createElement('div');
     if (!options.root) this.root.className = 'typewriter-editor';
     this.paper = paper;
+    this.enabled = true;
     this.enable();
+    this.lastSelection = undefined;
     this._settingEditorSelection = false;
     this._settingBrowserSelection = false;
     this.modules = {};
@@ -92,7 +94,7 @@ export default class View extends EventDispatcher {
   }
 
   getBrowserSelection() {
-    return this.doc.getSelection();
+    return this.doc && this.doc.getSelection();
   }
 
   /**
@@ -102,7 +104,7 @@ export default class View extends EventDispatcher {
    */
   hasFocus(): boolean {
     const selection = this.getBrowserSelection();
-    return selection && selection.anchorNode && this.root.contains(selection.anchorNode);
+    return !!(selection && selection.anchorNode && this.root.contains(selection.anchorNode));
   }
 
   /**
@@ -146,8 +148,9 @@ export default class View extends EventDispatcher {
    * @param {Number} to   The end of the range
    * @returns {DOMRect}   A native DOMRect object with the bounds of the range
    */
-  getBounds(range: EditorRange): ClientRect | DOMRect {
+  getBounds(range: EditorRange | null): ClientRect | DOMRect | null {
     range = this.editor.getSelectedRange(range);
+    if (!range) return null;
     return getBounds(this.root, this.paper, range);
   }
 
@@ -161,8 +164,9 @@ export default class View extends EventDispatcher {
    * @param {Number} to   The end of the range
    * @returns {DOMRectList}   A native DOMRect object with the bounds of the range
    */
-  getAllBounds(range: EditorRange): ClientRectList | DOMRectList {
+  getAllBounds(range: EditorRange | null): ClientRectList | DOMRectList | null {
     range = this.editor.getSelectedRange(range);
+    if (!range) return null;
     return getAllBounds(this.root, this.paper, range);
   }
 
@@ -205,7 +209,7 @@ export default class View extends EventDispatcher {
   updateBrowserSelection() {
     if (this._settingEditorSelection) return;
     this._settingBrowserSelection = true;
-    this.setSelection(this.editor.selection);
+    this.editor.selection && this.setSelection(this.editor.selection);
     setTimeout(() => this._settingBrowserSelection = false, 20); // sad hack :(
   }
 
@@ -256,7 +260,9 @@ export default class View extends EventDispatcher {
   init() {
     // already inited
     let renderQueued = false;
-    if (this.hasOwnProperty('uninit')) return;
+    if (this.hasOwnProperty('uninit') || !this.doc) return;
+
+    const doc = this.doc;
 
     const onSelectionChange = () => {
       this.updateEditorSelection(SOURCE_USER);
@@ -273,7 +279,7 @@ export default class View extends EventDispatcher {
 
     const rerender = () => this.render();
 
-    this.doc.addEventListener('selectionchange', onSelectionChange);
+    doc.addEventListener('selectionchange', onSelectionChange);
     this.editor.on('editor-change', onEditorChange);
     this.editor.on('render', rerender);
 
@@ -284,7 +290,7 @@ export default class View extends EventDispatcher {
     this.render();
 
     this.uninit = () => {
-      this.doc.removeEventListener('selectionchange', onSelectionChange);
+      doc.removeEventListener('selectionchange', onSelectionChange);
       this.editor.off('editor-change', onEditorChange);
       this.editor.off('render', rerender);
       Object.keys(this.modules).forEach(key => {

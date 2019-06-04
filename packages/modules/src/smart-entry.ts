@@ -43,6 +43,8 @@ export function blockReplace(editor: Editor, index: number, prefix: string) {
       const end = index - prefix.length;
       editor.updateContents(change, SOURCE_USER, [ end, end ]);
       return true;
+    } else {
+      return false;
     }
   });
 }
@@ -51,8 +53,10 @@ export function textReplace(editor: Editor, index: number, prefix: string) {
   return textReplacements.some(([ regexp, replaceWith ]) => {
     const match = prefix.match(regexp);
     if (match) {
-      editor.insertText([ index - match[0].length, index ], replaceWith(match[1]), null, SOURCE_USER);
+      editor.insertText([ index - match[0].length, index ], replaceWith(match[1]), undefined, SOURCE_USER);
       return true;
+    } else {
+      return false;
     }
   });
 }
@@ -107,7 +111,7 @@ const DIGIT_VALUES = {
   M: 1000
 };
 
-function fromRomanNumeral(romanNumeral: string): number {
+function fromRomanNumeral(romanNumeral: string): number | undefined {
   romanNumeral = romanNumeral.toUpperCase();
   let result = 0;
   for (let i = 0; i < romanNumeral.length; i++) {

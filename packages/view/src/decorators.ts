@@ -1,4 +1,4 @@
-import { Delta, Embed } from '@typewriter/editor';
+import { Delta, getLines } from '@typewriter/editor';
 
 export function decorate(root: HTMLElement, contents: Delta) {
   const decorators = new Decorators(contents);
@@ -7,7 +7,7 @@ export function decorate(root: HTMLElement, contents: Delta) {
 
   if (change.ops.length) {
     change.forEach(op => {
-      if (op.delete || (op.retain && op.attributes && !op.attributes.decorator) || (op.insert && !(op.insert as Embed).decorator)) {
+      if (op.delete || (op.retain && op.attributes && !op.attributes.decorator) || (op.insert && !(op.insert as any).decorator)) {
         throw new Error('Decorators may not insert text or delete contents.');
       }
     });
@@ -19,7 +19,7 @@ export function decorate(root: HTMLElement, contents: Delta) {
 
 class Decorators {
   public contents: Delta;
-  private change: Delta;
+  private change?: Delta;
   private delta: Delta;
   private position: number;
 
@@ -44,7 +44,7 @@ class Decorators {
   }
 
   line(at: number, attributes: { [name: string]: any }) {
-    const line = this.contents.getLines(at, at)[0];
+    const line = getLines(this.contents, at, at)[0];
     if (!line) return;
     this.updatePosition(line.end - 1);
     this.delta.retain(1, { decorator: attributes });
@@ -56,6 +56,10 @@ class Decorators {
   }
 
   private updatePosition(from: number, to?: number): any {
+    if (from == null || isNaN(from) || (to != null && isNaN(to))) {
+      throw new Error('Decorators must have valid indexes');
+    }
+
     if (this.change) {
       from = this.change.transformPosition(from);
       if (to != null) to = this.change.transformPosition(to);

@@ -1,4 +1,4 @@
-export { Paper } from './paper';
+export { Paper, Type, TypeMap, PaperTypes } from './paper';
 export { deltaFromDom } from './delta-dom';
 export { isBRPlaceholder } from './br';
 export { deltaFromHTML } from './delta-html';

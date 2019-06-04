@@ -6,6 +6,8 @@
   "author": "Jacob Wright <jacwright@gmail.com>",
   "license": "MIT",
   "main": "lib/index.js",
+  "module": "lib/index.esm.js",
+  "types": "lib/types/index.d.ts",
   "directories": {
     "lib": "lib",
     "test": "test"
@@ -21,8 +23,8 @@
     "url": "git+https://github.com/typewriter-editor/typewriter.git"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc -w",
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "bugs": {

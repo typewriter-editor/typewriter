@@ -10,8 +10,10 @@ interface ModifiedHTMLElement extends HTMLElement {
 export interface VDomNode {
   name: string;
   attributes: VDomAttributes;
-  children: VDomNode[];
+  children: VDomChild[];
 }
+
+export type VDomChild = VDomNode | string;
 
 export function h(name: string | Function, attributes?: VDomAttributes, ...rest: any[]): VDomNode {
   const children: VDomNode[] = [];
@@ -43,7 +45,7 @@ export function render(node: VDomNode, element: HTMLElement) {
   return element;
 }
 
-export function renderChildren(children: VDomNode[], element: HTMLElement) {
+export function renderChildren(children: VDomChild[], element: HTMLElement) {
   patchChildren(element, children);
 }
 
@@ -87,7 +89,7 @@ function updateAttribute(element: ModifiedHTMLElement, name: string, value: any,
   }
 }
 
-function createElement(node: VDomNode, isSvg?: boolean): HTMLElement {
+function createElement(node: VDomChild, isSvg?: boolean): HTMLElement {
   const element =
     typeof node === "string" || typeof node === "number"
       ? document.createTextNode(node)
@@ -98,10 +100,11 @@ function createElement(node: VDomNode, isSvg?: boolean): HTMLElement {
           )
         : document.createElement(node.name);
 
-  const attributes = node.attributes;
+  const vNode: VDomNode = node as VDomNode;
+  const attributes = vNode.attributes;
   if (attributes) {
-    for (let i = 0; i < node.children.length; i++) {
-      element.appendChild(createElement(node.children[i], isSvg));
+    for (let i = 0; i < vNode.children.length; i++) {
+      element.appendChild(createElement(vNode.children[i], isSvg));
     }
 
     for (let name in attributes) {
@@ -148,11 +151,11 @@ function removeElement(parent: HTMLElement, element: Node) {
   parent.removeChild(element);
 }
 
-function patchChildren(element: HTMLElement, children: VDomNode[], isSvg?: boolean) {
+function patchChildren(element: HTMLElement, children: VDomChild[], isSvg?: boolean) {
   let i = 0;
 
   while (i < children.length) {
-    patch(element, element.childNodes[i] as HTMLElement, children[i], isSvg);
+    patch(element, element.childNodes[i] as HTMLElement, children[i] as VDomNode, isSvg);
     i++;
   }
 
@@ -161,7 +164,7 @@ function patchChildren(element: HTMLElement, children: VDomNode[], isSvg?: boole
   }
 }
 
-function patch(parent: HTMLElement, element: HTMLElement, node: VDomNode, isSvg?: boolean) {
+function patch(parent: HTMLElement | null, element: HTMLElement | null, node: VDomNode, isSvg?: boolean) {
   const name = element && element.nodeName !== '#text' ? element.nodeName.toLowerCase() : undefined;
   if (element == null || name !== node.name) {
     const newElement = createElement(node, isSvg);

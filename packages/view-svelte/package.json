@@ -13,6 +13,7 @@
   "license": "MIT",
   "main": "lib/index.js",
   "module": "lib/index.esm.js",
+  "types": "lib/types/index.d.ts",
   "directories": {
     "lib": "lib",
     "test": "test"

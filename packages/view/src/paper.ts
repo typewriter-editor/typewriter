@@ -1,5 +1,5 @@
 // A basic DOM type used in Typewriter views, either a block, mark, or embed
-interface Type {
+export interface Type {
   // Type name
   name: string;
 
@@ -9,18 +9,18 @@ interface Type {
   // A selector which matches this Type when found in a style (e.g. '[style*="italic"]')
   styleSelector?: string;
 
-  // Returns the attributes object for the Delta given a matching DOM node
-  fromDom?: Function;
+  // Returns the attributes object for the Delta given a matching DOM node, if false indicate should be ignored
+  fromDom?: Function | false;
 
   // Different views will have different requirements on the data they need to render each type
   [other: string]: any;
 }
 
-interface TypeMap {
+export interface TypeMap {
   [name: string]: Type;
 }
 
-interface PaperTypes {
+export interface PaperTypes {
   blocks?: Type[];
   marks?: Type[];
   embeds?: Type[];
@@ -159,7 +159,7 @@ class Types {
   // Find the first type by priority that matches this attributes object. Can return the default for no match.
   findByAttributes(attributes: object, fallbackToDefault = false) {
     const keys = attributes && Object.keys(attributes);
-    let type: Type;
+    let type: Type | undefined;
     keys && keys.every(name => !(type = this.get(name)));
     return type || (fallbackToDefault ? this.getDefault() : undefined);
   }

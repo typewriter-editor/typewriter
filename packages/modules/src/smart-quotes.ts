@@ -20,6 +20,7 @@ export default function smartQuotes() {
 
       const index = editor.selection[1];
       const lastOp = change.ops[change.ops.length - 1];
+      if (typeof lastOp.insert !== 'string') return;
       const lastChars = editor.getText([ index - 1, index ]) + lastOp.insert.slice(-1);
 
       const replaced = lastChars.replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, '“')
@@ -46,7 +47,7 @@ export default function smartQuotes() {
 }
 
 function isTextEntry(change: Delta): boolean {
-  return (
+  return !!(
     change.ops.length === 1 ||
     (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)
   ) &&

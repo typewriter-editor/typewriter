@@ -20,9 +20,9 @@ export default function keyShortcuts(customShortcuts = {}) {
   return (editor: Editor, root: HTMLElement) => {
     const shortcuts = { ...keymap, ...customShortcuts };
 
-    function onShortcut(event: CustomEvent) {
+    function onShortcut(event: Event) {
       if (event.defaultPrevented) return;
-      const shortcut = event.detail;
+      const shortcut = (event as CustomEvent).detail;
       if (shortcut in shortcuts) {
         event.preventDefault();
         shortcuts[shortcut](editor);

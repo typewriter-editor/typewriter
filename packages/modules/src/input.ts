@@ -1,4 +1,4 @@
-import { Editor, EditorRange, Delta, diff, Line, SOURCE_USER, DIFF_EQUAL, DIFF_INSERT, DIFF_DELETE } from '@typewriter/editor';
+import { Editor, EditorRange, Delta, diff, getLines, getLine, Line, SOURCE_USER } from '@typewriter/editor';
 import { Paper, getSelection, deltaFromDom, getNodeIndex, getNodeAndOffset } from '@typewriter/view';
 
 const mutationOptions = {
@@ -39,18 +39,18 @@ export default function input(options: InputOptions = {}) {
     }
 
     // Undo a DOM mutation so that the view can update it correctly if needed
-    function getTextChange(list: MutationRecord[]): Delta {
+    function getTextChange(list: MutationRecord[]): Delta | null {
       const mutation = getTextChangeMutation(list);
-      if (!mutation) return;
+      if (!mutation || mutation.oldValue == null || mutation.target.nodeValue == null) return null;
 
       const change = editor.delta();
       const index = getNodeIndex(root, paper, mutation.target);
       change.retain(index);
       const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
       diffs.forEach(([ action, string ]) => {
-        if (action === DIFF_EQUAL) change.retain(string.length);
-        else if (action === DIFF_DELETE) change.delete(string.length);
-        else if (action === DIFF_INSERT) {
+        if (action === diff.EQUAL) change.retain(string.length);
+        else if (action === diff.DELETE) change.delete(string.length);
+        else if (action === diff.INSERT) {
           change.insert(string, editor.activeFormats);
         }
       });
@@ -64,9 +64,35 @@ export default function input(options: InputOptions = {}) {
       list.reverse().forEach(mutation => {
         mutation.addedNodes.forEach((node: Element) => node.remove());
         mutation.removedNodes.forEach(node => mutation.target.insertBefore(node, mutation.nextSibling));
-        if (!exceptText && mutation.type === 'characterData') (mutation.target as Text).data = mutation.oldValue;
+        if (!exceptText && mutation.type === 'characterData' && mutation.target) {
+          (mutation.target as Text).nodeValue = mutation.oldValue;
+        }
       });
       observer.observe(root, mutationOptions);
+    }
+
+
+    function onPaste(event: ClipboardEvent) {
+      event.preventDefault();
+      const dataTransfer = event.clipboardData;
+      if (!dataTransfer || !editor.selection) return;
+      const html = dataTransfer.getData('text/html');
+
+      if (!html) {
+        const text = dataTransfer.getData('text/plain');
+        if (text) {
+          editor.insertText(editor.selection, text);
+        }
+      } else {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html' );
+        const delta = deltaFromDom(doc.body, paper);
+        const lastOp = delta.ops[delta.ops.length - 1];
+        if (lastOp && typeof lastOp.insert === 'string') {
+          lastOp.insert = lastOp.insert.replace(/\n$/, '');
+        }
+        editor.insertContent(editor.selection, delta);
+      }
     }
 
 
@@ -74,11 +100,12 @@ export default function input(options: InputOptions = {}) {
       if (event.defaultPrevented) return;
       event.preventDefault();
       const range = editor.getSelectedRange();
+      if (!range) return;
       const isCollapsed = range[0] === range[1];
 
-      const line = editor.contents.getLine(range[0]);
+      const line = getLine(editor.contents, range[0]);
       let attributes = line.attributes;
-      const block = paper.blocks.findByAttributes(attributes, true);
+      const block = paper.blocks.findByAttributes(attributes) || paper.blocks.getDefault();
       const isDefault = block === paper.blocks.getDefault();
       const length = line.end - line.start - 1;
       const atEnd = range[1] === line.end - 1;
@@ -105,7 +132,8 @@ export default function input(options: InputOptions = {}) {
       event.preventDefault();
       if (!paper.embeds.get('br')) return;
       const range = editor.getSelectedRange();
-      editor.insertEmbed(range, 'br', true, null, SOURCE_USER);
+      if (!range) return;
+      editor.insertEmbed(range, 'br', true, undefined, SOURCE_USER);
     }
 
 
@@ -114,9 +142,11 @@ export default function input(options: InputOptions = {}) {
       event.preventDefault();
 
       const range = editor.getSelectedRange();
+      if (!range) return;
 
       function flattenBlock(line: Line, force?: boolean) {
-        const block = paper.blocks.findByAttributes(line.attributes, true);
+        if (!range) return;
+        const block = paper.blocks.findByAttributes(line.attributes) || paper.blocks.getDefault();
         if (block.indentable && line.attributes.indent) {
           onTab(new CustomEvent('shortcut', { detail: 'Shift+Tab' }));
           return true;
@@ -128,12 +158,12 @@ export default function input(options: InputOptions = {}) {
       }
 
       if (range[0] + range[1] === 0) {
-        const line = editor.contents.getLine(range[0]);
+        const line = getLine(editor.contents, range[0]);
         if (flattenBlock(line, true)) return true;
       } else {
         // The "from" block needs to stay the same. The "to" block gets merged into it
         if (range[0] === range[1]) {
-          const line = editor.contents.getLine(range[0]);
+          const line = getLine(editor.contents, range[0]);
           if (range[0] === line.start && flattenBlock(line)) {
             return;
           }
@@ -150,6 +180,7 @@ export default function input(options: InputOptions = {}) {
       event.preventDefault();
 
       const range = editor.getSelectedRange();
+      if (!range) return;
       const isCollapsed = range[0] === range[1];
       if (isCollapsed && range[0] >= editor.length - 1) return;
 
@@ -166,12 +197,14 @@ export default function input(options: InputOptions = {}) {
       const shortcut = event.detail;
 
       const direction = shortcut === 'Tab' || shortcut === 'Mod+]' ? 1 : -1;
-      const [ from, to ] = editor.getSelectedRange();
-      const lines: Line[] = editor.contents.getLines(from, to);
+      const range = editor.getSelectedRange();
+      if (!range) return;
+      const [ from, to ] = range;
+      const lines: Line[] = getLines(editor.contents, from, to);
 
       editor.transaction(() => {
-        lines.forEach((line: Line) => {
-          const block = paper.blocks.findByAttributes(line.attributes, true);
+        lines.forEach(line => {
+          const block = paper.blocks.findByAttributes(line.attributes) || paper.blocks.getDefault();
           if (block.indentable) {
             const indent = (line.attributes.indent || 0) + direction;
             const range: EditorRange = [ line.start, line.start ];
@@ -203,6 +236,7 @@ export default function input(options: InputOptions = {}) {
 
     root.addEventListener('rendering', onRendering);
     root.addEventListener('render', onRender);
+    root.addEventListener('paste', onPaste);
     root.addEventListener('shortcut:Enter', onEnter);
     root.addEventListener('shortcut:Shift+Enter', onShiftEnter);
     root.addEventListener('shortcut:Backspace', onBackspace);
@@ -217,6 +251,7 @@ export default function input(options: InputOptions = {}) {
         observer.disconnect();
         root.removeEventListener('rendering', onRendering);
         root.removeEventListener('render', onRender);
+        root.removeEventListener('paste', onPaste);
         root.removeEventListener('shortcut:Enter', onEnter);
         root.removeEventListener('shortcut:Shift+Enter', onShiftEnter);
         root.removeEventListener('shortcut:Backspace', onBackspace);
@@ -232,12 +267,26 @@ export default function input(options: InputOptions = {}) {
 
 
 function getTextChangeMutation(list: MutationRecord[]) {
+  // Shrink the list down to one entry per text node
+  const textNodes = new Set();
+  list = list.filter(record => {
+    if (record.type !== 'characterData') return true;
+    if (textNodes.has(record.target)) return false;
+    textNodes.add(record.target);
+    return true;
+  });
+
   if (list.length > 3) return null;
-  const last = list[list.length - 1];
-  if (last.type !== 'characterData') return null;
-  if (list.length < 3) return list[0].type === 'characterData' ? list[0] : last;
-  const [ textAdd, brRemove ] = list;
-  if (textAdd.addedNodes[0] !== last.target) return null;
-  if (!brRemove.removedNodes.length || brRemove.removedNodes[0].nodeName !== 'BR') return null;
-  return last;
+
+  const text = list.find(record => record.type === 'characterData');
+  if (!text) return null;
+  const textAdd = list.find(record => record.addedNodes.length === 1 && record.addedNodes[0].nodeName === '#text');
+  const brAddRemove = list.find(record => {
+    return (record.addedNodes.length === 1 && record.addedNodes[0].nodeName === 'BR') ||
+           (record.removedNodes.length === 1 && record.removedNodes[0].nodeName === 'BR');
+  });
+  const count = 1 + (textAdd ? 1 : 0) + (brAddRemove ? 1 : 0);
+  if (count < list.length) return null;
+  if (textAdd && textAdd.addedNodes[0] !== text.target) return null;
+  return text;
 }

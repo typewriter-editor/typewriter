@@ -7,7 +7,7 @@ export const header = (attr, children) => h(`h${attr.header}`, attr.decorator, c
 
 export const list = lists => {
   const topLevelChildren = [];
-  const levels = [];
+  const levels: VDomNode[] = [];
   // e.g. levels = [ul, ul]
 
   lists.forEach(([attr, children]) => {
@@ -19,7 +19,7 @@ export const list = lists => {
       const newLevel = h(name, { start: attr.start, type: attr.type });
       const childrenArray = levels.length ? levels[levels.length - 1].children : topLevelChildren;
       const lastChild = childrenArray[childrenArray.length - 1];
-      if (lastChild && lastChild.name === 'li') {
+      if (typeof lastChild === 'object' && lastChild.name === 'li') {
         lastChild.children.push(newLevel);
       } else {
         childrenArray.push(newLevel);
@@ -42,9 +42,9 @@ export const list = lists => {
   return topLevelChildren;
 };
 
-export const blockquote = quotes => h('blockquote', null, quotes.map(([attr, children]) => h('p', attr.decorator, children)));
+export const blockquote = quotes => h('blockquote', undefined, quotes.map(([attr, children]) => h('p', attr.decorator, children)));
 
-export const codeblock = lines => h('pre', null, lines.map(([attr, children]) => [children, '\n']));
+export const codeblock = lines => h('pre', undefined, lines.map(([attr, children]) => [children, '\n']));
 
 export const hr = () => h('hr');
 

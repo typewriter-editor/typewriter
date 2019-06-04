@@ -2,10 +2,6 @@ import { Editor, Delta, EditorRange } from '@typewriter/editor';
 
 const SOURCE_USER = 'user';
 const SOURCE_SILENT = 'silent';
-const defaultOptions = {
-  delay: 0,
-  maxStack: 500,
-};
 
 interface StackEntry {
   redo: Delta;
@@ -41,15 +37,9 @@ interface Options {
  * };
  * ```
  */
-export default function history(options: Options = {}) {
+export default function history({ maxStack = 500, delay = 0, stack = newStack() }: Options = {}) {
 
   return function(editor: Editor, root: HTMLElement) {
-    options = { ...defaultOptions, ...options };
-
-    const stack = options.stack || {
-      undo: [],
-      redo: [],
-    };
     let lastRecorded = 0;
     let lastAction = '';
     let ignoreChange = false;
@@ -87,22 +77,24 @@ export default function history(options: Options = {}) {
       ignoreChange = false;
     }
 
-    function record(change: Delta, contents: Delta, oldContents: Delta, selection: EditorRange, oldSelection: EditorRange) {
+    function record(change: Delta, oldContents: Delta, selection: EditorRange, oldSelection: EditorRange) {
       const timestamp = Date.now();
       const action = getAction(change);
       stack.redo.length = 0;
 
-      let undoChange = contents.diff(oldContents);
+      let undoChange = change.invert(oldContents);
       // Break combining if actions are different (e.g. a delete then an insert should break it)
       if (!action || lastAction !== action) cutoff();
       lastAction = action;
 
-      if (lastRecorded && (!options.delay || lastRecorded + options.delay > timestamp) && stack.undo.length > 0) {
+      if (lastRecorded && (!delay || lastRecorded + delay > timestamp) && stack.undo.length > 0) {
         // Combine with the last change
         const entry = stack.undo.pop();
-        oldSelection = entry.undoSelection;
-        undoChange = undoChange.compose(entry.undo);
-        change = entry.redo.compose(change);
+        if (entry) {
+          oldSelection = entry.undoSelection;
+          undoChange = undoChange.compose(entry.undo);
+          change = entry.redo.compose(change);
+        }
       } else {
         lastRecorded = timestamp;
       }
@@ -114,7 +106,7 @@ export default function history(options: Options = {}) {
         undoSelection: oldSelection,
       });
 
-      if (stack.undo.length > options.maxStack) {
+      if (stack.undo.length > maxStack) {
         stack.undo.shift();
       }
     }
@@ -132,10 +124,10 @@ export default function history(options: Options = {}) {
     }
 
 
-    function onTextChange({ change, contents, oldContents, selection, oldSelection, source }) {
+    function onTextChange({ change, oldContents, selection, oldSelection, source }) {
       if (ignoreChange) return;
       if (source === SOURCE_USER) {
-        record(change, contents, oldContents, selection, oldSelection);
+        record(change, oldContents, selection, oldSelection);
       } else if (source !== SOURCE_SILENT) {
         transform(change);
       }
@@ -158,7 +150,6 @@ export default function history(options: Options = {}) {
       undo,
       redo,
       cutoff,
-      options,
       clear,
       onDestroy() {
         editor.off('text-change', onTextChange);
@@ -169,6 +160,13 @@ export default function history(options: Options = {}) {
       }
     }
   }
+}
+
+function newStack(): Stack {
+  return {
+    undo: [],
+    redo: [],
+  };
 }
 
 function getAction(change) {
