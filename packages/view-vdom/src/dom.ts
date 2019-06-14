@@ -59,7 +59,7 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
     // Merge marks to optimize
     inlineChildren = mergeChildren(inlineChildren);
     const lastChild = inlineChildren[inlineChildren.length - 1];
-    if (!inlineChildren.length || (lastChild && ((lastChild as VDomNode).name === 'br' || (inlineChildren.length === 1 && isDecoratorEmbed(lastChild))))) {
+    if (!inlineChildren.length || (lastChild && (lastChild as VDomNode).name === 'br')) {
       inlineChildren.push(BR);
     }
 
@@ -141,8 +141,4 @@ function nodeToHTML(node) {
 function childrenToHTML(children) {
   if (!children || !children.length) return '';
   return children.reduce((html, child) => html + (child.name ? nodeToHTML(child) : escapeHtml(child).replace(/\xA0/g, '&nbsp;')), '');
-}
-
-function isDecoratorEmbed(node) {
-  return node.name === 'span' && node.attributes.class && node.attributes.class.indexOf('decorator') > -1;
 }
