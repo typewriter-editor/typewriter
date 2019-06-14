@@ -88,7 +88,7 @@ export default function input(options: InputOptions = {}) {
         const doc = parser.parseFromString(html, 'text/html' );
         const delta = deltaFromDom(doc.body, paper);
         const lastOp = delta.ops[delta.ops.length - 1];
-        if (lastOp && typeof lastOp.insert === 'string') {
+        if (lastOp && typeof lastOp.insert === 'string' && lastOp.insert !== '\n') {
           lastOp.insert = lastOp.insert.replace(/\n$/, '');
         }
         editor.insertContent(editor.selection, delta);
