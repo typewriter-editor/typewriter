@@ -1,4 +1,5 @@
 import { Editor, Delta } from '@typewriter/editor';
+import { Paper } from '@typewriter/view';
 const SOURCE_USER = 'user';
 
 export type Replacement = [RegExp, Function];
@@ -31,11 +32,14 @@ export const textReplacements: Replacement[] = [
 /**
  * Allow text representations to format a block
  */
-export function blockReplace(editor: Editor, index: number, prefix: string) {
+export function blockReplace(editor: Editor, index: number, prefix: string, paper: Paper) {
   return blockReplacements.some(([ regexp, getAttributes ]) => {
     const match = prefix.match(regexp);
     if (match) {
       const attributes = getAttributes(match[1]);
+      if (!paper.blocks.findByAttributes(attributes)) {
+        return false;
+      }
       const change = editor.getChange(() => {
         editor.formatLine([ index, index ], attributes);
         editor.deleteText([ index - prefix.length, index ]);
@@ -66,7 +70,7 @@ export const defaultHandlers = [ blockReplace, textReplace ];
 
 export default function(handlers = defaultHandlers) {
 
-  return (editor: Editor) => {
+  return (editor: Editor, root: HTMLElement, paper: Paper) => {
     let ignore = false;
 
     function onTextChange({ change, source }) {
@@ -77,7 +81,7 @@ export default function(handlers = defaultHandlers) {
       const prefix = text.slice(lineStart, index);
 
       ignore = true;
-      handlers.some(handler => handler(editor, index, prefix));
+      handlers.some(handler => handler(editor, index, prefix, paper));
       ignore = false;
     }
 
