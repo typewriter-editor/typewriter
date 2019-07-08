@@ -1,9 +1,9 @@
 {
   "name": "@typewriter/demo",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "dependencies": {
     "@typewriter/editor": "^0.7.1",
-    "@typewriter/modules": "^0.7.1",
+    "@typewriter/modules": "^0.7.2",
     "@typewriter/ui": "^0.7.1",
     "@typewriter/view": "^0.7.1",
     "@typewriter/view-svelte": "^0.7.1",
