@@ -1,12 +1,15 @@
 import { Editor, EditorRange, Delta, diff, getLines, getLine, Line, SOURCE_USER } from '@typewriter/editor';
 import { Paper, getSelection, deltaFromDom, getNodeIndex, getNodeAndOffset } from '@typewriter/view';
 
-const mutationOptions = {
+const MUTATION_OPTIONS = {
   characterData: true,
   characterDataOldValue: true,
   subtree: true,
   childList: true
 };
+
+// A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
+const BAD_CHARS = /[^\x09\x0A\x0D\x20-\xFF\x85\xA0-\uD7FF\uE000-\uFDCF\uFDE0-\uFFFD]/gm;
 
 interface InputOptions {
   forceTextUpdates?: boolean;
@@ -25,6 +28,7 @@ export default function input(options: InputOptions = {}) {
       const selection = getSelection(root, paper);
 
       if (textChange) {
+        cleanText(textChange);
         const committed = !!editor.updateContents(textChange, SOURCE_USER, selection);
         undoMutation(list, !options.forceTextUpdates && committed);
         if (!committed) editor.render();
@@ -32,6 +36,7 @@ export default function input(options: InputOptions = {}) {
         // Handle everything else, pasted content, cut, spellcheck replacements
         const delta = deltaFromDom(root, paper);
         const change = editor.contents.diff(delta);
+        cleanText(change);
         undoMutation(list);
         const committed = editor.updateContents(change, SOURCE_USER, selection);
         if (!committed) editor.render();
@@ -68,7 +73,7 @@ export default function input(options: InputOptions = {}) {
           (mutation.target as Text).nodeValue = mutation.oldValue;
         }
       });
-      observer.observe(root, mutationOptions);
+      observer.observe(root, MUTATION_OPTIONS);
     }
 
 
@@ -87,6 +92,7 @@ export default function input(options: InputOptions = {}) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html' );
         const delta = deltaFromDom(doc.body, paper);
+        cleanText(delta);
         const lastOp = delta.ops[delta.ops.length - 1];
         if (lastOp && typeof lastOp.insert === 'string' && lastOp.insert !== '\n') {
           lastOp.insert = lastOp.insert.replace(/\n$/, '');
@@ -221,7 +227,7 @@ export default function input(options: InputOptions = {}) {
 
 
     const observer = new MutationObserver(onMutate);
-    observer.observe(root, mutationOptions);
+    observer.observe(root, MUTATION_OPTIONS);
 
     // Don't observe the changes that occur when the view updates, we only want to respond to changes that happen
     // outside of our API to read them back in
@@ -231,7 +237,7 @@ export default function input(options: InputOptions = {}) {
 
     // Once the view update is complete, continue observing for changes
     function onRender() {
-      observer.observe(root, mutationOptions);
+      observer.observe(root, MUTATION_OPTIONS);
     }
 
     root.addEventListener('rendering', onRendering);
@@ -289,4 +295,12 @@ function getTextChangeMutation(list: MutationRecord[]) {
   if (count < list.length) return null;
   if (textAdd && textAdd.addedNodes[0] !== text.target) return null;
   return text;
+}
+
+function cleanText(delta: Delta) {
+  delta.forEach(op => {
+    if (typeof op.insert === 'string') {
+      op.insert = op.insert.replace(BAD_CHARS, '');
+    }
+  });
 }
