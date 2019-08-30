@@ -190,7 +190,6 @@ function onHeaderClick(item) {
 </script>
 
 <style>
-  @import url(https://fonts.googleapis.com/icon?family=Material+Icons);
   .menu {
     position: absolute;
     background-image: linear-gradient(to bottom, rgba(49, 49, 47, .99), #262625);
