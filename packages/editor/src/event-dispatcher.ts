@@ -2,7 +2,7 @@ const dispatcherEvents = new WeakMap();
 
 
 export default class EventDispatcher {
-  constructor(public _catchEventErrors = false) {
+  constructor(private _catchEventErrors = false) {
 
   }
 
