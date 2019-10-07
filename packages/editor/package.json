@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/editor",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "The core editor for typewriter. Manages the data model and updates. Can be run headless.",
   "keywords": [
     "typewriter",
