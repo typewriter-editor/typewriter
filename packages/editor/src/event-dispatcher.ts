@@ -2,6 +2,9 @@ const dispatcherEvents = new WeakMap();
 
 
 export default class EventDispatcher {
+  constructor(public _catchEventErrors = false) {
+
+  }
 
   on(type: string, listener: Function) {
     getEventListeners(this, type, true).add(listener);
@@ -24,7 +27,15 @@ export default class EventDispatcher {
     let uncanceled = true;
     const events = getEventListeners(this, type);
     if (events) events.forEach(listener => {
-      uncanceled && listener.apply(this, args) !== false || (uncanceled = false);
+      if (this._catchEventErrors) {
+        try {
+          uncanceled && (listener.apply(this, args) !== false || (uncanceled = false));
+        } catch(err) {
+          this.fire('error', err);
+        }
+      } else {
+        uncanceled && (listener.apply(this, args) !== false || (uncanceled = false));
+      }
     });
     return uncanceled;
   }

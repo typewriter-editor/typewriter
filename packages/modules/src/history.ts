@@ -3,19 +3,19 @@ import { Editor, Delta, EditorRange } from '@typewriter/editor';
 const SOURCE_USER = 'user';
 const SOURCE_SILENT = 'silent';
 
-interface StackEntry {
+export interface StackEntry {
   redo: Delta;
   undo: Delta;
   redoSelection: EditorRange;
   undoSelection: EditorRange;
 }
 
-interface Stack {
+export interface Stack {
   undo: StackEntry[],
   redo: StackEntry[],
 }
 
-interface Options {
+export interface Options {
   delay?: number;
   maxStack?: number;
   stack?: Stack;

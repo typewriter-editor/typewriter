@@ -3,12 +3,7 @@ import { Editor } from '@typewriter/editor';
 const isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
 const modExpr = isMac ? /Cmd/ : /Ctrl/;
 
-export function shortcuts(options) {
-  if (!options) {
-    options = {
-      bubbles: false,
-    };
-  }
+export function shortcuts(options?: {bubbles?: boolean}) {
 
   return function(editor: Editor, root: HTMLElement) {
 
@@ -21,7 +16,7 @@ export function shortcuts(options) {
       var init = {
         detail: shortcut,
         cancelable: true,
-        bubbles: options.bubbles
+        bubbles: options && options.bubbles
       };
       var os = isMac ? 'mac' : 'win';
       var osSpecificEvent = new CustomEvent('shortcut:' + os + ':' + shortcut, init);

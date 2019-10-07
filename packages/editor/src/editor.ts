@@ -82,8 +82,8 @@ export default class Editor extends EventDispatcher {
    * @param {Object} options Options for this editor include initial `contents` and `modules`:
    * @param {Delta}  options.contents The initial contents of this editor
    */
-  constructor(options: { contents?: Delta } = {}) {
-    super();
+  constructor(options: { contents?: Delta, catchEventErrors?: boolean } = {}) {
+    super(options.catchEventErrors);
     this.contents = normalizeContents(options.contents || this.delta().insert('\n'));
     this.length = this.contents.length();
     this.selection = null;

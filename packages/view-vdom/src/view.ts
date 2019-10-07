@@ -73,7 +73,7 @@ export default class View extends EventDispatcher {
    *   @param {Object} modules     Modules which can be used with this view
    */
   constructor(editor: Editor, paper: Paper, options: any = {}) {
-    super();
+    super(options.catchEventErrors);
     if (!editor) throw new Error('Editor view requires an editor');
     this.editor = editor;
     this.root = options.root || document.createElement('div');

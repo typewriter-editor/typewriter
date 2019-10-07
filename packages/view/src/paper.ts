@@ -60,7 +60,7 @@ export class Paper {
 /**
  * A type store to hold types and make it easy to manage them.
  */
-class Types {
+export class Types {
   private paper: Paper;
 
   // A selector which will match all nodes of this type (e.g. all blocks)
