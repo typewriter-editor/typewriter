@@ -1,1 +1,21 @@
 ## Editor
+
+### Inserting content
+```
+// Insert some text to the beginning of the document:
+editor.insertText(0, 'This is the beginning');
+
+// Insert an image 
+editor.insertEmbed(0, 'image', 'https://via.placeholder.com/150');
+```
+
+### Inserting content at the selection
+```
+editor.insertEmbed(editor.selection, 'image', 'https://via.placeholder.com/150');
+```
+
+### Formatting selected lines
+```
+editor.formatLine(editor.selection, { 
+  list: 'ordered'
+});
