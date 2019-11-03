@@ -71,7 +71,7 @@ import { Editor, View, defaultViewModules } from 'typewriter-editor';
 const editor = new Editor();
 const view = new View(editor, { modules: defaultViewModules });
 
-view.mount(document.body);
+document.body.appendChild(view.root);
 ```
 
 Your editor will have no styling. You will need to add that yourself.
