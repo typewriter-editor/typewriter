@@ -300,7 +300,7 @@ function getTextChangeMutation(list: MutationRecord[]) {
 function cleanText(delta: Delta) {
   delta.forEach(op => {
     if (typeof op.insert === 'string') {
-      op.insert = op.insert.replace(BAD_CHARS, '');
+      op.insert = op.insert.replace(BAD_CHARS, '').replace(/[ \xa0]*\n[ \xa0]*/g, '\n');
     }
   });
 }
