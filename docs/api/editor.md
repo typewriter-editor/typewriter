@@ -19,3 +19,18 @@ editor.insertEmbed(editor.selection, 'image', 'https://via.placeholder.com/150')
 editor.formatLine(editor.selection, { 
   list: 'ordered'
 });
+```
+
+### Detecting text change
+```
+editor.on('text-change', (e) => {
+  console.log(e)
+});
+```
+
+### Detecting selection change
+```
+editor.on('selection-change', (e) => {
+  console.log(e)
+});
+```
