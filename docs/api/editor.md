@@ -21,6 +21,18 @@ editor.formatLine(editor.selection, {
 });
 ```
 
+### Toggling format on selected text/lines
+```
+editor.toggleTextFormat(editor.selection, { 
+  bold: true
+});
+
+editor.toggleLineFormat(editor.selection, { 
+  list: 'ordered'
+});
+
+```
+
 ### Detecting text change
 ```
 editor.on('text-change', (e) => {
