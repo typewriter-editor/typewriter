@@ -50,8 +50,8 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}): De
       // If all newlines, we can ignore
       if (node.nodeValue == null || node.nodeValue.replace(/\n+/g, '') === '') continue;
 
-      // non-breaking spaces (&nbsp;) are spaces in a delta
-      const text = node.nodeValue.replace(/\xA0/g, ' ').replace(/\n+/g, ' ');
+      // non-breaking spaces (&nbsp;) are spaces in a delta, but first collapse all whitespace to 1
+      const text = node.nodeValue.replace(/\s+/g, ' ').replace(/\xA0/g, ' ');
 
       // Word gives us end-of-paragraph nodes with a single space. Ignore them.
       if (!text || (text === ' ' && parent.classList.contains('EOP'))) continue;
