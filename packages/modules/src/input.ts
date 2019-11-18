@@ -125,8 +125,6 @@ export default function input(options: InputOptions = {}) {
         editor.formatLine(range, {}, SOURCE_USER);
       } else {
         const selection: EditorRange = [ range[0] + 1, range[0] + 1 ];
-        // Insert the newline after the current newline, not before it
-        if (atEnd && isCollapsed) range[0] = range[1] = range[0] + 1;
         editor.insertText(range, '\n', attributes, SOURCE_USER, selection);
       }
       editor.activeFormats = activeFormats;
