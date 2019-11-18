@@ -164,6 +164,7 @@ export function getNodeAndOffsetIndex(root: Element, paper: Paper, node: Node, o
   if (node.nodeType === Node.ELEMENT_NODE) {
     if (offset) {
       node = node.childNodes[offset - 1];
+      while (node.lastChild) node = node.lastChild;
       offset = node.nodeType === Node.ELEMENT_NODE ? 0 : (node.nodeValue ? node.nodeValue.length : 0);
     } else {
       offset = 1;
