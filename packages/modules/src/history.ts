@@ -52,6 +52,14 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
       action(event, 'redo', 'undo');
     }
 
+    function hasUndo() {
+      return stack.undo.length > 0;
+    }
+
+    function hasRedo() {
+      return stack.redo.length > 0;
+    }
+
     function cutoff() {
       lastRecorded = 0;
     }
@@ -147,6 +155,8 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
     root.addEventListener('shortcut:mac:Cmd+Shift+Z', redo);
 
     return {
+      hasUndo,
+      hasRedo,
       undo,
       redo,
       cutoff,
