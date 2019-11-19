@@ -44,11 +44,11 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
     let lastAction = '';
     let ignoreChange = false;
 
-    function undo(event: Event) {
+    function undo(event?: Event) {
       action(event, 'undo', 'redo');
     }
 
-    function redo(event: Event) {
+    function redo(event?: Event) {
       action(event, 'redo', 'undo');
     }
 
@@ -69,9 +69,11 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
       stack.redo.length = 0;
     }
 
-    function action(event: Event, source: string, dest: string) {
-      if (event.defaultPrevented) return;
-      event.preventDefault();
+    function action(event: Event | undefined, source: string, dest: string) {
+      if (event) {
+        if (event.defaultPrevented) return;
+        event.preventDefault();
+      }
       if (stack[source].length === 0) return;
       const entry = stack[source].pop();
       stack[dest].push(entry);
