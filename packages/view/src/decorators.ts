@@ -17,7 +17,7 @@ export function decorate(root: HTMLElement, contents: Delta) {
 }
 
 
-class Decorators {
+export class Decorators {
   public contents: Delta;
   private change?: Delta;
   private delta: Delta;
