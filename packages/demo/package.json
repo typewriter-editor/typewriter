@@ -1,13 +1,13 @@
 {
   "name": "@typewriter/demo",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "dependencies": {
     "@typewriter/editor": "^0.8.1",
     "@typewriter/modules": "^0.7.11",
     "@typewriter/ui": "^0.7.6",
     "@typewriter/view": "^0.7.5",
     "@typewriter/view-svelte": "^0.7.5",
-    "@typewriter/view-vdom": "^0.8.3"
+    "@typewriter/view-vdom": "^0.8.4"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5",
