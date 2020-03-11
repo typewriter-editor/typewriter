@@ -50,10 +50,6 @@ export const blockquote = {
     const match = className.match(/quote-(\S+)/);
     const blockquote = match && match[1] !== 'true' && match[1] || true;
     return { blockquote };
-  },
-  getNextLineAttributes(attrs) {
-    const { start, ...rest } = attrs;
-    return rest;
   }
 };
 
