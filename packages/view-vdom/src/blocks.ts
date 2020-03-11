@@ -51,7 +51,7 @@ export const blockquote = quotes => {
       container = h('blockquote', { className: `quote-${lastType}`});
       containers.push(container);
     }
-    container.attributes.push(h('p', attr.decorator, children));
+    container.children.push(h('p', attr.decorator, children));
   });
   return containers;
 }
