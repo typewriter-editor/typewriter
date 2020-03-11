@@ -45,6 +45,16 @@ export const list = {
 export const blockquote = {
   name: 'blockquote',
   selector: 'blockquote p',
+  fromDom(node: HTMLParagraphElement) {
+    const { className } = (node.parentNode as HTMLElement);
+    const match = className.match(/quote-(\S+)/);
+    const blockquote = match && match[1] !== 'true' && match[1] || true;
+    return { blockquote };
+  },
+  getNextLineAttributes(attrs) {
+    const { start, ...rest } = attrs;
+    return rest;
+  }
 };
 
 export const codeblock = {
