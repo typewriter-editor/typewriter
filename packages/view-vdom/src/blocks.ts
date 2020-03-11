@@ -42,7 +42,19 @@ export const list = lists => {
   return topLevelChildren;
 };
 
-export const blockquote = quotes => h('blockquote', undefined, quotes.map(([attr, children]) => h('p', attr.decorator, children)));
+export const blockquote = quotes => {
+  let lastType: any, container: VDomNode;
+  let containers: VDomNode[] = [];
+  quotes.forEach(([attr, children]) => {
+    if (lastType !== attr.blockquote) {
+      lastType = attr.blockquote;
+      container = h('blockquote', { className: `quote-${lastType}`});
+      containers.push(container);
+    }
+    container.attributes.push(h('p', attr.decorator, children));
+  });
+  return containers;
+}
 
 export const codeblock = lines => h('pre', undefined, lines.map(([attr, children]) => [children, '\n']));
 
