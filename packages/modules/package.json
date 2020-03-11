@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/modules",
-  "version": "0.7.11",
+  "version": "0.7.12",
   "description": "Common modules that may be used with typewriter views.",
   "keywords": [
     "typewriter",
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@typewriter/editor": "^0.8.1",
-    "@typewriter/ui": "^0.7.6",
-    "@typewriter/view": "^0.7.5"
+    "@typewriter/ui": "^0.7.7",
+    "@typewriter/view": "^0.7.6"
   }
 }
