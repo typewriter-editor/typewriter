@@ -115,17 +115,25 @@ export default function input(options: InputOptions = {}) {
       const isDefault = block === paper.blocks.getDefault();
       const length = line.end - line.start - 1;
       const atEnd = range[1] === line.end - 1;
-      if (atEnd && !isDefault && block.defaultFollows) {
-        attributes = {};
-      } else if (typeof block.getNextLineAttributes === 'function') {
-        attributes = block.getNextLineAttributes(attributes);
-      }
       const activeFormats = editor.activeFormats;
       if (!length && !isDefault && !block.defaultFollows && isCollapsed) {
+        // Convert a bullet point line into a paragraph
         editor.formatLine(range, {}, SOURCE_USER);
       } else {
         const selection: EditorRange = [ range[0] + 1, range[0] + 1 ];
-        editor.insertText(range, '\n', attributes, SOURCE_USER, selection);
+        if (atEnd && !isDefault && block.defaultFollows) {
+          editor.transaction(() => {
+            const reverse = {};
+            Object.keys(attributes).forEach(key => reverse[key] = null);
+            editor.insertText(range, '\n', attributes, SOURCE_USER, selection);
+            editor.updateContents(editor.delta().retain(selection[0]).retain(1, reverse));
+          }, SOURCE_USER);
+        } else {
+          if (typeof block.getNextLineAttributes === 'function') {
+            attributes = block.getNextLineAttributes(attributes);
+          }
+          editor.insertText(range, '\n', attributes, SOURCE_USER, selection);
+        }
       }
       editor.activeFormats = activeFormats;
     }
