@@ -1,81 +1,15 @@
-import { Editor, EditorRange, Delta, diff, getLines, getLine, Line, SOURCE_USER } from '@typewriter/editor';
-import { Paper, getSelection, deltaFromDom, getNodeIndex, getNodeAndOffset } from '@typewriter/view';
+import { Editor, EditorRange, Delta, getLines, getLine, Line, SOURCE_USER } from '@typewriter/editor';
+import { Paper, getSelection, deltaFromDom } from '@typewriter/view';
 
-const MUTATION_OPTIONS = {
-  characterData: true,
-  characterDataOldValue: true,
-  subtree: true,
-  childList: true
-};
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 const BAD_CHARS = /[^\x09\x0A\x0D\x20-\xFF\x85\xA0-\uD7FF\uE000-\uFDCF\uFDE0-\uFFFD]/gm;
 
-interface InputOptions {
-  forceTextUpdates?: boolean;
-}
-
 
 // Basic text input module. Prevent any actions other than typing characters and handle with the API.
-export default function input(options: InputOptions = {}) {
+export default function input() {
 
   return function(editor: Editor, root: HTMLElement, paper: Paper) {
-
-    // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce ´
-    function onMutate(list: MutationRecord[]) {
-      // Optimize for text changes (typing text)
-      const textChange = getTextChange(list);
-      const selection = getSelection(root, paper);
-
-      if (textChange) {
-        cleanText(textChange);
-        const committed = !!editor.updateContents(textChange, SOURCE_USER, selection);
-        undoMutation(list, !options.forceTextUpdates && committed);
-        if (!committed) editor.render();
-      } else {
-        // Handle everything else, pasted content, cut, spellcheck replacements
-        const delta = deltaFromDom(root, paper);
-        const change = editor.contents.diff(delta);
-        cleanText(change);
-        undoMutation(list);
-        const committed = editor.updateContents(change, SOURCE_USER, selection);
-        if (!committed) editor.render();
-      }
-    }
-
-    // Undo a DOM mutation so that the view can update it correctly if needed
-    function getTextChange(list: MutationRecord[]): Delta | null {
-      const mutation = getTextChangeMutation(list);
-      if (!mutation || mutation.oldValue == null || mutation.target.nodeValue == null) return null;
-
-      const change = editor.delta();
-      const index = getNodeIndex(root, paper, mutation.target);
-      change.retain(index);
-      const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
-      diffs.forEach(([ action, string ]) => {
-        if (action === diff.EQUAL) change.retain(string.length);
-        else if (action === diff.DELETE) change.delete(string.length);
-        else if (action === diff.INSERT) {
-          change.insert(string, editor.activeFormats);
-        }
-      });
-      change.chop();
-      return change;
-    }
-
-    // Undo a DOM mutation so that the view can update it correctly if needed
-    function undoMutation(list: MutationRecord[], exceptText = false) {
-      observer.disconnect();
-      list.reverse().forEach(mutation => {
-        mutation.addedNodes.forEach((node: Element) => node.remove());
-        mutation.removedNodes.forEach(node => mutation.target.insertBefore(node, mutation.nextSibling));
-        if (!exceptText && mutation.type === 'characterData' && mutation.target) {
-          (mutation.target as Text).nodeValue = mutation.oldValue;
-        }
-      });
-      observer.observe(root, MUTATION_OPTIONS);
-    }
-
 
     function onPaste(event: ClipboardEvent) {
       event.preventDefault();
@@ -231,23 +165,27 @@ export default function input(options: InputOptions = {}) {
       }, SOURCE_USER);
     }
 
-
-    const observer = new MutationObserver(onMutate);
-    observer.observe(root, MUTATION_OPTIONS);
-
-    // Don't observe the changes that occur when the view updates, we only want to respond to changes that happen
-    // outside of our API to read them back in
-    function onRendering() {
-      observer.disconnect();
+    function onInput(event) {
+      const selection = getSelection(root, paper);
+      if (event.inputType === 'insertText' && editor.selection) {
+        editor.insertText(editor.selection, event.data, undefined, SOURCE_USER, selection);
+      } else {
+        updateContents();
+      }
     }
 
-    // Once the view update is complete, continue observing for changes
-    function onRender() {
-      observer.observe(root, MUTATION_OPTIONS);
+    // Fallback to commit whatever was changed, least performant
+    function updateContents() {
+      const selection = getSelection(root, paper);
+      const delta = deltaFromDom(root, paper);
+      const change = editor.contents.diff(delta);
+      cleanText(change);
+      const committed = editor.updateContents(change, SOURCE_USER, selection);
+      if (!committed) editor.render();
     }
 
-    root.addEventListener('rendering', onRendering);
-    root.addEventListener('render', onRender);
+    root.addEventListener('input', onInput);
+
     root.addEventListener('paste', onPaste);
     root.addEventListener('shortcut:Enter', onEnter);
     root.addEventListener('shortcut:Shift+Enter', onShiftEnter);
@@ -260,9 +198,7 @@ export default function input(options: InputOptions = {}) {
 
     return {
       onDestroy() {
-        observer.disconnect();
-        root.removeEventListener('rendering', onRendering);
-        root.removeEventListener('render', onRender);
+        root.removeEventListener('input', onInput);
         root.removeEventListener('paste', onPaste);
         root.removeEventListener('shortcut:Enter', onEnter);
         root.removeEventListener('shortcut:Shift+Enter', onShiftEnter);
@@ -277,31 +213,6 @@ export default function input(options: InputOptions = {}) {
   }
 }
 
-
-function getTextChangeMutation(list: MutationRecord[]) {
-  // Shrink the list down to one entry per text node
-  const textNodes = new Set();
-  list = list.filter(record => {
-    if (record.type !== 'characterData') return true;
-    if (textNodes.has(record.target)) return false;
-    textNodes.add(record.target);
-    return true;
-  });
-
-  if (list.length > 3) return null;
-
-  const text = list.find(record => record.type === 'characterData');
-  if (!text) return null;
-  const textAdd = list.find(record => record.addedNodes.length === 1 && record.addedNodes[0].nodeName === '#text');
-  const brAddRemove = list.find(record => {
-    return (record.addedNodes.length === 1 && record.addedNodes[0].nodeName === 'BR') ||
-           (record.removedNodes.length === 1 && record.removedNodes[0].nodeName === 'BR');
-  });
-  const count = 1 + (textAdd ? 1 : 0) + (brAddRemove ? 1 : 0);
-  if (count < list.length) return null;
-  if (textAdd && textAdd.addedNodes[0] !== text.target) return null;
-  return text;
-}
 
 function cleanText(delta: Delta) {
   delta.forEach(op => {
