@@ -168,7 +168,8 @@ export default function input() {
     function onInput(event) {
       const selection = getSelection(root, paper);
       if (event.inputType === 'insertText' && editor.selection) {
-        editor.insertText(editor.selection, event.data, undefined, SOURCE_USER, selection);
+        const committed = editor.insertText(editor.selection, event.data, undefined, SOURCE_USER, selection);
+        if (!committed) editor.render();
       } else {
         updateContents();
       }
