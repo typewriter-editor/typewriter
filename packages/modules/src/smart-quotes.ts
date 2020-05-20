@@ -36,11 +36,46 @@ export default function smartQuotes() {
       }
     }
 
+    function onPaste(event: { text?: string, delta?: Delta }) {
+      let originalText = event.delta
+        ? event.delta.ops.reduce((txt, op) => txt + (typeof op.insert === 'string' ? op.insert : ' '), '')
+        : event.text || '';
+
+      const text = originalText.replace(/(^|\s)"/g, '$1“')
+        .replace(/"($|\s)/g, '”$1')
+        .replace(/"($|[\s,.!])/g, '”$1')
+        .replace(/\b'/g, '’')
+        .replace(/'\b/g, '‘');
+
+      if (event.delta) {
+        const quotes = new Delta();
+        let pos = 0;
+        for (let i = 0; i < originalText.length; i++) {
+          if (originalText[i] !== text[i]) {
+            quotes.retain(i - pos).delete(1).insert(text[i]);
+            pos = i + 1;
+          }
+        }
+        const trailingWhitespace = new Delta();
+        pos = 0;
+        text.replace(/ +\n/g, (text, offset) => {
+          trailingWhitespace.retain(offset - pos).delete(text.length - 1);
+          pos = offset + text.length;
+          return '\n';
+        });
+        event.delta = event.delta.compose(quotes).compose(trailingWhitespace);
+      } else {
+        event.text = text.replace(/ +\n/g, '\n');
+      }
+    }
+
     editor.on('text-changing', onTextChange);
+    editor.on('paste', onPaste);
 
     return {
       onDestroy() {
         editor.off('text-changing', onTextChange);
+        editor.off('paste', onPaste);
       }
     }
   }
