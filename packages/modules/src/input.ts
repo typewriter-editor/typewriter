@@ -18,19 +18,25 @@ export default function input() {
       const html = dataTransfer.getData('text/html');
 
       if (!html) {
-        const text = dataTransfer.getData('text/plain');
+        let text = dataTransfer.getData('text/plain');
+        const event = { text };
+        text && editor.fire('paste', event);
+        text = event.text;
         if (text) {
           editor.insertText(editor.selection, text);
         }
       } else {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html' );
-        const delta = deltaFromDom(doc.body, paper);
+        let delta = deltaFromDom(doc.body, paper);
         cleanText(delta);
         const lastOp = delta.ops[delta.ops.length - 1];
         if (lastOp && typeof lastOp.insert === 'string' && lastOp.insert !== '\n') {
           lastOp.insert = lastOp.insert.replace(/\n$/, '');
         }
+        const event = { delta };
+        editor.fire('paste', event);
+        delta = event.delta;
         editor.insertContent(editor.selection, delta);
       }
     }
