@@ -16,7 +16,7 @@ export function shortcuts(options?: {bubbles?: boolean}) {
       var init = {
         detail: shortcut,
         cancelable: true,
-        bubbles: options && options.bubbles
+        bubbles: options && options.bubbles || false
       };
       var os = isMac ? 'mac' : 'win';
       var osSpecificEvent = new CustomEvent('shortcut:' + os + ':' + shortcut, init);
