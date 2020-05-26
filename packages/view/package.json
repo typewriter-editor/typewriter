@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/view",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "description": "General utilities for use in modules and views.",
   "keywords": [],
   "author": "Jacob Wright <jacwright@gmail.com>",
