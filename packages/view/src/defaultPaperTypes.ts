@@ -91,7 +91,7 @@ export const image = {
   selector: 'img',
   fromDom: (node: HTMLImageElement) => {
     const image = {};
-    node.getAttributeNames().forEach(name => {
+    ['src', 'alt', 'width', 'height'].forEach(name => {
       const value = name in node ? node[name] : node.getAttribute(name);
       if (name === 'src') name = 'image';
       image[name] = value;
