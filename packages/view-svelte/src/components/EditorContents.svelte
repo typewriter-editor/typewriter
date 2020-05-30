@@ -11,7 +11,7 @@
 import { onDestroy, tick } from 'svelte';
 import BlockContents from './BlockContents.svelte';
 import { getComponent } from '../components';
-import { Delta, shallowEqual } from '@typewriter/editor';
+import { shallowEqual } from '@typewriter/editor';
 import { decorate, getSelection, setSelection, getBounds as viewGetBounds } from '@typewriter/view';
 import { fromDelta } from '../data';
 

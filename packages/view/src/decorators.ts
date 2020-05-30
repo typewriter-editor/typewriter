@@ -40,7 +40,6 @@ export class Decorators {
   embed(at: number, attributes: { [name: string]: any }) {
     this.updatePosition(at);
     this.delta.insert({ decorator: attributes });
-    this.position += 1;
   }
 
   line(at: number, attributes: { [name: string]: any }) {
@@ -66,7 +65,7 @@ export class Decorators {
     }
 
     // Optimize by adding to the existing delta when possible, compose is slow
-    if (this.position < from) {
+    if (this.position <= from) {
       this.delta.retain(from - this.position);
       this.position = from;
     } else if (this.position) {

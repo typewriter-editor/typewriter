@@ -7,4 +7,4 @@
 	}
 </script>
 
-<img {...props}>
+<img {...props} alt={props.alt}>
