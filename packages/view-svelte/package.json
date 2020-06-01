@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "dev": "",
     "test": "echo \"Error: run tests from root\" && exit 1"
   },
   "bugs": {

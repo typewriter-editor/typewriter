@@ -1,5 +1,4 @@
 <script>
-import { tick } from 'svelte';
 import { Editor } from '@typewriter/editor';
 import { getDefaultPaper, getBounds } from '@typewriter/view';
 import { View } from '@typewriter/view-vdom';
@@ -19,12 +18,12 @@ editor.on('selection-change', () => selection = editor.selection);
 $: updateBox(selection);
 
 $: if (editor && paper && root) {
-  view = new View(editor, paper, { root, modules });
+  window.view = view = new View(editor, paper, { root, modules });
 }
 
 async function updateBox(selection) {
-  await tick();
-  selectionBox = selection ? view.getBounds(selection[0], selection[1]) : null;
+  await Promise.resolve();
+  selectionBox = selection ? view.getBounds(selection) : null;
 }
 
 function outputBox(box) {

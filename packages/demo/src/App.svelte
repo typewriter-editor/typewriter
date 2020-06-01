@@ -1,35 +1,10 @@
-<svelte:options accessors/>
-<div class="container">
-  <p>
-    <button on:click={populate}>Populate</button> | <button on:click={clear}>Clear</button>
-  </p>
-  <p class="help">
-    <span class="category">Keyboard shortcuts:</span><br>
-    <strong>Headers (1-6 &amp; 0)</strong>: <code>Ctrl+1</code>,
-    <strong>Undo</strong>: <code>Ctrl+Z</code>,
-    <strong>Indent List</strong>: <code>Tab</code> / <code>Shift+Tab</code>
-  </p>
-  <p class="help">
-    <span class="category">Text entry:</span><br>
-    <strong>Bullet List</strong>: <code>* </code> / <code>- </code>,
-    <strong>Ordered List</strong>: <code>1._</code> / <code>a._</code> / <code>i._</code> / <code>5._</code>,
-    <strong>Headers 1-6</strong>: <code>#_</code> / <code>##_</code>
-  </p>
-
-  <h3>Virtual DOM Renderer</h3>
-  <Frame component={VDom} {editor} {paper} {modules}/>
-
-  <h3>Svelte Renderer <small>(experimental)</small></h3>
-  <Frame component={Svelte} {editor} {paper} modules={svelteModules}/>
-</div>
-
 <script>
-import { Editor } from '@typewriter/editor';
+import { Editor, fromDelta } from '@typewriter/editor';
 import { getDefaultPaper } from '@typewriter/view';
 import { shortcuts, input, history, keyShortcuts, smartEntry, smartQuotes, placeholder } from '@typewriter/modules';
 import { hoverMenu, HoverMenu } from '@typewriter/ui';
 import Frame from './Frame.svelte';
-import Svelte from './Svelte.svelte';
+// import Svelte from './Svelte.svelte';
 import VDom from './VDom.svelte';
 
 export const editor = new Editor();
@@ -41,7 +16,7 @@ const modules = {
   keyShortcuts: keyShortcuts(),
   smartEntry: smartEntry(),
   smartQuotes: smartQuotes(),
-  placeholder: placeholder('Write here...'),
+  // placeholder: placeholder('Write here...'),
   hoverMenu: hoverMenu(),
   highlightAs: (editor, root) => {
     const exp = /the/ig;
@@ -63,13 +38,10 @@ const modules = {
   }
 };
 const svelteModules = { ...modules, input: input({ forceTextUpdates: true }) };
-
-// Let the CSS get created so it will add to the iframes
-let menu = new HoverMenu({
-  target: document.body
+window.editor = editor;
+editor.on('text-change', ({ contents }) => {
+  window.blocks = fromDelta(contents);
 });
-menu.$destroy();
-menu = null;
 
 function populate() {
   editor.setContents(editor.delta([
@@ -95,6 +67,31 @@ function clear() {
 }
 
 </script>
+
+<svelte:options accessors/>
+<div class="container">
+  <p>
+    <button on:click={populate}>Populate</button> | <button on:click={clear}>Clear</button>
+  </p>
+  <p class="help">
+    <span class="category">Keyboard shortcuts:</span><br>
+    <strong>Headers (1-6 &amp; 0)</strong>: <code>Ctrl+1</code>,
+    <strong>Undo</strong>: <code>Ctrl+Z</code>,
+    <strong>Indent List</strong>: <code>Tab</code> / <code>Shift+Tab</code>
+  </p>
+  <p class="help">
+    <span class="category">Text entry:</span><br>
+    <strong>Bullet List</strong>: <code>* </code> / <code>- </code>,
+    <strong>Ordered List</strong>: <code>1._</code> / <code>a._</code> / <code>i._</code> / <code>5._</code>,
+    <strong>Headers 1-6</strong>: <code>#_</code> / <code>##_</code>
+  </p>
+
+  <h3>Virtual DOM Renderer</h3>
+  <Frame component={VDom} {editor} {paper} {modules}/>
+
+  <!-- <h3>Svelte Renderer <small>(experimental)</small></h3>
+  <Frame component={Svelte} {editor} {paper} modules={svelteModules}/> -->
+</div>
 
 <style>
 :global(body) {

@@ -5,6 +5,7 @@ import Op from './Op';
 import AttributeMap from './AttributeMap';
 import diff from 'fast-diff';
 
+export { fromDelta } from './DeltaBlocks';
 export { EventDispatcher, Editor, Delta, Op, AttributeMap, diff };
 export { EditorRange, SOURCE_USER, SOURCE_API, SOURCE_SILENT } from './editor';
 export { shallowEqual, deepEqual } from './equal';
