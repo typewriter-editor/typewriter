@@ -27,7 +27,7 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
         if (typeof op.insert === 'string') {
           const prev = array[i - 1];
           const next = array[i + 1];
-          let text: string = op.insert.replace(/  /g, '\xA0 ');
+          let text: string = op.insert.replace(/  /g, ' \xA0');
           if (!prev) text = text.replace(/^ /, '\xA0');
           if (!next || (typeof next.insert === 'string' && next.insert[0] === ' ')) text = text.replace(/ $/, '\xA0');
           children.push(text);
