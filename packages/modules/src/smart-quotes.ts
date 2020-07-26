@@ -60,7 +60,7 @@ export default function smartQuotes() {
         pos = 0;
         text.replace(/ +\n/g, (text, offset) => {
           trailingWhitespace.retain(offset - pos).delete(text.length - 1);
-          pos = offset + text.length;
+          pos = offset + text.length - 1;
           return '\n';
         });
         event.delta = event.delta.compose(quotes).compose(trailingWhitespace);
