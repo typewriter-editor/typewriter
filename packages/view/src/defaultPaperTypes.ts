@@ -66,13 +66,13 @@ export const hr = {
 export const bold = {
   name: 'bold',
   selector: 'strong, b',
-  styleSelector: '[style*="bold"]',
+  styleSelector: '[style*="font-weight:bold"], [style*="font-weight: bold"]',
 };
 
 export const italic = {
   name: 'italic',
   selector: 'em, i',
-  styleSelector: '[style*="italic"]',
+  styleSelector: '[style*="font-style:italic"], [style*="font-style: italic"]',
 };
 
 export const code = {
