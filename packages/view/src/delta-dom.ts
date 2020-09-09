@@ -111,7 +111,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}): De
 
   // Delta documents should always end with a newline, unless they are partial documents
   if (!unknownBlock || !empty) {
-    delta.insert('\n', currentBlock);
+    delta.insert('\n', currentBlock.unknownBlock ? {} : currentBlock);
   }
 
   return delta;
