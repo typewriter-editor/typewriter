@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/view-svelte",
-  "version": "0.7.13",
+  "version": "0.7.14",
   "description": "A view powered by the Svelte framework to render editor contents to the DOM.",
   "keywords": [
     "typewriter",
@@ -35,6 +35,6 @@
   },
   "dependencies": {
     "@typewriter/editor": "^0.8.2",
-    "@typewriter/view": "^0.7.13"
+    "@typewriter/view": "^0.7.14"
   }
 }
