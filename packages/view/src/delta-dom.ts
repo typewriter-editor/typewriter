@@ -91,8 +91,8 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}): De
       }
 
       if (firstBlockSeen) {
-        if (!currentBlock.unknownBlock || !empty) {
-          delta.insert('\n', currentBlock.unknownBlock ? {} : currentBlock);
+        if (!currentBlock || !currentBlock.unknownBlock || !empty) {
+          delta.insert('\n', !currentBlock || currentBlock.unknownBlock ? {} : currentBlock);
           empty = true;
         }
       } else {
@@ -111,7 +111,7 @@ export function deltaFromDom(root: Element, paper: Paper, options: any = {}): De
 
   // Delta documents should always end with a newline, unless they are partial documents
   if (!unknownBlock || !empty) {
-    delta.insert('\n', currentBlock.unknownBlock ? {} : currentBlock);
+    delta.insert('\n', !currentBlock || currentBlock.unknownBlock ? {} : currentBlock);
   }
 
   return delta;

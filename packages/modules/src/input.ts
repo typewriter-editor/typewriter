@@ -31,7 +31,7 @@ export default function input() {
         let delta = deltaFromDom(doc.body, paper);
         cleanText(delta);
         const lastOp = delta.ops[delta.ops.length - 1];
-        if (lastOp && typeof lastOp.insert === 'string' && lastOp.insert !== '\n') {
+        if (lastOp && typeof lastOp.insert === 'string' && (lastOp.insert !== '\n' || !lastOp.attributes)) {
           lastOp.insert = lastOp.insert.replace(/\n$/, '');
         }
         const event = { delta };
