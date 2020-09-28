@@ -298,7 +298,7 @@ export default class View extends EventDispatcher {
         if (api && typeof api.onDestroy === 'function') api.onDestroy();
         delete this.modules[key];
       });
-      delete this.uninit;
+      delete (this as any).uninit;
     }
   }
 

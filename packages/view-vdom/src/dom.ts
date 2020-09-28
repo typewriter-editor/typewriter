@@ -59,7 +59,7 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
     // Merge marks to optimize
     inlineChildren = mergeChildren(inlineChildren);
     const lastChild = inlineChildren[inlineChildren.length - 1];
-    if (!inlineChildren.length || (lastChild && (lastChild as VDomNode).name === 'br')) {
+    if (!inlineChildren.length || (lastChild && (lastChild as VDomNode).name === 'br') || inlineChildren.every((child: VDomNode) => !child.children || !child.children.length)) {
       inlineChildren.push(BR);
     }
 

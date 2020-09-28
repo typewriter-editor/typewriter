@@ -8,9 +8,9 @@ const production = !process.env.ROLLUP_WATCH;
 
 export default {
 	input: 'src/index.ts',
-  output: [
-    { file: 'lib/index.js', format: 'cjs', sourcemap: true },
-    { file: 'lib/index.esm.js', format: 'es', sourcemap: true }
+	output: [
+		{ file: 'lib/index.js', format: 'cjs', sourcemap: true },
+		{ file: 'lib/index.esm.js', format: 'es', sourcemap: true }
 	],
 	external: [
 		'@typewriter/editor',
@@ -22,10 +22,10 @@ export default {
 	],
 	plugins: [
 		sourcemaps(),
-    typescript({ useTsconfigDeclarationDir: true }),
+ 		typescript({ useTsconfigDeclarationDir: true }),
 		svelte({
-      dev: !production,
-      immutable: true,
+			dev: !production,
+			immutable: true,
 			css: css => {
 				css.write('lib/bundle.css');
 			},
