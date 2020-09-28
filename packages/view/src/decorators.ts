@@ -1,5 +1,9 @@
 import { Delta, getLines } from '@typewriter/editor';
 
+export interface DecorateEvent extends CustomEvent {
+  detail: Decorators;
+}
+
 export function decorate(root: HTMLElement, contents: Delta) {
   const decorators = new Decorators(contents);
   root.dispatchEvent(new CustomEvent('decorate', { detail: decorators }));

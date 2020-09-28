@@ -1,4 +1,5 @@
 import { Editor } from '@typewriter/editor';
+import { DecorateEvent } from '@typewriter/view';
 
 /**
  * Set placeholder text in the editable area when there is no content. Add css:
@@ -14,7 +15,7 @@ export default function placeholder(placeholder: string | Function) {
 
   return (editor: Editor, root: HTMLElement) => {
 
-    function onDecorate(event: CustomEvent) {
+    function onDecorate(event: DecorateEvent) {
       const decorators = event.detail;
       if (editor.length === 1) {
         const text = (typeof placeholder === 'function' ? placeholder() : placeholder) || '';

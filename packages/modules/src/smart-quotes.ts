@@ -1,10 +1,4 @@
-import { Editor, Delta, EditorRange, SOURCE_USER } from '@typewriter/editor';
-
-type ChangeHandlerArg = {
-  change: Delta,
-  source: string,
-  selection: EditorRange
-};
+import { Editor, Delta, SOURCE_USER, TextChangeEvent } from '@typewriter/editor';
 
 /**
  * Replaces regular quotes with smart quotes as they are typed. Does not affect pasted content.
@@ -15,7 +9,7 @@ type ChangeHandlerArg = {
 export default function smartQuotes() {
   return (editor: Editor) => {
 
-    function onTextChange({ change, source, selection }: ChangeHandlerArg) {
+    function onTextChange({ change, source, selection }: TextChangeEvent) {
       if (source !== SOURCE_USER || !editor.selection || !isTextEntry(change)) return;
 
       const index = editor.selection[1];

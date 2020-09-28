@@ -1,4 +1,4 @@
-import { Editor, Delta, EditorRange } from '@typewriter/editor';
+import { Editor, Delta, EditorRange, TextChangeEvent, SelectionChangeEvent } from '@typewriter/editor';
 import { KeyboardEventWithShortcut } from './shortcuts';
 
 const SOURCE_USER = 'user';
@@ -158,7 +158,7 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
     }
 
 
-    function onTextChange({ change, oldContents, selection, oldSelection, source }) {
+    function onTextChange({ change, oldContents, selection, oldSelection, source }: TextChangeEvent) {
       if (ignoreChange) return;
       if (source === SOURCE_USER) {
         record(change, oldContents, selection, oldSelection);
@@ -167,7 +167,7 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
       }
     }
 
-    function onSelectionChange({ change }) {
+    function onSelectionChange({ change }: TextChangeEvent) {
       if (change) return;
       // Break the history merging when selection changes without a text change
       cutoff();

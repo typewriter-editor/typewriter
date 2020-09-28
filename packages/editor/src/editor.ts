@@ -13,6 +13,22 @@ const noop = ()=>{};
 
 export type EditorRange = [number, number];
 
+export type Source = 'api' | 'user' | 'silent';
+
+export interface SelectionChangeEvent {
+  selection: EditorRange;
+  oldSelection: EditorRange;
+  source: Source;
+}
+
+export interface TextChangeEvent extends SelectionChangeEvent {
+  change: Delta;
+  contents: Delta;
+  oldContents: Delta;
+}
+
+type QueuedEvent = [string, SelectionChangeEvent];
+
 /**
  * Event for text changes, called before the change has occurred. If a listener returns false the change will be
  * canceled and not committed.
@@ -20,8 +36,8 @@ export type EditorRange = [number, number];
  * @event Editor#text-changing
  * @type  {Object}
  * @property {Delta} change       The change which is being applied to the content
- * @property {Delta} content      The new content after the change
- * @property {Delta} oldContent   The old content before the change
+ * @property {Delta} contents     The new content after the change
+ * @property {Delta} oldContents  The old content before the change
  * @property {Array} seleciton    The selection after the change
  * @property {Array} oldSelection The selection before the change
  * @property {String} source      The source of the change, api, user, or silent
@@ -33,8 +49,8 @@ export type EditorRange = [number, number];
  * @event Editor#text-change
  * @type  {Object}
  * @property {Delta} change       The change which is being applied to the content
- * @property {Delta} content      The new content after the change
- * @property {Delta} oldContent   The old content before the change
+ * @property {Delta} contents     The new content after the change
+ * @property {Delta} oldContents  The old content before the change
  * @property {Array} seleciton    The selection after the change
  * @property {Array} oldSelection The selection before the change
  * @property {String} source      The source of the change, api, user, or silent
@@ -47,8 +63,8 @@ export type EditorRange = [number, number];
  * @event Editor#selection-change
  * @type  {Object}
  * @property {Delta} change       [ Optional ] The change which is being applied to the content
- * @property {Delta} content      [ Optional ] The new content after the change
- * @property {Delta} oldContent   [ Optional ] The old content before the change
+ * @property {Delta} contents     [ Optional ] The new content after the change
+ * @property {Delta} oldContents  [ Optional ] The old content before the change
  * @property {Array} seleciton    The selection after the change
  * @property {Array} oldSelection The selection before the change
  * @property {String} source      The source of the change, api, user, or silent
@@ -74,7 +90,7 @@ export default class Editor extends EventDispatcher {
   length: number;
   selection: EditorRange | null;
   activeFormats: AttributeMap;
-  private _queuedEvents: any[];
+  private _queuedEvents: QueuedEvent[];
 
   /**
    * Create a new Typewriter editor.
@@ -162,7 +178,7 @@ export default class Editor extends EventDispatcher {
     // Reset the active formats when selection changes (do this before setting selection)
     this.activeFormats = selection ? this.getTextFormat([ selection[1], selection[1] ]) : empty;
     this.selection = selection;
-    const event = { selection, oldSelection, source };
+    const event = { selection, oldSelection, source } as SelectionChangeEvent;
 
     if (source !== SOURCE_SILENT) this.fire('selection-change', event);
     this.fire('editor-change', event);
@@ -193,7 +209,7 @@ export default class Editor extends EventDispatcher {
     if (!selection) selection = oldSelection ? oldSelection.map(i => change.transform(i)) as EditorRange : undefined;
     selection = selection && this._normalizeSelection(selection, length - 1);
 
-    const changeEvent = { contents, oldContents, change, selection, oldSelection, source };
+    const changeEvent = { contents, oldContents, change, selection, oldSelection, source } as TextChangeEvent;
     const selectionChanged = !shallowEqual(oldSelection, selection);
 
     if (!this.fire('text-changing', changeEvent)) return null;
@@ -206,7 +222,7 @@ export default class Editor extends EventDispatcher {
       this.selection = selection;
     }
 
-    const events: any = [];
+    const events: QueuedEvent[] = [];
     if (source !== SOURCE_SILENT) {
       events.push([ 'text-change', changeEvent ]);
       if (selectionChanged) events.push([ 'selection-change', changeEvent ]);
@@ -615,13 +631,13 @@ export default class Editor extends EventDispatcher {
 
 
 
-  _queueEvents(events) {
+  _queueEvents(events: QueuedEvent[]) {
     const alreadyRunning = this._queuedEvents.length;
     this._queuedEvents.push(...events);
     if (alreadyRunning) return;
     while (this._queuedEvents.length) {
-      const event = this._queuedEvents.shift() as [ string, ];
-      this.fire(...event);
+      const args = this._queuedEvents.shift() as [ string, SelectionChangeEvent ];
+      this.fire(...args);
     }
   }
 
@@ -669,7 +685,7 @@ function cleanDelete(editor: Editor, range: EditorRange, change: Delta) {
 }
 
 // Ensures contents end with a newline
-function normalizeContents(contents) {
+function normalizeContents(contents: Delta) {
   // Contents only have inserts. Deletes and retains belong to changes only.
   contents.ops = contents.ops.filter(op => op.insert);
   const lastOp = contents.ops[contents.ops.length - 1];

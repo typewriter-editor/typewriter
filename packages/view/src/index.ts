@@ -3,7 +3,7 @@ export { deltaFromDom } from './delta-dom';
 export { isBRPlaceholder } from './br';
 export { deltaFromHTML } from './delta-html';
 export { shortcutFromEvent } from './shortcut-string';
-export { decorate, Decorators } from './decorators';
+export { decorate, Decorators, DecorateEvent } from './decorators';
 export {
   getSelection,
   setSelection,

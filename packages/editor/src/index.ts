@@ -6,6 +6,6 @@ import AttributeMap from './AttributeMap';
 import diff from 'fast-diff';
 
 export { EventDispatcher, Editor, Delta, Op, AttributeMap, diff };
-export { EditorRange, SOURCE_USER, SOURCE_API, SOURCE_SILENT } from './editor';
+export { EditorRange, SOURCE_USER, SOURCE_API, SOURCE_SILENT, SelectionChangeEvent, TextChangeEvent } from './editor';
 export { shallowEqual, deepEqual } from './equal';
 export { getLines, getLine, getOps, getOp, Line, OpInfo } from './delta-helpers';

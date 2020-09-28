@@ -3,9 +3,9 @@ node_modules/
 !.babelrc
 !.travis.yml
 typewriter-iife.js*
-node_modules/
 lerna-debug.log
 npm-debug.log
 packages/*/lib
 packages/demo/public/bundle.*
 packages/demo/public/vendor-bundle.*
+.rpt2_cache/

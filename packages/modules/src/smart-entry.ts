@@ -1,4 +1,4 @@
-import { Editor, Delta } from '@typewriter/editor';
+import { Editor, Delta, TextChangeEvent } from '@typewriter/editor';
 import { Paper } from '@typewriter/view';
 const SOURCE_USER = 'user';
 
@@ -73,7 +73,7 @@ export default function(handlers = defaultHandlers) {
   return (editor: Editor, root: HTMLElement, paper: Paper) => {
     let ignore = false;
 
-    function onTextChange({ change, source }) {
+    function onTextChange({ change, source }: TextChangeEvent) {
       if (ignore || source !== 'user' || !editor.selection || !isTextEntry(change)) return;
       const index = editor.selection[1];
       const text = editor.getExactText();
