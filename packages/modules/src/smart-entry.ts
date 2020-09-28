@@ -3,6 +3,9 @@ import { Paper } from '@typewriter/view';
 const SOURCE_USER = 'user';
 
 export type Replacement = [RegExp, Function];
+const httpExpr = /(?:http(?:s):\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)$/;
+const wwwExpr = /(?:www\.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)$/;
+const nakedExpr = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.(?:com|org|net|io)\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)$/;
 
 /**
  * A list of [ RegExp, Function ] tuples to convert text into a formatted block with the attributes returned by the
@@ -18,6 +21,22 @@ export const blockReplacements: Replacement[] = [
   [ /^([a-z])\. $/, char => ({ list: 'ordered', type: 'a', start: char.charCodeAt(0) - 'a'.charCodeAt(0) + 1 }) ],
   [ /^([IVXLCDM]+)\. $/i, chars => ({ list: 'ordered', type: chars[0].toUpperCase() === chars[0] ? 'I' : 'i', start: fromRomanNumeral(chars) }) ],
   [ /^> $/, () => ({ blockquote: true }) ],
+];
+
+/**
+ * A list of [ RegExp, Function ] tuples to convert text into formatted text with the attributes returned by the
+ * function. The function's argument will be the captured text from the regular expression.
+ */
+export const markReplacements: Replacement[] = [
+  [ /(\*|_){3}((?:(?!\1).)+)\1{3}((?:(?!\1)[.\n]))$/m, () => ({ bold: true, italic: true })],
+  [ /(\*|_){2}((?:(?!\1).)+)\1{2}((?:(?!\1)[.\n]))$/m, () => ({ bold: true })],
+  [ /(\*|_){1}((?:(?!\1).)+)\1{1}((?:(?!\1)[.\n]))$/m, () => ({ italic: true })],
+];
+
+export const linkReplacements: Replacement[] = [
+  [ httpExpr, capture => ({ link: capture }) ],
+  [ wwwExpr, capture => ({ link: 'https://' + capture }) ],
+  [ nakedExpr, capture => ({ link: 'https://' + capture }) ],
 ];
 
 /**
@@ -53,6 +72,43 @@ export function blockReplace(editor: Editor, index: number, prefix: string, pape
   });
 }
 
+export function linkReplace(editor: Editor, index: number, prefix: string, paper: Paper) {
+  return linkReplacements.some(([ regexp, getAttributes ]) => {
+    const match = prefix.match(regexp);
+    if (match) {
+      const text = match[0];
+      const attributes = getAttributes(text);
+      if (!paper.marks.findByAttributes(attributes)) {
+        return false;
+      }
+      editor.formatText([ index - text.length, index ], attributes, SOURCE_USER);
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
+
+export function markReplace(editor: Editor, index: number, prefix: string, paper: Paper, wholeText: string) {
+  return markReplacements.some(([ regexp, getAttributes ]) => {
+    const match = prefix.match(regexp);
+    if (match) {
+      let [ text, _, matched, last ] = match;
+      const attributes = getAttributes(matched);
+      if (!paper.marks.findByAttributes(attributes)) {
+        return false;
+      }
+      let selection = index - (text.length - matched.length) + last.length;
+      if (last === ' ' && wholeText[index] === ' ') last = '';
+      const end = index - last.length;
+      editor.insertText([ end - text.length + last.length, end ], matched, attributes, SOURCE_USER, [ selection, selection ]);
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
+
 export function textReplace(editor: Editor, index: number, prefix: string) {
   return textReplacements.some(([ regexp, replaceWith ]) => {
     const match = prefix.match(regexp);
@@ -65,7 +121,7 @@ export function textReplace(editor: Editor, index: number, prefix: string) {
   });
 }
 
-export const defaultHandlers = [ blockReplace, textReplace ];
+export const defaultHandlers = [ blockReplace, markReplace, textReplace, linkReplace ];
 
 
 export default function(handlers = defaultHandlers) {
@@ -77,11 +133,11 @@ export default function(handlers = defaultHandlers) {
       if (ignore || source !== 'user' || !editor.selection || !isTextEntry(change)) return;
       const index = editor.selection[1];
       const text = editor.getExactText();
-      const lineStart = text.lastIndexOf('\n', index - 1) + 1;
+      const lineStart = text.lastIndexOf('\n', index - 2) + 1;
       const prefix = text.slice(lineStart, index);
 
       ignore = true;
-      handlers.some(handler => handler(editor, index, prefix, paper));
+      handlers.some(handler => handler(editor, index, prefix, paper, text));
       ignore = false;
     }
 
@@ -101,8 +157,8 @@ function isTextEntry(change: Delta) {
     change.ops.length === 1 ||
     (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)
   ) &&
-    change.ops[change.ops.length - 1].insert &&
-    change.ops[change.ops.length - 1].insert !== '\n';
+    change.ops[change.ops.length - 1].insert// &&
+    // change.ops[change.ops.length - 1].insert !== '\n';
 }
 
 const DIGIT_VALUES = {
