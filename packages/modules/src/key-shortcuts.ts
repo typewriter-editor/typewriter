@@ -1,4 +1,5 @@
 import { Editor } from '@typewriter/editor';
+import { KeyboardEventWithShortcut } from './shortcuts';
 
 const SOURCE_USER = 'user';
 
@@ -22,18 +23,18 @@ export default function keyShortcuts(customShortcuts = {}) {
 
     function onShortcut(event: Event) {
       if (event.defaultPrevented) return;
-      const shortcut = (event as CustomEvent).detail;
-      if (shortcut in shortcuts) {
+      const shortcut = (event as KeyboardEventWithShortcut).modShortcut;
+      if (shortcut && shortcut in shortcuts) {
         event.preventDefault();
         shortcuts[shortcut](editor);
       }
     }
 
-    root.addEventListener('shortcut', onShortcut);
+    root.addEventListener('keydown', onShortcut);
 
     return {
       onDestroy() {
-        root.addEventListener('shortcut', onShortcut);
+        root.addEventListener('keydown', onShortcut);
       }
     }
   };
