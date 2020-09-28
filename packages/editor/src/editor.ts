@@ -575,7 +575,7 @@ export default class Editor extends EventDispatcher {
       }
     };
     producer(this);
-    delete this.updateContents;
+    delete (this as any).updateContents;
     return change;
   }
 

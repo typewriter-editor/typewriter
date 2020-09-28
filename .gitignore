@@ -8,3 +8,4 @@ lerna-debug.log
 npm-debug.log
 packages/*/lib
 packages/demo/public/bundle.*
+packages/demo/public/vendor-bundle.*

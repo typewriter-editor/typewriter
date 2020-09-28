@@ -1,5 +1,6 @@
 import { Editor, EditorRange, Delta, getLines, getLine, Line, SOURCE_USER } from '@typewriter/editor';
 import { Paper, getSelection, deltaFromDom } from '@typewriter/view';
+import { KeyboardEventWithShortcut } from './shortcuts';
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
@@ -37,7 +38,7 @@ export default function input() {
         const event = { delta };
         editor.fire('paste', event);
         delta = event.delta;
-        editor.insertContent(editor.selection, delta);
+        if (delta) editor.insertContent(editor.selection, delta);
       }
     }
 
@@ -100,7 +101,9 @@ export default function input() {
         if (!range) return;
         const block = paper.blocks.findByAttributes(line.attributes) || paper.blocks.getDefault();
         if (block.indentable && line.attributes.indent) {
-          onTab(new CustomEvent('shortcut', { detail: 'Shift+Tab' }));
+          const event = new KeyboardEvent('keydown') as KeyboardEventWithShortcut;
+          event.modShortcut = 'Shift+Tab';
+          onTab(event);
           return true;
         }
         if (block && (force || block !== paper.blocks.getDefault() && !block.defaultFollows)) {
@@ -143,10 +146,10 @@ export default function input() {
     }
 
 
-    function onTab(event: CustomEvent) {
+    function onTab(event: KeyboardEventWithShortcut) {
       if (event.defaultPrevented) return;
       event.preventDefault();
-      const shortcut = event.detail;
+      const shortcut = event.modShortcut;
 
       const direction = shortcut === 'Tab' || shortcut === 'Mod+]' ? 1 : -1;
       const range = editor.getSelectedRange();
@@ -191,30 +194,34 @@ export default function input() {
       if (!committed) editor.render();
     }
 
-    root.addEventListener('input', onInput);
+    function onKeyDown(event) {
+      if (event.isComposing) return;
+      switch (event.modShortcut) {
+        case 'Enter': onEnter(event); break;
+        case 'Shift+Enter': onShiftEnter(event); break;
+        case 'Enter': onEnter(event); break;
+        case 'Enter': onEnter(event); break;
+        case 'Enter': onEnter(event); break;
+        case 'Enter': onEnter(event); break;
+        case 'Backspace': onBackspace(event); break;
+        case 'Delete': onDelete(event); break;
+        case 'Tab':
+        case 'Shift+Tab':
+        case 'Mod+]':
+        case 'Mod+[': onTab(event); break;
+        default: return;
+      }
+    }
 
+    root.addEventListener('input', onInput);
     root.addEventListener('paste', onPaste);
-    root.addEventListener('shortcut:Enter', onEnter);
-    root.addEventListener('shortcut:Shift+Enter', onShiftEnter);
-    root.addEventListener('shortcut:Backspace', onBackspace);
-    root.addEventListener('shortcut:Delete', onDelete);
-    root.addEventListener('shortcut:Tab', onTab);
-    root.addEventListener('shortcut:Shift+Tab', onTab);
-    root.addEventListener('shortcut:Mod+]', onTab);
-    root.addEventListener('shortcut:Mod+[', onTab);
+    root.addEventListener('keydown', onKeyDown);
 
     return {
       onDestroy() {
         root.removeEventListener('input', onInput);
         root.removeEventListener('paste', onPaste);
-        root.removeEventListener('shortcut:Enter', onEnter);
-        root.removeEventListener('shortcut:Shift+Enter', onShiftEnter);
-        root.removeEventListener('shortcut:Backspace', onBackspace);
-        root.removeEventListener('shortcut:Delete', onDelete);
-        root.removeEventListener('shortcut:Tab', onTab);
-        root.removeEventListener('shortcut:Shift+Tab', onTab);
-        root.removeEventListener('shortcut:Mod+]', onTab);
-        root.removeEventListener('shortcut:Mod+[', onTab);
+        root.removeEventListener('keydown', onKeyDown);
       }
     }
   }

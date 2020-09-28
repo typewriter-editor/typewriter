@@ -17,22 +17,22 @@
   </p>
 
   <h3>Virtual DOM Renderer</h3>
-  <Frame component={VDom} {editor} {paper} {modules}/>
+  <VDom editor={editor1} {paper} {modules}/>
 
   <h3>Svelte Renderer <small>(experimental)</small></h3>
-  <Frame component={Svelte} {editor} {paper} modules={svelteModules}/>
+  <Svelte editor={editor2} {paper} {modules}/>
 </div>
 
 <script>
 import { Editor } from '@typewriter/editor';
 import { getDefaultPaper } from '@typewriter/view';
 import { shortcuts, input, history, keyShortcuts, smartEntry, smartQuotes, placeholder } from '@typewriter/modules';
-import { hoverMenu, HoverMenu } from '@typewriter/ui';
-import Frame from './Frame.svelte';
+import { hoverMenu } from '@typewriter/ui';
 import Svelte from './Svelte.svelte';
 import VDom from './VDom.svelte';
 
-export const editor = new Editor();
+export const editor1 = new Editor();
+export const editor2 = new Editor();
 const paper = getDefaultPaper();
 const modules = {
   shortcuts: shortcuts(),
@@ -62,17 +62,9 @@ const modules = {
     }
   }
 };
-const svelteModules = { ...modules, input: input({ forceTextUpdates: true }) };
-
-// Let the CSS get created so it will add to the iframes
-let menu = new HoverMenu({
-  target: document.body
-});
-menu.$destroy();
-menu = null;
 
 function populate() {
-  editor.setContents(editor.delta([
+  const delta = editor1.delta([
     { insert: 'The Two Towers' },
     { insert: '\n', attributes: { header: 1 } },
     { insert: 'Aragorn sped on up the hill.\n' },
@@ -87,7 +79,9 @@ function populate() {
     { insert: { image: 'https://uploads-ssl.webflow.com/5c3e4c64d1dbdf089664a286/5c3e841bb511dcf520fcc2cd_cabin-sm.jpg', width: 400, alt: 'Cabin' },
       attributes: { link: 'https://github.com/typewriter-editor/typewriter/' } },
     { insert: '\n' },
-  ]), 'user');
+  ]);
+  editor1.setContents(delta, 'user');
+  editor2.setContents(delta, 'user');
 }
 
 function clear() {
@@ -104,6 +98,8 @@ function clear() {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 800px;
+  margin: 0 auto;
 }
 .container :global(iframe) {
   flex: 1 1;

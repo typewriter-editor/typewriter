@@ -1,4 +1,5 @@
 import { Editor, Delta, EditorRange } from '@typewriter/editor';
+import { KeyboardEventWithShortcut } from './shortcuts';
 
 const SOURCE_USER = 'user';
 const SOURCE_SILENT = 'silent';
@@ -43,6 +44,29 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
     let lastRecorded = 0;
     let lastAction = '';
     let ignoreChange = false;
+
+    function onKeyDown(event: KeyboardEventWithShortcut) {
+      switch(event.osShortcut) {
+        case 'win:Ctrl+Z':
+        case 'mac:Cmd+Z':
+          undo();
+          break;
+        case 'win:Ctrl+Y':
+        case 'mac:Cmd+Shift+Z':
+          redo();
+          break;
+      }
+    }
+
+    function onInput(event: InputEvent) {
+      if (event.inputType === 'historyUndo') {
+        event.preventDefault();
+        undo();
+      } else if (event.inputType === 'historyRedo') {
+        event.preventDefault();
+        redo();
+      }
+    }
 
     function undo(event?: Event) {
       action(event, 'undo', 'redo');
@@ -152,9 +176,8 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
 
     editor.on('text-change', onTextChange);
     editor.on('selection-change', onSelectionChange);
-    root.addEventListener('shortcut:Mod+Z', undo);
-    root.addEventListener('shortcut:win:Ctrl+Y', redo);
-    root.addEventListener('shortcut:mac:Cmd+Shift+Z', redo);
+    root.addEventListener('keydown', onKeyDown);
+    root.addEventListener('beforeinput', onInput);
 
     return {
       hasUndo,
@@ -166,9 +189,8 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
       onDestroy() {
         editor.off('text-change', onTextChange);
         editor.off('selection-change', onSelectionChange);
-        root.removeEventListener('shortcut:Mod+Z', undo);
-        root.removeEventListener('shortcut:win:Ctrl+Y', redo);
-        root.removeEventListener('shortcut:mac:Cmd+Shift+Z', redo);
+        root.removeEventListener('keydown', onKeyDown);
+        root.removeEventListener('beforeinput', onInput);
       }
     }
   }

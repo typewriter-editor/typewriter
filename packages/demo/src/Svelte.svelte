@@ -41,6 +41,8 @@ function outputBox(box) {
 
 <style>
 .container {
+  flex: 1;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   padding: 8px;
@@ -63,5 +65,8 @@ function outputBox(box) {
   border-color: #80bdff;
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+:global(.typewriter-editor p) {
+  contain: layout;
 }
 </style>

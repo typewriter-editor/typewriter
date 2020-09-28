@@ -3,51 +3,29 @@ import { Editor } from '@typewriter/editor';
 const isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
 const modExpr = isMac ? /Cmd/ : /Ctrl/;
 
+export interface KeyboardEventWithShortcut extends KeyboardEvent {
+  shortcut?: string;
+  osShortcut?: string;
+  modShortcut?: string;
+}
+
+
 export function shortcuts(options?: {bubbles?: boolean}) {
 
   return function(editor: Editor, root: HTMLElement) {
 
-    function onKeyDown(event: KeyboardEvent) {
-      var shortcut = shortcutFromEvent(event);
-      // Don't dispatch events for every character typed
-      if (shortcut.length <= 1) return;
-
-      var canceled = false;
-      var init = {
-        detail: shortcut,
-        cancelable: true,
-        bubbles: options && options.bubbles || false
-      };
-      var os = isMac ? 'mac' : 'win';
-      var osSpecificEvent = new CustomEvent('shortcut:' + os + ':' + shortcut, init);
-      var specificEvent = new CustomEvent('shortcut:' + shortcut, init);
-      var generalEvent = new CustomEvent('shortcut', init);
-      root.dispatchEvent(osSpecificEvent);
-      root.dispatchEvent(specificEvent);
-      root.dispatchEvent(generalEvent);
-      canceled = osSpecificEvent.defaultPrevented || specificEvent.defaultPrevented || generalEvent.defaultPrevented;
-
-      if (modExpr.test(shortcut)) {
-        init.detail = shortcut.replace(modExpr, 'Mod');
-        specificEvent = new CustomEvent('shortcut:' + init.detail, init);
-        generalEvent = new CustomEvent('shortcut', init);
-        root.dispatchEvent(specificEvent);
-        root.dispatchEvent(generalEvent);
-        canceled = canceled || specificEvent.defaultPrevented || generalEvent.defaultPrevented;
-      }
-
-      if (canceled) {
-        // Prevent the original keydown if the shortcut event called preventDefault
-        event.preventDefault();
-      }
+    function onKeyDown(event: KeyboardEventWithShortcut) {
+      event.shortcut = shortcutFromEvent(event);
+      event.osShortcut = `${isMac ? 'mac' : 'win'}:${event.shortcut}`;
+      event.modShortcut = event.shortcut.replace(modExpr, 'Mod');
     }
 
-    root.addEventListener('keydown', onKeyDown);
+    root.addEventListener('keydown', onKeyDown, true);
 
     return {
       options,
       onDestroy() {
-        root.removeEventListener('keydown', onKeyDown);
+        root.removeEventListener('keydown', onKeyDown, true);
       }
     };
   }

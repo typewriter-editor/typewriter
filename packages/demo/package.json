@@ -11,14 +11,17 @@
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5",
+    "rollup-plugin-css-only": "^2.1.0",
     "rollup-plugin-livereload": "^1.3.0",
+    "rollup-plugin-postcss": "^3.1.8",
     "run-p": "0.0.0",
-    "sirv-cli": "^0.2.5"
+    "sirv-cli": "^0.2.5",
+    "svelte": "^3.25.1"
   },
   "scripts": {
     "autobuild": "rollup -c -w",
     "dev": "run-p start:dev autobuild",
     "start": "sirv public --port 5050",
-    "start:dev": "sirv public --dev --port 5050"
+    "start:dev": "sirv public --dev --port 5050 --host"
   }
 }

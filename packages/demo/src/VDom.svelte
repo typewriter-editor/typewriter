@@ -24,7 +24,7 @@ $: if (editor && paper && root) {
 
 async function updateBox(selection) {
   await tick();
-  selectionBox = selection ? view.getBounds(selection[0], selection[1]) : null;
+  selectionBox = selection ? view.getBounds(selection) : null;
 }
 
 function outputBox(box) {
@@ -46,6 +46,8 @@ function outputBox(box) {
 
 <style>
 .container {
+  flex: 1;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   padding: 8px;
