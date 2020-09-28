@@ -1,6 +1,6 @@
 {
   "name": "@typewriter/modules",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Common modules that may be used with typewriter views.",
   "keywords": [
     "typewriter",
