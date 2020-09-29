@@ -16,8 +16,8 @@
     {/each}
   </div>
   <div class="link-input">
-    <input bind:this={input} bind:value={href} on:keydown={onKeyDown} on:blur={createLink} placeholder="https://example.com/">
-    <i on:click={exitInput} class="close">×</i>
+    <input bind:this={input} bind:value={href} on:keydown={onKeyDown} on:blur={onInputBlur} placeholder="https://example.com/">
+    <i bind:this={linkClose} on:click={removeInput} class="close" tabindex="-1">×</i>
   </div>
 </div>
 
@@ -40,6 +40,7 @@ export let pos = { left: 0, top: 0 };
 export let href = '';
 let lastSelection;
 let input;
+let linkClose;
 
 $: if (menu && root && range) reposition();
 $: {
@@ -119,10 +120,22 @@ function reposition() {
   }
 }
 
+function removeInput() {
+  editor.formatText(lastSelection, { link: null }, SOURCE_USER);
+  exitInput();
+  range = range.slice();
+}
+
 function exitInput() {
   inputMode = false;
   href = '';
+  root && root.focus();
   editor.setSelection(lastSelection);
+}
+
+function onInputBlur(event) {
+  if (event.relatedTarget === linkClose) return;
+  createLink();
 }
 
 function createLink() {
@@ -131,6 +144,7 @@ function createLink() {
     editor.formatText(range, { link: href }, SOURCE_USER);
   }
   exitInput();
+  range = range.slice();
 }
 
 function onClick(item) {
@@ -155,7 +169,7 @@ function onKeyDown(event) {
 async function inputLink() {
   lastSelection = editor.selection;
   inputMode = true;
-  href = '';
+  href = editor.getTextFormat(lastSelection).link || '';
   await tick();
   input.focus();
 }
@@ -173,11 +187,7 @@ function onBlockClick(item) {
 }
 
 function onLinkClick() {
-  if (editor.getTextFormat(range).link) {
-    editor.formatText(range, { link: null }, SOURCE_USER);
-  } else {
-    inputLink();
-  }
+  inputLink();
 }
 
 function onHeaderClick(item) {
@@ -306,28 +316,35 @@ function onHeaderClick(item) {
   }
 
   .link-input {
+    display: flex;
     position: absolute;
     top: 0;
     width: 100%;
     height: 100%;
   }
   .link-input input {
-    width: 100%;
+    flex: 1;
     height: 100%;
     background: none;
     border: none;
     color: #f7f7f9;
-    padding: 10px 24px 10px 12px;
+    padding: 10px 0 10px 12px;
     font-size: .875rem;
     outline: none;
     box-sizing: border-box;
   }
   .link-input .close {
-    position: absolute;
-    right: 12px;
-    top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 30px;
+    padding: 0 6px 2px 0;
+    box-sizing: border-box;
+    font-style: normal;
     color: #f7f7f9;
     opacity: .5;
+    cursor: pointer;
   }
   .link-input .close:hover {
     color: #f7f7f9;

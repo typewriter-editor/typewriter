@@ -3,9 +3,9 @@ import { Paper } from '@typewriter/view';
 const SOURCE_USER = 'user';
 
 export type Replacement = [RegExp, Function];
-const httpExpr = /(?:http(?:s):\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)$/;
-const wwwExpr = /(?:www\.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)$/;
-const nakedExpr = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.(?:com|org|net|io)\b(?:[-a-zA-Z0-9@:%_\+.~#?&//=]*)$/;
+const httpExpr = /(http(s):\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b[-a-zA-Z0-9@:%_+.~#?&/=]*\s$/s;
+const wwwExpr = /(www\.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b[-a-zA-Z0-9@:%_+.~#?&/=]*\s$/s;
+const nakedExpr = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.(com|org|net|io)\b[-a-zA-Z0-9@:%_+.~#?&/=]*\s$/s;
 
 /**
  * A list of [ RegExp, Function ] tuples to convert text into a formatted block with the attributes returned by the
@@ -28,9 +28,9 @@ export const blockReplacements: Replacement[] = [
  * function. The function's argument will be the captured text from the regular expression.
  */
 export const markReplacements: Replacement[] = [
-  [ /(\*|_){3}((?:(?!\1).)+)\1{3}((?:(?!\1)[.\n]))$/m, () => ({ bold: true, italic: true })],
-  [ /(\*|_){2}((?:(?!\1).)+)\1{2}((?:(?!\1)[.\n]))$/m, () => ({ bold: true })],
-  [ /(\*|_){1}((?:(?!\1).)+)\1{1}((?:(?!\1)[.\n]))$/m, () => ({ italic: true })],
+  [ /(\*|_){3}(\b(?:(?!\1).)+\b)\1{3}((?:(?!\1).))$/s, () => ({ bold: true, italic: true })],
+  [ /(\*|_){2}(\b(?:(?!\1).)+\b)\1{2}((?:(?!\1).))$/s, () => ({ bold: true })],
+  [ /(\*|_){1}(\b(?:(?!\1).)+\b)\1{1}((?:(?!\1).))$/s, () => ({ italic: true })],
 ];
 
 export const linkReplacements: Replacement[] = [
@@ -76,12 +76,14 @@ export function linkReplace(editor: Editor, index: number, prefix: string, paper
   return linkReplacements.some(([ regexp, getAttributes ]) => {
     const match = prefix.match(regexp);
     if (match) {
-      const text = match[0];
+      let text = match[0].slice(0, -1);
+      if (text[text.length - 1] === '.') text = text.slice(0, -1);
+      const end = index - (match[0].length - text.length);
       const attributes = getAttributes(text);
       if (!paper.marks.findByAttributes(attributes)) {
         return false;
       }
-      editor.formatText([ index - text.length, index ], attributes, SOURCE_USER);
+      editor.formatText([ end - text.length, end ], attributes, SOURCE_USER);
       return true;
     } else {
       return false;
