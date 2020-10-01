@@ -58,8 +58,9 @@ export function deltaToVdom(delta: Delta, paper: Paper) {
 
     // Merge marks to optimize
     inlineChildren = mergeChildren(inlineChildren);
-    const lastChild = inlineChildren[inlineChildren.length - 1];
-    if (!inlineChildren.length || (lastChild && (lastChild as VDomNode).name === 'br') || inlineChildren.every((child: VDomNode) => !child.children || !child.children.length)) {
+    let lastChild = inlineChildren[inlineChildren.length - 1] as any;
+    if (lastChild && lastChild.children && lastChild.children.length) lastChild = lastChild.children[lastChild.children.length - 1];
+    if (!inlineChildren.length || (lastChild && lastChild.name === 'br') || inlineChildren.every((child: VDomNode) => typeof child !== 'string' && (!child.children || !child.children.length))) {
       inlineChildren.push(BR);
     }
 

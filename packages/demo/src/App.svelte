@@ -33,6 +33,8 @@ import VDom from './VDom.svelte';
 
 export const editor1 = new Editor();
 export const editor2 = new Editor();
+window.editor1 = editor1;
+window.editor2 = editor2;
 const paper = getDefaultPaper();
 const modules = {
   shortcuts: shortcuts(),
