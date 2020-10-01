@@ -49,10 +49,12 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
       switch(event.osShortcut) {
         case 'win:Ctrl+Z':
         case 'mac:Cmd+Z':
+          event.preventDefault();
           undo();
           break;
         case 'win:Ctrl+Y':
         case 'mac:Cmd+Shift+Z':
+          event.preventDefault();
           redo();
           break;
       }
