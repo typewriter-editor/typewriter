@@ -13,6 +13,8 @@ function isLastNode(paper: Paper, node: Node) {
   if (next) {
     if (next.nodeType === Node.ELEMENT_NODE) {
       return paper.blocks.matches(next as Element) || next.firstChild?.nodeType === Node.ELEMENT_NODE && paper.blocks.matches(next.firstChild as Element);
+    } else {
+      return false;
     }
   }
   return !node.parentNode || paper.blocks.matches(node.parentNode as Element) ? true : isLastNode(paper, node.parentNode);
