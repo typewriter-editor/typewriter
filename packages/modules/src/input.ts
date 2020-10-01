@@ -17,29 +17,26 @@ export default function input() {
       const dataTransfer = event.clipboardData;
       if (!dataTransfer || !editor.selection) return;
       const html = dataTransfer.getData('text/html');
+      let delta: Delta;
 
       if (!html) {
         let text = dataTransfer.getData('text/plain');
-        const event = { text };
-        text && editor.fire('paste', event);
-        text = event.text;
-        if (text) {
-          editor.insertText(editor.selection, text);
-        }
+        if (!text) return;
+        delta = new Delta().insert(text);
       } else {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html' );
-        let delta = deltaFromDom(doc.body, paper);
+        delta = deltaFromDom(doc.body, paper);
         cleanText(delta);
         const lastOp = delta.ops[delta.ops.length - 1];
         if (lastOp && typeof lastOp.insert === 'string' && (lastOp.insert !== '\n' || !lastOp.attributes)) {
           lastOp.insert = lastOp.insert.replace(/\n$/, '');
         }
-        const event = { delta };
-        editor.fire('paste', event);
-        delta = event.delta;
-        if (delta) editor.insertContent(editor.selection, delta);
       }
+
+      const editorEvent = { delta };
+      editor.fire('paste', editorEvent);
+      if (editorEvent.delta) editor.insertContent(editor.selection, editorEvent.delta);
     }
 
 
