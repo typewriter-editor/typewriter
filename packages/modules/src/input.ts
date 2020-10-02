@@ -4,7 +4,7 @@ import { KeyboardEventWithShortcut } from './shortcuts';
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
-const BAD_CHARS = /[\0-\x1F\x7F-\x9F\xAD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB\uE000-\uF8FF]/g;
+const BAD_CHARS = /[\0-\x09\x0B\x1F\x7F-\x9F\xAD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB\uE000-\uF8FF]/g;
 
 
 // Basic text input module. Prevent any actions other than typing characters and handle with the API.
