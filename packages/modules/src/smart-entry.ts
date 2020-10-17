@@ -7,6 +7,8 @@ const httpExpr = /(https?:\/\/.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b[-a-z
 const wwwExpr = /(www\.)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b[-a-zA-Z0-9@:%_+.~#?&/=]*\s$/s;
 const nakedExpr = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.(com|org|net|io)\b[-a-zA-Z0-9@:%_+.~#?&/=]*\s$/s;
 
+export type Handler = (editor?: Editor, index?: number, prefix?: string, paper?: Paper, wholeText?: string) => void;
+
 /**
  * A list of [ RegExp, Function ] tuples to convert text into a formatted block with the attributes returned by the
  * function. The function's argument will be the captured text from the regular expression.
@@ -123,10 +125,10 @@ export function textReplace(editor: Editor, index: number, prefix: string) {
   });
 }
 
-export const defaultHandlers = [ blockReplace, markReplace, textReplace, linkReplace ];
+export const defaultHandlers = [ blockReplace, textReplace, linkReplace ];
 
 
-export default function(handlers = defaultHandlers) {
+export default function(handlers: Handler[] = defaultHandlers) {
 
   return (editor: Editor, root: HTMLElement, paper: Paper) => {
     let ignore = false;
