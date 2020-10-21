@@ -152,10 +152,14 @@ export default function history({ maxStack = 500, delay = 0, stack = newStack() 
       stack.undo.forEach(entry => {
         entry.undo = change.transform(entry.undo, true) as Delta;
         entry.redo = change.transform(entry.redo, true) as Delta;
+        entry.undoSelection = transformRange(change, entry.undoSelection);
+        entry.redoSelection = transformRange(change, entry.redoSelection);
       });
       stack.redo.forEach(entry => {
         entry.undo = change.transform(entry.undo, true) as Delta;
         entry.redo = change.transform(entry.redo, true) as Delta;
+        entry.undoSelection = transformRange(change, entry.undoSelection);
+        entry.redoSelection = transformRange(change, entry.redoSelection);
       });
     }
 
@@ -213,4 +217,12 @@ function getAction(change) {
     if (changeOp.insert) return 'insert';
   }
   return '';
+}
+
+function transformRange(change: Delta, range: EditorRange): EditorRange {
+  if (!range) return range;
+  const collapsed = range[0] === range[1];
+  const from = change.transformPosition(range[0], true);
+  const to = collapsed ? from : change.transformPosition(range[1], true);
+  return [ from, to ];
 }
