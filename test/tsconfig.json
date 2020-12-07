@@ -1,22 +1,18 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "declaration": true,
-    "declarationDir": "lib/types",
     "noImplicitAny": false,
     "strictFunctionTypes": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "module": "commonjs",
-    "target": "es2019",
     "jsx": "react",
-    "strict": true,
+    "target": "es6",
     "lib": ["es2015", "es2016", "es2017", "dom"],
-    "types": ["@pyoner/svelte-types"],
-    "outDir": "lib"
+    "types": ["@pyoner/svelte-types", "mocha"],
+    "baseUrl": "../src",
   },
   "include": [
-    "src"
+    "."
   ]
 }

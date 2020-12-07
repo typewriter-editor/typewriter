@@ -1,11 +1,7 @@
 .*
+*.log
 node_modules/
+npm-debug.log
 !.babelrc
 !.travis.yml
-typewriter-iife.js*
-lerna-debug.log
-npm-debug.log
-packages/*/lib
-packages/demo/public/bundle.*
-packages/demo/public/vendor-bundle.*
-.rpt2_cache/
+lib

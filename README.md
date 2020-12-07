@@ -5,23 +5,27 @@
 [![Join the chat at https://gitter.im/typewriter-editor/Lobby](https://badges.gitter.im/typewriter-editor/Lobby.svg)](https://gitter.im/typewriter-editor/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
-Built on the same data model as Quill.js, the [Delta](https://github.com/quilljs/delta/) format, and using a tiny virtual DOM, [Ultradom](https://github.com/jorgebucaran/ultradom/), Typewriter aims to make custom rich text editors fast, easy, and more powerful. UI is framework agnostic, built with [Svelte](https://svelte.technology/).
+Built on the same data model as Quill.js, the [Delta](https://github.com/quilljs/delta/) format, and using a tiny virtual DOM, [Superfine](https://github.com/jorgebucaran/superfine), Typewriter aims to make custom rich text editors faster, easier, and more powerful. Need something out-of-the-box? Typewriter is not for you. Typewriter provides the tools to easily create your own custom editor. Build the user interface with [Svelte](https://svelte.technology/) [renderless components](https://adamwathan.me/renderless-components-in-vuejs/) using its slot features.
 
 ## Why Typewriter?
 
-A new class of rich text editors has emerged in recent years, backed by their own data model instead of the HTML and using contenteditable as an input mechanism. The benefit these editors provide is consistent display across every browser, the ability to create your own editor with the building blocks provided, and the ability to use [operational transforms](https://en.wikipedia.org/wiki/Operational_transformation) (or something similar) to enable collaborative authoring. They are the future of rich text editors on the web.
+A new class of rich text editors has emerged in recent years, backed by their own data model instead of HTML, and using ContentEditable simply as an input mechanism. These editors provide consistent display across every browser, bypass many of the bugs inherent with ContentEditable, give the ability to create your own custom editor with the building blocks provided, and allow realtime updates with collaborators (using [operational transforms](https://en.wikipedia.org/wiki/Operational_transformation) or [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)). They are the future of rich text editors on the web and have become mainstream.
 
-Some of these editors such as [ProseMirror](http://prosemirror.net/) and [CKEditor5](https://ckeditor.com/ckeditor-5-framework/), use a hierarchical data model. This allows for complete control over what is allowed in the editor but comes with a high complexity cost. It is difficult to design these models, and once designed it is difficult for those implementing the editors to customize them.
+Some of these new editors are dependent on a large framework such as Vue or React. These are great when you are already paying the cost of the framework, but if you are not, you add a lot of code size for your editor. React has editors such as [Draft.js](https://draftjs.org/) and [Slate](http://slatejs.org/).
 
-Some editors are dependent on React, such as [Draft.js](https://draftjs.org/) and [Slate](http://slatejs.org/). These editors require React and neither of them support operational transforms yet, though the Slate community is working on it.
+Some of these editors such as [ProseMirror](http://prosemirror.net/) and [CKEditor5](https://ckeditor.com/ckeditor-5-framework/), use a hierarchical data model like HTML. This gives complete control over what is allowed in the editor but comes with a high complexity cost. It is more difficult to conceptualize a hierarchical document that can be any depth than it is a text document that is a flat list of characters. It is also more difficult to customize editors using a hierarchical data model, but ultimately it is more flexible and powerful.
 
-Other editors such as [Quill.js](https://quilljs.com/) and [Medium's editor](https://medium.engineering/why-contenteditable-is-terrible-122d8a40e480) use a linear data model which is much easier to reason about and simpler to work with. These editors do not allow as much flexibility or control over the output as their hierarchical cousins, but many types of content can be represented linearly. One might argue that most content could be.
+Other editors such as [Quill.js](https://quilljs.com/) and [Medium's editor](https://medium.engineering/why-contenteditable-is-terrible-122d8a40e480) use a linear data model which is much easier to reason about and simpler to work with. These editors do not allow as much flexibility or control over the output as their hierarchical cousins, but many (perhaps most) types of content can be represented linearly.
 
-Typewriter takes the latter approach, building on the same data model as Quill.js, but fully separating the view layer from the model layer and making both more flexible and more performant.
+Typewriter pulls bits from all these editors and takes the best of each of them.
 
-Typewriter was built for [Dabble](https://www.dabblewriter.com/), an in-browser app for novelists to write their stories. Dabble requires performance with large documents, a mechnism for decorating the HTML display without altering the underlying data (for things like search-and-replace), and simplicity so the creator of Dabble could understand it well enough to customize it.
+Typewriter takes the linear approach, building off the same data model as Quill.js, the `[Delta](https://github.com/quilljs/delta/)` format. Typewriter modifies `Delta` to provide better memory usage with an immutable approach and adds `TextDocument` which splits a `Delta` document into lines to add even more memory benefits for large documents. This model is more similar to the Medium editor and provides greater runtime performance, especially on larger documents.
 
-The result is something close to Quill.js, but with some differences in API and output. Pains were taken to ensure Typewriter could consume the data from Quill so Quill users could migrate if desired.
+Typewriter avoids large frameworks by using a tiny virtual DOM for rendering its contents and providing optional tiny renderless [Svelte](https://svelte.dev/) components that help you build your own toolbars and popup menus.
+
+Typewriter adds Decorations like ProseMirror which support changes to how the document is displayed without changing the document. It does this in a performant manner. This is used for features like highlighting find-replace words or inserting a collaborator's cursor.
+
+Typewriter was built for [Dabble](https://www.dabblewriter.com/), an in-browser app for novelists to write their stories. Dabble requires performance with large documents, a mechnism for decorating the display without altering the underlying data (for find-and-replace and collaboration), and simplicity so the creator of Dabble could understand it well enough to customize it.
 
 ## Learn Typewriter
 
@@ -29,20 +33,19 @@ For an overview of the Typerwriter concepts and how it works, see the [Typewrite
 
 ## Differences Between Typewriter and Quill.js
 
-* Typewriter’s ranges use `from` and `to` (start index and end index) while Quill uses `index` and `length`.
-* Typewriter’s API is split between an `Editor` class and a `View` class for greater customization and the ability to use `Editor` on the server in a Node.js environment. This could allow bots to collaborate on a document.
-* Typewriter’s `insertText` and `insertEmbed` methods allow overwriting content. With Quill you need call `deleteText` first to do the same.
-* Typewriter provides a `transaction` feature which allows calling multiple methods which are combined into one commit to the data model.
-* Typewriter provides view decorators! Using the same mechanism as transactions, a decorator can alter the contents of the editor and those changes will be applied on top of the underlying editor contents before being displayed. No new APIs to learn, just use the core APIs to add decorators.
-* Typewriter has _no_ stylesheet requirements. This is something that many of the other editors required (including Quill) and restricted full customization of the display.
-* Typewriter handles lists correctly as HTML lists should be. Quill uses classes to fake list indentation.
-* Typewriter allows `<br>` tags to be used, such as you get when `Shift+Enter` is pressed.
-* Related to `<br>`, Typewriter allows paragraphs to be paragraphs! Without a required stylesheet removing margins, you can have your paragraphs be styled the way you need them to be.
-* Typewriter breaks runs of actions at the correct places for undo to work correctly (i.e. the way the native OS does). There is still a time delay to keep them from getting too long which you can choose not to use.
+* Typewriter uses tuples of indexes to describe ranges and selection rather than `index` and `length` values.
+* Typewriter’s rendering to the DOM is a module and can be replaced with custom rendering.
+* Typewriter provides a TextChange interface to roll up multiple change operations into one atomic change in the editor.
+* Typewriter’s single `insert` replaces Quill's `insertText` and `insertEmbed` methods and allows overwriting selected content in one operation. With Quill you need call `deleteText` first to do the same, creating 2 operations.
+* Typewriter provides decorations! A decorator can alter the contents of the editor by adding classes, styles, and other HTML attributes to lines, spans of text, or an embedded element, and those changes will be applied on top of the underlying editor contents before being displayed.
+* Typewriter has _no_ stylesheet requirements. This is something that several of the other editors require (including Quill and ProseMirror) and restricts full customization of the display.
+* Typewriter handles lists correctly as HTML lists should be. Quill uses CSS to fake list indentation.
+* Typewriter allows paragraphs to be paragraphs! Without a required stylesheet which removes paragraph margins, you can have your paragraphs be styled the way you need them to be, and Typewriter allows `<br>` tags to be used, such as you get when `Shift+Enter` is pressed.
+* Typewriter's History module works the same way your OS undo works, breaking simliar actions at the correct places. You may still use a time delay to keep them from getting too long if you wish.
 
 ## The Current State of Typewriter
 
-Typewriter has just gotten its legs underneath it. Documentation may be lacking and there may be breaking API changes as we get a feel for it.
+Typewriter has just undergone a huge rewrite, moving from using just the `Delta` format to its new `TextDocument` model for enhanced performance and encorporating many things learned from the previous iterations. There may still be some API changes, but those should be fewer as Typewriter settles into its new trajectory.
 
 ## Contributing
 
@@ -63,35 +66,34 @@ Add Typewriter to your project:
 npm install --save typewriter-editor
 ```
 
-Then import it in your app and add it to the page:
+Import it in your app, create an editor and add it to the page:
 
 ```js
-import { Editor, View, defaultViewModules } from 'typewriter-editor';
+import { Editor } from 'typewriter-editor';
 
 const editor = new Editor();
-const view = new View(editor, { modules: defaultViewModules });
 
-view.mount(document.body);
+document.body.appendChild(editor.root);
 ```
 
-Your editor will have no styling. You will need to add that yourself.
+Your editor root is a plain `<div>` and will assume the styling of the page. Add additional styling as required.
 
 ## Building
 
-To test out locally, clone this repo to your computer and run:
+To test Typewriter out locally, clone this repo to your computer and run:
 
 ```
 npm install
 npm start
 ```
 
-To run the tests:
+Then open https://localhost:9000/ to view the examples app.
+
+To run the few tests:
 
 ```
-npm run test
+npm test
 ```
-
-The [`src/dev.js`](src/dev.js) file is the current test runner for playing around with ideas. You might try checking that out to see some of what is possible.
 
 ## Documentation
 
@@ -99,13 +101,10 @@ Link to our [documentation](docs/README.md)
 
 ### TODO
 
-* Paste handling (should be pretty easy with deltaFromDom) https://www.w3.org/TR/clipboard-apis/#override-paste
-* Handle copy to remove decorations and only copy source (https://developer.mozilla.org/en-US/docs/Web/Events/copy)
-* Code comments (started this in editor)
-* Testing (started this too)
+* More testing
 * More modules
-* Rethink the module API (objects with methods instead of just functions?), see quill's modules
-* Optional UI, toolbars, image handling, etc.
+* Table support
+* More UI tools for image handling, etc.
 * Benchmarking
 
 ## Contributing
