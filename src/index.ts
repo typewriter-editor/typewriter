@@ -24,6 +24,7 @@ export * from './modules';
 export * from './stores';
 export * from './typesetting/defaults';
 
+export * from './Editor';
 import Editor from './Editor';
 
 export { Editor as Editor };

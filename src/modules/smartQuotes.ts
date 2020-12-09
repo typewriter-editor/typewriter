@@ -8,7 +8,7 @@ import { PasteEvent } from './paste';
  * quotes act more seemlessly and includes them as part of regular text undo/redo instead of breaking it like the smart-
  * entry conversions do.
  */
-export default function smartQuotes() {
+export function smartQuotes() {
   return (editor: Editor) => {
 
     function onTextChange(event: EditorChangeEvent) {

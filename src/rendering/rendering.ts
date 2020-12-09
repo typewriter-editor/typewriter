@@ -8,7 +8,7 @@ import { LineType } from '../typesetting/typeset';
 import { deltaFromDom, docToHTML } from './html';
 import { EditorRange } from '../doc/EditorRange';
 import Delta from '../delta/Delta';
-import { applyDecorations } from '../modules';
+import { applyDecorations } from '../modules/decorations';
 
 const EMPTY_ARR = [];
 const BR = h('br', {});

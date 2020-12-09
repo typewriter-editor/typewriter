@@ -50,7 +50,7 @@ export interface DecorationsModule {
 }
 
 
-export function decorations(editor: Editor) {
+export function decorations(editor: Editor): DecorationsModule {
   const decorations = new Map<string, Delta>();
   let original = editor.doc;
   let old = original;

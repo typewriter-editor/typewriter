@@ -1,4 +1,4 @@
-import { applyDecorations } from '../modules';
+import { applyDecorations } from '../modules/decorations';
 import { h } from '../rendering/vdom';
 import { format } from './typeset';
 

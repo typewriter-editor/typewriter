@@ -1,26 +1,38 @@
 import TextDocument from '../doc/TextDocument';
 import TextChange from '../doc/TextChange';
 import Editor, { EditorChangeEvent, Source } from '../Editor';
-import { KeyboardEventWithShortcut } from './keyboard';
+import Delta from '../delta/Delta';
 
 export interface StackEntry {
   redo: TextChange;
   undo: TextChange;
 }
 
-export interface Stack {
+export interface UndoStack {
   undo: StackEntry[],
   redo: StackEntry[],
 }
 
 export interface Options {
-  delay?: number;
-  maxStack?: number;
-  stack?: Stack;
+  delay: number;
+  maxStack: number;
 }
 
 // Default history module
 export const history = initHistory();
+
+export interface HistoryModule {
+  options: Options;
+  hasUndo: () => boolean;
+  hasRedo: () => boolean;
+  undo: () => void;
+  redo: () => void;
+  cutoffHistory: () => void;
+  clearHistory: () => void;
+  setStack: (value: UndoStack) => void;
+  getStack: () => UndoStack;
+  destroy(): void;
+}
 
 /**
  * History is a view module for storing user changes and undoing/redoing those changes.
@@ -38,12 +50,14 @@ export const history = initHistory();
  * };
  * ```
  */
-export function initHistory({ maxStack = 500, delay = 0, stack = undoStack() }: Options = {}) {
+export function initHistory(initOptions: Partial<Options> = {}) {
 
   return function(editor: Editor) {
     let lastRecorded = 0;
     let lastAction = '';
     let ignoreChange = false;
+    let stack = undoStack();
+    const options: Options = { maxStack: 500, delay: 0, ...initOptions };
 
     function onBeforeInput(event: InputEvent) {
       if (event.inputType === 'historyUndo') {
@@ -105,7 +119,7 @@ export function initHistory({ maxStack = 500, delay = 0, stack = undoStack() }: 
       if (!action || lastAction !== action) cutoffHistory();
       lastAction = action;
 
-      if (lastRecorded && (!delay || lastRecorded + delay > timestamp) && stack.undo.length) {
+      if (lastRecorded && (!options.delay || lastRecorded + options.delay > timestamp) && stack.undo.length) {
         // Combine with the last change
         const entry = stack.undo[stack.undo.length - 1];
         entry.redo.delta = entry.redo.delta.compose(change.delta);
@@ -117,7 +131,7 @@ export function initHistory({ maxStack = 500, delay = 0, stack = undoStack() }: 
         stack.undo.push({ redo, undo });
       }
 
-      if (stack.undo.length > maxStack) {
+      if (stack.undo.length > options.maxStack) {
         stack.undo.shift();
       }
     }
@@ -130,17 +144,17 @@ export function initHistory({ maxStack = 500, delay = 0, stack = undoStack() }: 
       if (source === Source.user) {
         record(change, old);
       } else {
-        transformStack(stack, change);
+        transformHistoryStack(stack, change);
       }
     }
 
     // Advanced, only use this if the stack matches the document
     // e.g. use transformStack when changes come in for a document that isn't loaded
-    function setUndoStack(value: Stack) {
+    function setStack(value: UndoStack) {
       stack = value;
     }
 
-    function getUndoStack() {
+    function getStack() {
       return stack;
     }
 
@@ -150,14 +164,15 @@ export function initHistory({ maxStack = 500, delay = 0, stack = undoStack() }: 
     root.addEventListener('beforeinput', onBeforeInput);
 
     return {
+      options,
       hasUndo,
       hasRedo,
       undo,
       redo,
       cutoffHistory,
       clearHistory,
-      setUndoStack,
-      getUndoStack,
+      setStack,
+      getStack,
       getActive() {
         return { undo: hasUndo(), redo: hasRedo() };
       },
@@ -179,14 +194,16 @@ export function initHistory({ maxStack = 500, delay = 0, stack = undoStack() }: 
   }
 }
 
-export function undoStack(): Stack {
+export function undoStack(): UndoStack {
   return {
     undo: [],
     redo: [],
   };
 }
 
-export function transformStack(stack: Stack, change: TextChange) {
+export function transformHistoryStack(stack: UndoStack, delta: TextChange | Delta) {
+  const change = delta instanceof Delta ? new TextChange(null, delta) : delta;
+
   stack.undo.forEach(entry => {
     entry.undo = change.transform(entry.undo, true);
     entry.redo = change.transform(entry.redo, true);

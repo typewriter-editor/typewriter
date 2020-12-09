@@ -2,7 +2,6 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "declaration": true,
-    "declarationDir": "lib/types",
     "noImplicitAny": false,
     "strictFunctionTypes": false,
     "esModuleInterop": true,

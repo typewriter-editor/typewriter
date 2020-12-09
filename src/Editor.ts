@@ -10,7 +10,6 @@ import Line from './doc/Line';
 import { docFromHTML, docToHTML } from './rendering/html';
 import EventDispatcher from './util/EventDispatcher';
 import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position';
-import Op from './delta/Op';
 
 const EMPTY_OBJ = {};
 const EMPTY_ARR = [];
@@ -169,7 +168,10 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  set(doc: TextDocument, source: Source = Source.user, change?: TextChange, changedLines?: Line[]): this {
+  set(doc: TextDocument | Delta, source: Source = Source.user, change?: TextChange, changedLines?: Line[]): this {
+    if (doc instanceof Delta) {
+      doc = new TextDocument(doc);
+    }
     if ((!this.enabled && source === Source.user) || !doc || doc === this.doc || this.doc.equals(doc)) {
       return this;
     }
@@ -351,6 +353,10 @@ export default class Editor extends EventDispatcher {
   }
 
   init() {
+    const root = this._root as any;
+    if (root.editor) root.editor.destroy();
+    root.editor = this;
+
     this.enabled = this._enabled;
     this.commands = {};
     PROXIED_EVENTS.forEach(type => this._root.addEventListener(type, getEventProxy(this)));
@@ -367,9 +373,12 @@ export default class Editor extends EventDispatcher {
   }
 
   destroy() {
-    if (!this._root) return;
-    PROXIED_EVENTS.forEach(type => this._root.removeEventListener(type, getEventProxy(this)));
+    const root = this._root as any;
+    if (!root) return;
+    PROXIED_EVENTS.forEach(type => root.removeEventListener(type, getEventProxy(this)));
     Object.values(this.modules).forEach(module => module.destroy && module.destroy());
+    (this._root as any) = undefined;
+    delete root.editor;
   }
 }
 

@@ -36,14 +36,14 @@ export function copy(editor: Editor) {
     editor.delete();
   }
 
-
-  const { root } = editor;
-  root.addEventListener('copy', onCopy);
-  root.addEventListener('cut', onCut);
-
   return {
+    init() {
+      editor.root.addEventListener('copy', onCopy);
+      editor.root.addEventListener('cut', onCut);
+    },
     destroy() {
-      root.removeEventListener('copy', onCopy);
+      editor.root.removeEventListener('copy', onCopy);
+      editor.root.removeEventListener('cut', onCut);
     }
   }
 }

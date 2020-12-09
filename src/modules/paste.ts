@@ -86,13 +86,12 @@ export function paste(editor: Editor) {
     }
   }
 
-
-  const { root } = editor;
-  root.addEventListener('paste', onPaste);
-
   return {
+    init() {
+      editor.root.addEventListener('paste', onPaste);
+    },
     destroy() {
-      root.removeEventListener('paste', onPaste);
+      editor.root.removeEventListener('paste', onPaste);
     }
   }
 }

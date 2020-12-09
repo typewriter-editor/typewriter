@@ -1,7 +1,7 @@
 import { VNode, h, Props, VChild } from '../rendering/vdom';
 import AttributeMap from '../delta/AttributeMap';
 import { line } from './typeset';
-import { applyDecorations } from '../modules';
+import { applyDecorations } from '../modules/decorations';
 import { normalizeRange } from '../doc/EditorRange';
 
 

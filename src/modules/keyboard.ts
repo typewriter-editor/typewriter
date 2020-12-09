@@ -1,6 +1,6 @@
 import Editor from '../Editor';
 import Line from '../doc/Line';
-import { shortcutFromEvent } from './shortcut-string';
+import { shortcutFromEvent } from './shortcutFromEvent';
 import { normalizeRange } from '../doc/EditorRange';
 const isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
 const modExpr = isMac ? /Cmd/ : /Ctrl/;

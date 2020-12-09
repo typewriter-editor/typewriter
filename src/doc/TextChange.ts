@@ -176,6 +176,11 @@ export default class TextChange {
     return [ from, to ];
   }
 
+  transformAgainst(delta: TextChange | Delta, priority?: boolean) {
+    const change = delta instanceof Delta ? new TextChange(null, delta) : delta;
+    return change.transform(this, !priority);
+  }
+
   isFor(doc: TextDocument) {
     return this.doc === doc;
   }

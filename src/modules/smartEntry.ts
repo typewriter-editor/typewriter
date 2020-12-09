@@ -130,7 +130,7 @@ export function textReplace(editor: Editor, index: number, prefix: string) {
 export const defaultHandlers = [ lineReplace, textReplace, linkReplace ];
 
 
-export default function(handlers: Handler[] = defaultHandlers) {
+export function smartEntry(handlers: Handler[] = defaultHandlers) {
 
   return (editor: Editor) => {
     let ignore = false;
