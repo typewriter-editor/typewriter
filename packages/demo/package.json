@@ -1,13 +1,13 @@
 {
   "name": "@typewriter/demo",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "dependencies": {
-    "@typewriter/editor": "^0.9.0",
-    "@typewriter/modules": "^0.9.5",
-    "@typewriter/ui": "^0.9.2",
-    "@typewriter/view": "^0.8.2",
-    "@typewriter/view-svelte": "^0.8.2",
-    "@typewriter/view-vdom": "^0.9.2"
+    "@typewriter/editor": "^0.9.1",
+    "@typewriter/modules": "^0.9.6",
+    "@typewriter/ui": "^0.9.3",
+    "@typewriter/view": "^0.8.3",
+    "@typewriter/view-svelte": "^0.8.3",
+    "@typewriter/view-vdom": "^0.9.3"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5",
