@@ -31,6 +31,10 @@ export default function input() {
         const lastOp = delta.ops[delta.ops.length - 1];
         if (lastOp && typeof lastOp.insert === 'string' && (lastOp.insert !== '\n' || !lastOp.attributes)) {
           lastOp.insert = lastOp.insert.replace(/\n$/, '');
+          if (!lastOp.insert) {
+            delta.ops.pop();
+            if (!delta.ops.length) return;
+          }
         }
       }
 

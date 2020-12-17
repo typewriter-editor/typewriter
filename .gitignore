@@ -9,3 +9,4 @@ packages/*/lib
 packages/demo/public/bundle.*
 packages/demo/public/vendor-bundle.*
 .rpt2_cache/
+lib
