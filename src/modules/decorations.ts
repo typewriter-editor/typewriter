@@ -190,6 +190,10 @@ export class Decorator {
     this._remove = remove;
   }
 
+  hasDecorations() {
+    return !!this._decoration && this._decoration.ops.length > 0 || this.change.delta.ops.length > 0;
+  }
+
   apply() {
     return this._apply(this._name, this.change.delta);
   }
@@ -199,6 +203,7 @@ export class Decorator {
   }
 
   clear(range?: EditorRange) {
+    if (!this.hasDecorations()) return;
     if (!range) {
       this.change.setDelta(this.invert());
     } else {

@@ -78,6 +78,7 @@ button:focus {
   border-radius: 3px;
 }
 .text-content {
+  outline: none;
   padding: 8px 16px;
   border-radius: 3px;
   min-height: 256px;
@@ -86,7 +87,6 @@ button:focus {
   transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 }
 .text-content.focus {
-  outline: none;
   border-color: #80bdff;
   box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 }

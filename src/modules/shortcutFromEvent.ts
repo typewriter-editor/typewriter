@@ -5,6 +5,20 @@ const modifierKeys = {
   Alt: true
 };
 const isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
+const modExpr = isMac ? /Cmd/ : /Ctrl/;
+
+export interface KeyboardEventWithShortcut extends KeyboardEvent {
+  shortcut?: string;
+  osShortcut?: string;
+  modShortcut?: string;
+}
+
+export function addShortcutsToEvent(event: KeyboardEventWithShortcut) {
+  event.shortcut = shortcutFromEvent(event);
+  event.osShortcut = `${isMac ? 'mac' : 'win'}:${event.shortcut}`;
+  event.modShortcut = event.shortcut.replace(modExpr, 'Mod');
+  return event;
+}
 
 /**
  * Returns the textual representation of a shortcut given a keyboard event. Examples of shortcuts:

@@ -6,7 +6,8 @@ import { docFromDom } from './rendering/html';
 export default function asRoot(root: HTMLElement, editor: Editor) {
 
   function update(newEditor: Editor) {
-    if (editor !== newEditor) destroy();
+    if (editor === newEditor) return;
+    destroy();
     if (newEditor) newEditor.setRoot(root);
     editor = newEditor;
   }
@@ -15,7 +16,7 @@ export default function asRoot(root: HTMLElement, editor: Editor) {
     editor.set(docFromDom(editor, root));
   }
 
-  update(editor);
+  if (editor) editor.setRoot(root);
 
   function destroy() {
     if (editor) editor.destroy();

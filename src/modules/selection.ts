@@ -9,15 +9,15 @@ import { DecorationsModule } from './decorations';
 export function selection(editor: Editor) {
 
   const { root } = editor;
-  const document = root.ownerDocument;
-  const window = document.defaultView as Window;
+  const rootDocument = root.ownerDocument;
+  const rootWindow = rootDocument.defaultView as Window;
   let lastSelection: EditorRange;
   let paused = false;
 
-  document.addEventListener('selectionchange', onSelectionChange);
+  rootDocument.addEventListener('selectionchange', onSelectionChange);
   root.addEventListener('mousedown', onMouseDown);
-  window.addEventListener('focus', onWindowFocus);
-  window.addEventListener('blur', onWindowFocus);
+  rootWindow.addEventListener('focus', onWindowFocus);
+  rootWindow.addEventListener('blur', onWindowFocus);
   editor.on('change', onChange);
   editor.on('decorate', onDecorate);
 
@@ -78,7 +78,7 @@ export function selection(editor: Editor) {
   }
 
   function onWindowFocus() {
-    root.classList.toggle('window-inactive', !document.hasFocus());
+    root.classList.toggle('window-inactive', !rootDocument.hasFocus());
   }
 
   function pause() {
@@ -105,10 +105,10 @@ export function selection(editor: Editor) {
     resume,
     renderSelection,
     destroy() {
-      document.removeEventListener('selectionchange', onSelectionChange);
+      rootDocument.removeEventListener('selectionchange', onSelectionChange);
       root.addEventListener('mousedown', onMouseDown);
-      window.removeEventListener('focus', onWindowFocus);
-      window.removeEventListener('blur', onWindowFocus);
+      rootWindow.removeEventListener('focus', onWindowFocus);
+      rootWindow.removeEventListener('blur', onWindowFocus);
       editor.off('change', onChange);
     }
   }

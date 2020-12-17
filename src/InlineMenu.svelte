@@ -11,9 +11,10 @@ let menu;
 let popper;
 let oldRoot;
 let menuHasFocus = false;
-const { active, doc, selection, focus, root } = editorStores(editor);
+const { active, doc, selection, focus, root, updateEditor } = editorStores(editor);
 
-$: activeSelection = menuHasFocus ? activeSelection : $selection;
+$: updateEditor(editor);
+$: activeSelection = getActive(menuHasFocus, $selection);
 $: sel = !hover && $selection && $selection[0] === $selection[1] && $selection;
 $: at = sel && sel[0];
 $: line = at || at === 0 ? $doc.getLineAt(at) : null;
@@ -43,6 +44,10 @@ function update() {
       popper = null;
     }
   }
+}
+
+function getActive(menuHasFocus, selection) {
+  return menuHasFocus ? activeSelection : selection;
 }
 
 function onMouseOver(event) {

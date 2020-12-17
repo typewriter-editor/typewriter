@@ -18,7 +18,7 @@ onMount(() => {
   </p>
 </div>
 
-<BubbleMenu {editor} let:active let:commands let:placement placement="bottom-end">
+<BubbleMenu {editor} let:active let:commands let:placement offset={8}>
   <div class="menu">
     <div data-arrow class="arrow {placement}"></div>
     <button

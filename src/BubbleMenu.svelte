@@ -1,10 +1,13 @@
 <script>
+import { onDestroy } from 'svelte';
 import { editorStores } from 'typewriter-editor';
 import { createPopper } from '@popperjs/core';
 
 export let editor;
 let className = 'bubble-menu';
 export { className as class };
+export let offset = 0;
+export let padding = 4;
 
 let menu;
 let popper;
@@ -12,9 +15,10 @@ let oldRoot;
 let mouseDown = false;
 let menuHasFocus = false;
 let placement = 'top';
-const { active, doc, selection, focus, root } = editorStores(editor);
+const { active, doc, selection, focus, root, updateEditor } = editorStores(editor);
 
-$: activeSelection = mouseDown || menuHasFocus ? activeSelection : $selection;
+$: updateEditor(editor);
+$: activeSelection = getActive(mouseDown, menuHasFocus, $selection);
 $: update(menu, $doc);
 $: updateRoot($root);
 
@@ -30,28 +34,13 @@ function update() {
         contextElement: editor.root,
       };
       popper = createPopper(element, menu, {
-        placement: placement,
+        placement: 'top',
         modifiers: [
-          {
-            name: 'arrow',
-            options: {
-              element: '[data-arrow]'
-            }
-          },
-          {
-            name: 'offset',
-            options: {
-              offset: [0, 8],
-            },
-          },
-          {
-            name: 'dataOutput',
-            enabled: true,
-            phase: 'write',
-            fn({ state }) {
-              placement = state.placement.split('-')[0];
-            },
-          }
+          { name: 'arrow', options: { element: '[data-arrow]' }},
+          { name: 'computeStyles', options: { adaptive: false }},
+          { name: 'offset', options: { offset: [0, offset] }},
+          { name: 'preventOverflow', options: { padding }},
+          { name: 'dataOutput', enabled: true, phase: 'write', fn({ state }) { placement = state.placement.split('-')[0] }}
         ],
       });
       requestAnimationFrame(() => menu.classList.add('active'))
@@ -62,6 +51,10 @@ function update() {
       popper = null;
     }
   }
+}
+
+function getActive(mouseDown, menuHasFocus, selection) {
+  return mouseDown || menuHasFocus ? activeSelection : selection;
 }
 
 function onMouseDown() {
@@ -87,6 +80,7 @@ function updateRoot(root) {
 
 function onGainFocus(event) {
   if (menuHasFocus || event.target.nodeName === 'BUTTON') return;
+  console.log('paused');
   editor.modules.selection.pause();
   menuHasFocus = true;
 }
@@ -94,8 +88,15 @@ function onGainFocus(event) {
 function onLoseFocus() {
   if (!menuHasFocus) return;
   editor.modules.selection.resume();
+  console.log('resumed');
   menuHasFocus = false;
 }
+
+onDestroy(() => {
+  updateRoot();
+  onLoseFocus();
+  if (popper) popper.destroy();
+});
 </script>
 
 {#if activeSelection && activeSelection[0] !== activeSelection[1]}

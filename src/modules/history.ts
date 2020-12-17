@@ -1,7 +1,8 @@
 import TextDocument from '../doc/TextDocument';
 import TextChange from '../doc/TextChange';
-import Editor, { EditorChangeEvent, Source } from '../Editor';
+import Editor, { EditorChangeEvent } from '../Editor';
 import Delta from '../delta/Delta';
+import { Source } from '../Source';
 
 export interface StackEntry {
   redo: TextChange;

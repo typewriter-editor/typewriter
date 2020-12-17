@@ -38,8 +38,8 @@ export function setSelection(editor: Editor, range: EditorRange | null) {
   if (range == null) {
     if (hasFocus) {
       selection.removeAllRanges();
+      root.classList.remove('focus');
     }
-    root.classList.remove('focus');
   } else {
     const [ anchorNode, anchorOffset, focusNode, focusOffset ] = getNodesForRange(editor, range);
     const type = range[0] === range[1] ? 'Caret' : 'Range';
@@ -53,4 +53,5 @@ export function setSelection(editor: Editor, range: EditorRange | null) {
     if (!hasFocus) root.focus();
     root.classList.add('focus');
   }
+  root.dispatchEvent(new Event('select', { bubbles: true }));
 }

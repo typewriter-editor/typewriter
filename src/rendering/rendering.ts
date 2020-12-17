@@ -100,10 +100,6 @@ export function renderChanges(editor: Editor, oldDoc: TextDocument, newDoc: Text
   editor.dispatchEvent(new Event('rendered'));
 }
 
-export function toHTML(editor: Editor, doc: TextDocument) {
-  return docToHTML(editor, doc);
-}
-
 // Return a line or multi-line array from the top-level node
 export function fromNode(editor: Editor, dom: HTMLElement) {
   const lines = Line.fromDelta(deltaFromDom(editor, { root: dom }));

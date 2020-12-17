@@ -10,18 +10,15 @@ import Line from './doc/Line';
 import { docFromHTML, docToHTML } from './rendering/html';
 import EventDispatcher from './util/EventDispatcher';
 import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position';
+import { Source } from './Source';
 
 const EMPTY_OBJ = {};
 const EMPTY_ARR = [];
 const PROXIED_EVENTS = [ 'focus', 'blur', 'keydown', 'mousedown', 'mouseup', 'click' ];
 const eventProxies = new WeakMap<Editor, EventListener>();
 
-export enum Source {
-  api = 'api',
-  user = 'user',
-}
-
 export interface EditorOptions {
+  identifier?: any;
   root?: HTMLElement | false;
   types?: TypesetTypes;
   doc?: TextDocument;
@@ -96,6 +93,7 @@ export class EditorFormatEvent extends Event {
 
 
 export default class Editor extends EventDispatcher {
+  identifier: any;
   typeset: Typeset;
   doc: TextDocument;
   activeFormats: AttributeMap = EMPTY_OBJ;
@@ -108,6 +106,7 @@ export default class Editor extends EventDispatcher {
 
   constructor(options: EditorOptions = {}) {
     super();
+    this.identifier = options.identifier;
     this.typeset = new Typeset(options.types || defaultTypes);
     if (options.doc) {
       this.doc = options.doc;

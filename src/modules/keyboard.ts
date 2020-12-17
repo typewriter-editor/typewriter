@@ -1,19 +1,11 @@
 import Editor from '../Editor';
 import Line from '../doc/Line';
-import { shortcutFromEvent } from './shortcutFromEvent';
+import { addShortcutsToEvent, KeyboardEventWithShortcut } from './shortcutFromEvent';
 import { normalizeRange } from '../doc/EditorRange';
-const isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
-const modExpr = isMac ? /Cmd/ : /Ctrl/;
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 const EMPTY_OBJ = {};
-
-export interface KeyboardEventWithShortcut extends KeyboardEvent {
-  shortcut?: string;
-  osShortcut?: string;
-  modShortcut?: string;
-}
 
 // Basic keyboard module.
 export function keyboard(editor: Editor) {
@@ -154,12 +146,10 @@ export function keyboard(editor: Editor) {
 
 
 
-  function onKeyDown(event) {
+  function onKeyDown(event: KeyboardEventWithShortcut) {
     if (event.isComposing) return;
 
-    event.shortcut = shortcutFromEvent(event);
-    event.osShortcut = `${isMac ? 'mac' : 'win'}:${event.shortcut}`;
-    event.modShortcut = event.shortcut.replace(modExpr, 'Mod');
+    addShortcutsToEvent(event);
 
     const checkShortcut = shortcut => {
       const command = editor.shortcuts[shortcut];
@@ -182,7 +172,7 @@ export function keyboard(editor: Editor) {
       case 'Mod+[': return onTab(event);
     }
 
-    switch (event.modShortcut.split('+').pop()) {
+    switch (event.modShortcut?.split('+').pop()) {
       case 'Backspace': return onBackspace(event);
       case 'Delete': return onDelete(event);
       default: return;

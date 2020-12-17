@@ -1,6 +1,7 @@
 export { decorations, DecorateEvent, DecorationsModule, Decorator } from './decorations';
 export { history, HistoryModule, undoStack } from './history';
 export { input } from './input';
+export * from './shortcutFromEvent';
 export { keyboard } from './keyboard';
 export { paste, PasteEvent } from './paste';
 export { copy } from './copy';
