@@ -28,6 +28,9 @@ export default class TextDocument {
     } else {
       this.lines = [ Line.create() ];
     }
+    if (!this.lines.length) {
+      this.lines.push(Line.create());
+    }
     const info = Line.getLineInfo(this.lines);
     this._ranges = info.ranges;
     this.byId = info.ids;
