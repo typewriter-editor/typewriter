@@ -203,7 +203,7 @@ export class Decorator {
   }
 
   clear(range?: EditorRange) {
-    if (!this.hasDecorations()) return;
+    if (!this.hasDecorations()) return this;
     if (!range) {
       this.change.setDelta(this.invert());
     } else {
@@ -213,7 +213,7 @@ export class Decorator {
   }
 
   clearLines(lines: Line[]) {
-    if (!lines.length) return;
+    if (!lines.length) return this;
     const doc = this._doc;
     const range = [ doc.getLineRange(lines[0])[0], doc.getLineRange(lines[lines.length - 1])[1] ] as EditorRange;
     const contiguous = lines.length === 1 || lines.every((line, i) =>
