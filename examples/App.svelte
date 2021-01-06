@@ -6,6 +6,7 @@ import CustomRoot from './CustomRoot.svelte';
 import Toolbar from './Toolbar.svelte';
 import BubbleMenu from './BubbleMenu.svelte';
 import InlineMenu from './InlineMenu.svelte';
+import Virtualized from './Virtualized.svelte';
 
 let url = globalHistory.location.pathname;
 globalHistory.listen(() => url = globalHistory.location.pathname);
@@ -27,6 +28,7 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
         <a href="/toolbar" class="menu-item" class:current={url === '/toolbar'} use:link>Toolbar</a>
         <a href="/bubble-menu" class="menu-item" class:current={url === '/bubble-menu'} use:link>Bubble Menu</a>
         <a href="/inline-menu" class="menu-item" class:current={url === '/inline-menu'} use:link>Inline Menu</a>
+        <a href="/virtualized" class="menu-item" class:current={url === '/virtualized'} use:link>Virtualized Rendering</a>
       </div>
 
       <div class="app-content">
@@ -35,6 +37,7 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
         <Route path="/toolbar" component={Toolbar}/>
         <Route path="/bubble-menu" component={BubbleMenu}/>
         <Route path="/inline-menu" component={InlineMenu}/>
+        <Route path="/virtualized" component={Virtualized}/>
       </div>
     </div>
 

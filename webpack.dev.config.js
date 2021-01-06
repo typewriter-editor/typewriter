@@ -18,6 +18,10 @@ module.exports = {
       {
         test: /\.svelte$/,
         use: 'svelte-loader'
+      },
+      {
+        test: /\.txt$/,
+        use: 'raw-loader'
       }
     ],
   },
