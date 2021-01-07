@@ -19,7 +19,7 @@ The following is a set of guidelines for contributing to Typewriter. These are j
 
 This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code.
-Please report unacceptable behavior to [info@typewriter-editor.com](mailto:info@typewriter-editor.com).
+<!-- Please report unacceptable behavior to [info@typewriter-editor.com](mailto:info@typewriter-editor.com). -->
 
 ## How Can I Contribute?
 ### Types of Contributors

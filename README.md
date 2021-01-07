@@ -49,8 +49,8 @@ Virtualized rendering is buggy and not ready for production.
 ## Contributing
 
 If you are interested in being a part of something new:
-* join the discussions on [Github Discussions](https://github.com/typewriter-editor/typewriter/discussions)
 * read through the [Typewriter Guide](docs/guide.md)
+* join the discussions on [Github Discussions](https://github.com/typewriter-editor/typewriter/discussions)
 * read through the code
 * write tests
 * write docs
@@ -95,7 +95,7 @@ npm test
 
 ## Documentation
 
-Link to our [documentation](docs/README.md)
+[Our documentation](docs/README.md)
 
 ### TODO
 
@@ -107,8 +107,8 @@ Link to our [documentation](docs/README.md)
 
 ## Contributing
 
-Thanks for taking the time to help! We intend Typewriter to be a useful tool and always appreciate any contributions in building it, not matter how big or small.
+Thanks for taking the time to help! We intend Typewriter to be a useful tool and always appreciate any contributions in building it, no matter how big or small.
 
-Please submit issues to discuss things, PRs to fix things.
+Please submit issues, discuss things, contribute PRs to add or fix things.
 
 Our Contribution guidelines are available at [CONTRIBUTING.md](CONTRIBUTING.md)

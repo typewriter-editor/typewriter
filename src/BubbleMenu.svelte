@@ -1,7 +1,7 @@
 <script>
 import { onDestroy } from 'svelte';
-import { editorStores } from 'typewriter-editor';
 import { createPopper } from '@popperjs/core';
+import { editorStores } from './stores';
 
 export let editor;
 let className = 'bubble-menu';

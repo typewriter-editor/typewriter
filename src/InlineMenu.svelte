@@ -1,6 +1,7 @@
 <script>
-import { getLineElementAt, editorStores } from 'typewriter-editor';
 import { createPopper } from '@popperjs/core';
+import { getLineElementAt } from './rendering/position';
+import { editorStores } from './stores';
 
 export let editor;
 export let hover;
