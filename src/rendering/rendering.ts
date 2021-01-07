@@ -219,7 +219,6 @@ export function renderInline(editor: Editor, delta: Delta) {
       if (embed?.render) {
         children.push(embed.render(op.insert, EMPTY_ARR, editor));
         if (embed.name === 'br') trailingBreak = true;
-        else trailingBreak = false;
       }
     }
 

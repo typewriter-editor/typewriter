@@ -142,7 +142,7 @@ export function decorations(editor: Editor): DecorationsModule {
 
 
   function gatherDecorations(change?: TextChange, changedLines?: Line[]) {
-    const init: DecorateEventInit = { old, doc, change, changedLines };
+    const init: DecorateEventInit = { old, doc: original, change, changedLines };
     decorating = true;
     editor.dispatchEvent(new DecorateEvent('decorate', init));
     decorating = false;

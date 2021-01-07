@@ -212,7 +212,9 @@ export default class TextDocument {
   }
 
   equals(other: TextDocument) {
-    return isEqual(this.selection, other.selection) && isEqual(this.lines, other.lines, { excludeProps });
+    return this === other
+      || isEqual(this.selection, other.selection)
+      && isEqual(this.lines, other.lines, { excludeProps });
   }
 
   toJSON() {
