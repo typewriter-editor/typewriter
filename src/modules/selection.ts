@@ -97,23 +97,22 @@ export function selection(editor: Editor) {
       rootWindow = rootDocument.defaultView as Window;
 
       rootDocument.addEventListener('selectionchange', onSelectionChange);
-      editor.root.addEventListener('mousedown', onMouseDown);
       rootWindow.addEventListener('focus', onWindowFocus);
       rootWindow.addEventListener('blur', onWindowFocus);
+      editor.root.addEventListener('mousedown', onMouseDown);
       editor.on('change', onChange);
       editor.on('decorate', onDecorate);
     },
     destroy() {
+      rootDocument.removeEventListener('selectionchange', onSelectionChange);
+      rootWindow.removeEventListener('focus', onWindowFocus);
+      rootWindow.removeEventListener('blur', onWindowFocus);
+      editor.root.addEventListener('mousedown', onMouseDown);
+      editor.off('change', onChange);
+      editor.off('decorate', onDecorate);
       paused = false;
       rootDocument = null as any;
       rootWindow = null as any;
-
-      rootDocument.removeEventListener('selectionchange', onSelectionChange);
-      editor.root.addEventListener('mousedown', onMouseDown);
-      rootWindow.removeEventListener('focus', onWindowFocus);
-      rootWindow.removeEventListener('blur', onWindowFocus);
-      editor.off('change', onChange);
-      editor.off('decorate', onDecorate);
     }
   }
 };
