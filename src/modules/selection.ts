@@ -1,25 +1,14 @@
 import isEqual from '../util/isEqual';
 import Editor, { EditorChangeEvent } from '../Editor';
-import { EditorRange } from '../doc/EditorRange';
 import { getSelection, setSelection } from '../rendering/selection';
 import { getLineNodeStart } from '../rendering/rendering';
 import { DecorationsModule } from './decorations';
 
 
 export function selection(editor: Editor) {
-
-  const { root } = editor;
-  const rootDocument = root.ownerDocument;
-  const rootWindow = rootDocument.defaultView as Window;
-  let lastSelection: EditorRange;
+  let rootDocument: Document;
+  let rootWindow: Window;
   let paused = false;
-
-  rootDocument.addEventListener('selectionchange', onSelectionChange);
-  root.addEventListener('mousedown', onMouseDown);
-  rootWindow.addEventListener('focus', onWindowFocus);
-  rootWindow.addEventListener('blur', onWindowFocus);
-  editor.on('change', onChange);
-  editor.on('decorate', onDecorate);
 
   function onSelectionChange() {
     if (paused) return;
@@ -29,7 +18,6 @@ export function selection(editor: Editor) {
       if (selection && selection[0] === selection[1] && selection[0] >= doc.length) {
         return; // Assuming this is a text composition at the end of the document, allow the entry
       }
-      if (selection) lastSelection = selection;
       editor.select(selection);
     } else {
       paused = true;
@@ -61,7 +49,7 @@ export function selection(editor: Editor) {
 
   function onMouseDown(event: MouseEvent) {
     // Helps select lines that are not easily selectable (e.g. <hr>)
-    const start = getLineNodeStart(root, event.target as Node);
+    const start = getLineNodeStart(editor.root, event.target as Node);
     const line = start != null && editor.doc.getLineAt(start);
     const type = line && editor.typeset.lines.findByAttributes(line.attributes);
     if (start != null && line && line.length === 1 && type && type.frozen) {
@@ -78,7 +66,7 @@ export function selection(editor: Editor) {
   }
 
   function onWindowFocus() {
-    root.classList.toggle('window-inactive', !rootDocument.hasFocus());
+    editor.root.classList.toggle('window-inactive', !rootDocument.hasFocus());
   }
 
   function pause() {
@@ -104,12 +92,28 @@ export function selection(editor: Editor) {
     pause,
     resume,
     renderSelection,
+    init() {
+      rootDocument = editor.root.ownerDocument;
+      rootWindow = rootDocument.defaultView as Window;
+
+      rootDocument.addEventListener('selectionchange', onSelectionChange);
+      editor.root.addEventListener('mousedown', onMouseDown);
+      rootWindow.addEventListener('focus', onWindowFocus);
+      rootWindow.addEventListener('blur', onWindowFocus);
+      editor.on('change', onChange);
+      editor.on('decorate', onDecorate);
+    },
     destroy() {
+      paused = false;
+      rootDocument = null as any;
+      rootWindow = null as any;
+
       rootDocument.removeEventListener('selectionchange', onSelectionChange);
-      root.addEventListener('mousedown', onMouseDown);
+      editor.root.addEventListener('mousedown', onMouseDown);
       rootWindow.removeEventListener('focus', onWindowFocus);
       rootWindow.removeEventListener('blur', onWindowFocus);
       editor.off('change', onChange);
+      editor.off('decorate', onDecorate);
     }
   }
 };

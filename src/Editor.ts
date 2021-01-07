@@ -379,6 +379,7 @@ export default class Editor extends EventDispatcher {
     });
     this.shortcuts = createShortcutMap(this);
     Object.keys(this.modules).forEach(key => this.modules[key].init?.());
+    this.render();
   }
 
   destroy() {

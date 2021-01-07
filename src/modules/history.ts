@@ -160,10 +160,6 @@ export function initHistory(initOptions: Partial<Options> = {}) {
     }
 
 
-    const { root } = editor;
-    editor.on('change', onChange);
-    root.addEventListener('beforeinput', onBeforeInput);
-
     return {
       options,
       hasUndo,
@@ -187,9 +183,13 @@ export function initHistory(initOptions: Partial<Options> = {}) {
         'win:Ctrl+Y': 'redo',
         'mac:Cmd+Shift+Z': 'redo',
       },
+      init() {
+      editor.on('change', onChange);
+      editor.root.addEventListener('beforeinput', onBeforeInput);
+      },
       destroy() {
         editor.off('change', onChange);
-        root.removeEventListener('beforeinput', onBeforeInput);
+        editor.root.removeEventListener('beforeinput', onBeforeInput);
       }
     }
   }

@@ -18,12 +18,11 @@ const MUTATION_OPTIONS = {
 type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
-  const { root } = editor;
   let inputHandled = false; // this is only a fallback for when mutate doesn't fire on buggy browsers
 
   function onInput(event: InputEvent) {
     if (event.isComposing || inputHandled) return;
-    const range = getLineRange(root);
+    const range = getLineRange(editor.root);
     const change = getChangeFromRange(range);
     if (change && change.ops.length) {
       const selection = getSelection(editor);
@@ -47,7 +46,7 @@ export function input(editor: Editor) {
     const selection = getSelection(editor);
 
     if (!change) {
-      const range = getChangedLineRange(root, list);
+      const range = getChangedLineRange(editor.root, list);
       change = getChangeFromRange(range);
     }
 
@@ -81,8 +80,8 @@ export function input(editor: Editor) {
     const { doc } = editor;
     if (range) {
       const [ startNode, endNode ] = range;
-      const start = getLineNodeStart(root, startNode);
-      const end = getLineNodeEnd(root, endNode);
+      const start = getLineNodeStart(editor.root, startNode);
+      const end = getLineNodeEnd(editor.root, endNode);
       const delta = deltaFromDom(editor, { startNode, endNode: endNode.nextElementSibling || undefined });
       let change = doc.toDelta().slice(start, end).diff(delta);
       if (change.ops.length && start) change = new Delta().retain(start).concat(change);
@@ -104,17 +103,18 @@ export function input(editor: Editor) {
   }
 
   function onRender() {
-    observer.observe(root, MUTATION_OPTIONS);
+    observer.observe(editor.root, MUTATION_OPTIONS);
   }
 
-  root.addEventListener('input', onInput);
-  editor.on('rendering', onRendering);
-  editor.on('render', onRender);
-
   return {
+    init() {
+      editor.root.addEventListener('input', onInput);
+      editor.on('rendering', onRendering);
+      editor.on('render', onRender);
+    },
     destroy() {
       observer.disconnect();
-      root.removeEventListener('input', onInput);
+      editor.root.removeEventListener('input', onInput);
       editor.off('rendering', onRendering);
       editor.off('render', onRender);
     }

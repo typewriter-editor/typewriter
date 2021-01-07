@@ -32,7 +32,6 @@ export function virtualRendering(editor: Editor) {
   let toRender: number[];
   let hasChanged = false;
   let updateQueued = true;
-  const { root } = editor;
 
 
   viewport.addEventListener('scroll', onScroll, { passive: true });
@@ -237,6 +236,7 @@ export function virtualRendering(editor: Editor) {
 
   function getOffsetTop() {
     const { scrollTop } = viewport;
+    const { root } = editor;
     if (viewport === root) return parseInt(getComputedStyle(root).paddingTop);
     return root.getBoundingClientRect().top
       + parseInt(getComputedStyle(root).paddingTop)

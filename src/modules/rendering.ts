@@ -40,9 +40,6 @@ export function rendering(editor: Editor) {
 
   return {
     render,
-    init() {
-      render();
-    },
     destroy() {
       editor.off('change', onChange);
     }

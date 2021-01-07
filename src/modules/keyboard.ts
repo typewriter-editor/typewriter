@@ -179,12 +179,12 @@ export function keyboard(editor: Editor) {
     }
   }
 
-  const { root } = editor;
-  root.addEventListener('keydown', onKeyDown);
-
   return {
+    init() {
+      editor.root.addEventListener('keydown', onKeyDown);
+    },
     destroy() {
-      root.removeEventListener('keydown', onKeyDown);
+      editor.root.removeEventListener('keydown', onKeyDown);
     }
   }
 }

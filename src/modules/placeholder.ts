@@ -26,12 +26,11 @@ export function placeholder(placeholder: string | Function) {
       }
     }
 
-    const { root } = editor;
-    root.addEventListener('decorate', onDecorate);
+    editor.addEventListener('decorate', onDecorate);
 
     return {
       destroy() {
-        root.removeEventListener('decorate', onDecorate);
+        editor.removeEventListener('decorate', onDecorate);
       }
     }
   }
