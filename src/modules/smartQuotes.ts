@@ -1,4 +1,5 @@
 import Delta from '../delta/Delta';
+import TextChange from '../doc/TextChange';
 import Editor, { EditorChangeEvent } from '../Editor';
 import { PasteEvent } from './paste';
 
@@ -12,13 +13,13 @@ export function smartQuotes() {
   return (editor: Editor) => {
 
     function onTextChange(event: EditorChangeEvent) {
-      const { change, source } = event;
-      if (source !== 'user' || !editor.doc.selection || !change || !isTextEntry(change.delta)) return;
+      const { change, source, doc, old } = event;
+      if (source !== 'user' || !old.selection || !change || !isTextEntry(change.delta)) return;
 
-      const index = editor.doc.selection[1];
+      const index = old.selection[1];
       const lastOp = change.delta.ops[change.delta.ops.length - 1];
       if (typeof lastOp.insert !== 'string') return;
-      const lastChars = editor.doc.getText([ index - 1, index ]) + lastOp.insert.slice(-1);
+      const lastChars = doc.getText([ index - 1, index ]) + lastOp.insert.slice(-1);
 
       const replaced = lastChars.replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, '“')
               .replace(/"$/, '”')
@@ -27,7 +28,8 @@ export function smartQuotes() {
 
       if (replaced !== lastChars) {
         const quote = replaced.slice(-1);
-        lastOp.insert = lastOp.insert.slice(0, -1) + quote;
+        const length = change.delta.length();
+        event.modify(new Delta().retain(length - 1).delete(1).insert(quote));
       }
     }
 

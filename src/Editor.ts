@@ -76,6 +76,16 @@ export class EditorChangeEvent extends Event {
     this.changedLines = init.changedLines;
     this.source = init.source;
   }
+
+  // Modify the data in during changing event before doc is committed
+  modify(delta: Delta) {
+    if (!this.cancelable) throw new Error('Cannot modify an applied change, listen to the "changing" event');
+    this.doc = this.doc.apply(delta);
+    if (this.change) this.change.delta = this.change.delta.compose(delta);
+    if (this.changedLines) {
+      this.changedLines = this.old.lines === this.doc.lines ? EMPTY_ARR : getChangedLines(this.old, this.doc);
+    }
+  }
 }
 
 export interface EditorFormatEventInit extends EventInit {
@@ -179,10 +189,10 @@ export default class Editor extends EventDispatcher {
     const changingEvent = new EditorChangeEvent('changing', { cancelable: true, old, doc, change, changedLines, source });
     this.dispatchEvent(changingEvent);
     if (changingEvent.defaultPrevented) return this;
-    this.activeFormats = getActiveFormats(this, doc);
-    this.doc = doc;
-    this.dispatchEvent(new EditorChangeEvent('change', { old, doc, change, changedLines, source }));
-    this.dispatchEvent(new EditorChangeEvent('changed', { old, doc, change, changedLines, source }));
+    this.activeFormats = getActiveFormats(this, changingEvent.doc);
+    this.doc = changingEvent.doc;
+    this.dispatchEvent(new EditorChangeEvent('change', { ...changingEvent, cancelable: false }));
+    this.dispatchEvent(new EditorChangeEvent('changed', { ...changingEvent, cancelable: false }));
     return this;
   }
 

@@ -185,6 +185,10 @@ export default class TextChange {
     return this.doc === doc;
   }
 
+  clone() {
+    return new TextChange(this.doc, new Delta(this.delta.ops.slice()), this.selection?.slice() as EditorRange);
+  }
+
   private compose(at: number, applicator: (delta: Delta) => Delta, length?: number) {
     if (this._pos <= at) {
       this.delta = applicator(this.delta.retain(at - this._pos));
