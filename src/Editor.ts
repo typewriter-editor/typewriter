@@ -178,17 +178,17 @@ export default class Editor extends EventDispatcher {
   }
 
   set(doc: TextDocument | Delta, source: Source = Source.user, change?: TextChange, changedLines?: Line[]): this {
+    const old = this.doc;
     if (doc instanceof Delta) {
       doc = new TextDocument(doc);
     }
-    if ((!this.enabled && source === Source.user) || !doc || doc === this.doc || this.doc.equals(doc)) {
+    if ((!this.enabled && source === Source.user) || !doc || old.equals(doc)) {
       return this;
     }
 
-    const old = this.doc;
     const changingEvent = new EditorChangeEvent('changing', { cancelable: true, old, doc, change, changedLines, source });
     this.dispatchEvent(changingEvent);
-    if (changingEvent.defaultPrevented) return this;
+    if (changingEvent.defaultPrevented || old.equals(changingEvent.doc)) return this;
     this.activeFormats = getActiveFormats(this, changingEvent.doc);
     this.doc = changingEvent.doc;
     this.dispatchEvent(new EditorChangeEvent('change', { ...changingEvent, cancelable: false }));
@@ -369,13 +369,13 @@ export default class Editor extends EventDispatcher {
     this.enabled = this._enabled;
     this.commands = {};
     PROXIED_EVENTS.forEach(type => this._root.addEventListener(type, getEventProxy(this)));
-    this.typeset.lines.list.forEach(type => type.commands && mergeCommands(this.commands, type.name, type.commands(this)));
-    this.typeset.formats.list.forEach(type => type.commands && mergeCommands(this.commands, type.name, type.commands(this)));
-    this.typeset.embeds.list.forEach(type => type.commands && mergeCommands(this.commands, type.name, type.commands(this)));
+    this.typeset.lines.list.forEach(type => type.commands && mergeCommands(this, type.name, type.commands(this)));
+    this.typeset.formats.list.forEach(type => type.commands && mergeCommands(this, type.name, type.commands(this)));
+    this.typeset.embeds.list.forEach(type => type.commands && mergeCommands(this, type.name, type.commands(this)));
     Object.keys(this._modules).forEach(key => {
       if (!this._modules[key]) return;
       const module = this.modules[key] = this._modules[key](this);
-      if (module.commands) mergeCommands(this.commands, key, module.commands);
+      if (module.commands) mergeCommands(this, key, module.commands);
     });
     this.shortcuts = createShortcutMap(this);
     Object.keys(this.modules).forEach(key => this.modules[key].init?.());
@@ -421,10 +421,17 @@ function getChangedLines(oldDoc: TextDocument, newDoc: TextDocument) {
   return newDoc.lines.filter(line => !set.has(line));
 }
 
-function mergeCommands(commands: Commands, name: string, other: Commands | Function) {
+function mergeCommands(editor: Editor, name: string, other: Commands | Function) {
   if (!other) return;
-  if (typeof other === 'function') commands[name] = other;
-  else Object.keys(other).forEach(key => commands[key] = other[key]);
+  if (typeof other === 'function') editor.commands[name] = enhanceCommand(editor, other);
+  else Object.keys(other).forEach(key => editor.commands[key] = enhanceCommand(editor, other[key]));
+}
+
+function enhanceCommand(editor: Editor, command: Function) {
+  return () => {
+    command();
+    if (editor.doc.selection) editor.root.focus();
+  }
 }
 
 function indentLines(editor: Editor, direction: 1 | -1 = 1) {
