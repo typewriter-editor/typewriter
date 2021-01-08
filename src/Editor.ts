@@ -200,7 +200,7 @@ export default class Editor extends EventDispatcher {
     return docToHTML(this, this.doc);
   }
 
-  setHTML(html: string, selection: EditorRange | null = this.doc.selection): this {
+  setHTML(html: string, selection: EditorRange | null = this.doc.selection, source?: Source): this {
     return this.set(docFromHTML(this, html, selection));
   }
 
@@ -208,16 +208,16 @@ export default class Editor extends EventDispatcher {
     return this.doc.toDelta();
   }
 
-  setDelta(delta: Delta, selection: EditorRange | null = this.doc.selection): this {
-    return this.set(new TextDocument(delta, selection));
+  setDelta(delta: Delta, selection: EditorRange | null = this.doc.selection, source?: Source): this {
+    return this.set(new TextDocument(delta, selection), source);
   }
 
   getText(range?: EditorRange): string {
     return this.doc.getText(range);
   }
 
-  setText(text: string, selection: EditorRange | null = this.doc.selection): this {
-    return this.set(new TextDocument(new Delta().insert(text), selection));
+  setText(text: string, selection: EditorRange | null = this.doc.selection, source?: Source): this {
+    return this.set(new TextDocument(new Delta().insert(text), selection), source);
   }
 
   getActive() {
