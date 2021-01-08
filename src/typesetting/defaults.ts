@@ -5,6 +5,6 @@ import './embeds';
 
 export const defaultTypes: TypesetTypes = {
   lines: [ 'paragraph', 'header', 'list', 'blockquote', 'code-block', 'hr', ],
-  formats: [ 'link', 'decoration', 'bold', 'italic', 'code', ],
-  embeds: [ 'image', 'br', 'decoration', ],
+  formats: [ 'link', 'bold', 'italic', 'code', ],
+  embeds: [ 'image', 'br', ],
 };

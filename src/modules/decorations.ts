@@ -5,10 +5,35 @@ import Line from '../doc/Line';
 import { EditorRange } from '../doc/EditorRange';
 import TextChange from '../doc/TextChange';
 import isEqual from '../util/isEqual';
-import { Props, VNode } from '../rendering/vdom';
+import { h, Props, VNode } from '../rendering/vdom';
 import AttributeMap from '../delta/AttributeMap';
+import { EmbedType, FormatType } from '../typesetting';
 
 const endInSemicolon = /;\s*$/;
+
+
+const formatDecoration: FormatType = {
+  name: 'decoration',
+  selector: 'span.format.decoration',
+  fromDom: false,
+  render: (attributes, children) => {
+    return applyDecorations(h('span', {}, children), attributes, [ 'format', 'decoration' ]);
+  }
+};
+
+const embedDecoration: EmbedType = {
+  name: 'decoration',
+  selector: '.embed.decoration',
+  fromDom: false,
+  noFill: true,
+  render: (attributes, children) => {
+    const classes = 'embed decoration';
+    const { name: type, ...props } = attributes.decoration;
+    props.class = props.class ? classes + ' ' + props.class : classes;
+    return h(type || 'span', props, children);
+  }
+};
+
 
 export interface Decorations {
   class?: string;
@@ -51,6 +76,9 @@ export interface DecorationsModule {
 
 
 export function decorations(editor: Editor): DecorationsModule {
+  editor.typeset.formats.add(formatDecoration);
+  editor.typeset.embeds.add(embedDecoration);
+
   const decorations = new Map<string, Delta>();
   let original = editor.doc;
   let old = original;
@@ -194,6 +222,10 @@ export class Decorator {
     return !!this._decoration && this._decoration.ops.length > 0 || this.change.delta.ops.length > 0;
   }
 
+  getDecoration() {
+    return (this._decoration || new Delta()).compose(this.change.delta);
+  }
+
   apply() {
     return this._apply(this._name, this.change.delta);
   }
@@ -283,7 +315,8 @@ export function applyDecorations(vnode: VNode, attributes: AttributeMap | undefi
     props = { ...decorations, ...props };
   });
 
-  props.class = Array.from(classes).join(' ');
+  const className = Array.from(classes).join(' ').trim();
+  if (className) props.class ? props.class + ' ' + className : className;
   if (style) props.style = style;
 
   vnode.props = props;

@@ -31,16 +31,3 @@ export const br = embed({
   commands: editor => () => editor.insert({ br: true }),
   render: () => h('br'),
 });
-
-
-export const embedDecoration = embed({
-  name: 'decoration',
-  selector: '.embed.decoration',
-  fromDom: false,
-  render: (attributes, children) => {
-    const classes = 'embed decoration';
-    const { name: type, ...props } = attributes.decoration;
-    props.class = props.class ? classes + ' ' + props.class : classes;
-    return h(type || 'span', props, children);
-  }
-});

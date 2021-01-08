@@ -356,6 +356,7 @@ export default class Editor extends EventDispatcher {
   }
 
   render(): this {
+    this.modules.decorations?.gatherDecorations();
     this.modules.rendering?.render();
     this.modules.selection?.renderSelection();
     return this;

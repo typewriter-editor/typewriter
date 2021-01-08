@@ -36,13 +36,3 @@ export const link = format({
   fromDom: (node: HTMLAnchorElement) => node.href,
   render: (attributes, children) => h('a', { href: attributes.link, target: '_blank' }, children),
 });
-
-
-export const decoration = format({
-  name: 'decoration',
-  selector: 'span.format.decoration',
-  fromDom: false,
-  render: (attributes, children) => {
-    return applyDecorations(h('span', {}, children), attributes, [ 'format', 'decoration' ]);
-  }
-});
