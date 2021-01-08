@@ -57,7 +57,6 @@
 
 <style>
 .text-content :global(.placeholder) {
-  display: block;
   position: relative;
 }
 .text-content :global(.placeholder::before) {

@@ -12,7 +12,7 @@ const shouldCombine: ShouldCombine = (prev, next) => true;
 export class Typeset {
   lines: Types<LineType>;
   formats: Types<FormatType>;
-  embeds: Types;
+  embeds: Types<EmbedType>;
 
   static line = line;
   static format = format;
@@ -37,7 +37,7 @@ export function format(type: FormatType) {
   return formatTypes[type.name] = type;
 }
 
-export function embed(type: BasicType) {
+export function embed(type: EmbedType) {
   return embedTypes[type.name] = type;
 }
 
@@ -77,6 +77,11 @@ export interface FormatType extends BasicType {
   greedy?: boolean;
 }
 
+export interface EmbedType extends BasicType {
+  // If this embed doesn't fill any space, set noFill to true to add a <br> afterwards if nothing else is in the line
+  noFill?: boolean;
+}
+
 export interface LineType extends BasicType {
   // Whether this line can be indented/unindented with the tab key
   indentable?: boolean;
@@ -105,7 +110,7 @@ export interface LineType extends BasicType {
 export interface TypesetTypes {
   lines?: Array<string | LineType>;
   formats?: Array<string | FormatType>;
-  embeds?: Array<string | BasicType>;
+  embeds?: Array<string | EmbedType>;
 }
 
 export interface TypeMap<T extends BasicType = BasicType> {

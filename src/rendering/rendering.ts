@@ -5,7 +5,7 @@ import Editor from '../Editor';
 import AttributeMap from '../delta/AttributeMap';
 import Line from '../doc/Line';
 import { LineType } from '../typesetting/typeset';
-import { deltaFromDom, docToHTML } from './html';
+import { deltaFromDom } from './html';
 import { EditorRange } from '../doc/EditorRange';
 import Delta from '../delta/Delta';
 import { applyDecorations } from '../modules/decorations';
@@ -219,6 +219,7 @@ export function renderInline(editor: Editor, delta: Delta) {
       if (embed?.render) {
         children.push(embed.render(op.insert, EMPTY_ARR, editor));
         if (embed.name === 'br') trailingBreak = true;
+        else if (!embed.noFill) trailingBreak = false;
       }
     }
 
