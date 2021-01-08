@@ -211,9 +211,9 @@ export default class TextDocument {
     return delta;
   }
 
-  equals(other: TextDocument) {
+  equals(other: TextDocument, options?: { contentOnly?: boolean }) {
     return this === other
-      || isEqual(this.selection, other.selection)
+      || (options?.contentOnly || isEqual(this.selection, other.selection))
       && isEqual(this.lines, other.lines, { excludeProps });
   }
 
