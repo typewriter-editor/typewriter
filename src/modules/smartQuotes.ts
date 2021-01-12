@@ -1,7 +1,13 @@
 import Delta from '../delta/Delta';
-import TextChange from '../doc/TextChange';
+import Op from '../delta/Op';
 import Editor, { EditorChangeEvent } from '../Editor';
-import { PasteEvent } from './paste';
+
+const straitQuotes = /['"]/g;
+const nonchar = /[\s\{\[\(\<'"\u2018\u201C]/;
+const conversions = {
+  '"': { left: '“', right: '”' },
+  "'": { left: '‘', right: '’' },
+}
 
 /**
  * Replaces regular quotes with smart quotes as they are typed. Does not affect pasted content.
@@ -9,75 +15,51 @@ import { PasteEvent } from './paste';
  * quotes act more seemlessly and includes them as part of regular text undo/redo instead of breaking it like the smart-
  * entry conversions do.
  */
-export function smartQuotes() {
-  return (editor: Editor) => {
+export function smartQuotes(editor: Editor) {
 
-    function onTextChange(event: EditorChangeEvent) {
-      const { change, source, doc, old } = event;
-      if (source !== 'user' || !old.selection || !change || !isTextEntry(change.delta)) return;
+  function onTextChange(event: EditorChangeEvent) {
+    const { change, source, doc, old } = event;
+    if (source !== 'user' || !old.selection || !change) return;
 
-      const index = old.selection[1];
-      const lastOp = change.delta.ops[change.delta.ops.length - 1];
-      if (typeof lastOp.insert !== 'string') return;
-      const lastChars = doc.getText([ index - 1, index ]) + lastOp.insert.slice(-1);
+    const indices = getQuoteIndices(change.delta.ops);
+    if (!indices.length) return;
 
-      const replaced = lastChars.replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(")$/, '“')
-              .replace(/"$/, '”')
-              .replace(/(?:^|[\s\{\[\(\<'"\u2018\u201C])(')$/, '‘')
-              .replace(/'$/, '’');
+    const text = doc.getText();
+    const convert = new Delta();
+    let pos = 0;
 
-      if (replaced !== lastChars) {
-        const quote = replaced.slice(-1);
-        const length = change.delta.length();
-        event.modify(new Delta().retain(length - 1).delete(1).insert(quote));
-      }
+    for (let i = 0; i < indices.length; i++) {
+      const index = indices[i];
+      const quote = text[index] as '"' | "'";
+      const converted = !index || nonchar.test(text[index - 1]) ? conversions[quote].left : conversions[quote].right;
+      convert.retain(index - pos).delete(1).insert(converted);
+      pos = index + 1;
     }
+    event.modify(convert);
+  }
 
-    function onPaste(event: PasteEvent) {
-      let originalText = event.delta.ops
-        .reduce((txt, op) => txt + (typeof op.insert === 'string' ? op.insert : ' '), '')
+  editor.on('changing', onTextChange);
 
-      const text = originalText.replace(/(^|\s)"/g, '$1“')
-        .replace(/"($|\s)/g, '”$1')
-        .replace(/"($|[\s,.!])/g, '”$1')
-        .replace(/\b'/g, '’')
-        .replace(/'\b/g, '‘');
-
-      const quotes = new Delta();
-      let pos = 0;
-      for (let i = 0; i < originalText.length; i++) {
-        if (originalText[i] !== text[i]) {
-          quotes.retain(i - pos).delete(1).insert(text[i]);
-          pos = i + 1;
-        }
-      }
-      const trailingWhitespace = new Delta();
-      pos = 0;
-      text.replace(/ +\n/g, (text, offset) => {
-        trailingWhitespace.retain(offset - pos).delete(text.length - 1);
-        pos = offset + text.length - 1;
-        return '\n';
-      });
-      event.delta = event.delta.compose(quotes).compose(trailingWhitespace);
-    }
-
-    editor.on('changing', onTextChange);
-    editor.on('paste', onPaste);
-
-    return {
-      destroy() {
-        editor.off('changing', onTextChange);
-        editor.off('paste', onPaste);
-      }
+  return {
+    destroy() {
+      editor.off('changing', onTextChange);
     }
   }
 }
 
-function isTextEntry(change: Delta): boolean {
-  return !!(
-    change.ops.length === 1 ||
-    (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)
-  ) &&
-    typeof change.ops[change.ops.length - 1].insert === 'string' &&
-    change.ops[change.ops.length - 1].insert !== '\n';
+function getQuoteIndices(ops: Op[]) {
+  const indices: number[] = [];
+  let pos = 0;
+  ops.forEach(op => {
+    if (op.retain) pos += op.retain;
+    if (op.delete) pos -= op.delete;
+    if (typeof op.insert === 'string') {
+      let result: RegExpExecArray | null;
+      while ((result = straitQuotes.exec(op.insert))) {
+        indices.push(pos + result.index);
+      }
+      pos += op.insert.length;
+    }
+  });
+  return indices;
 }
