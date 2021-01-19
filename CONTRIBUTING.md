@@ -4,7 +4,7 @@ The following is a set of guidelines for contributing to Typewriter. These are j
 
 #### Table of Contents
 * [What should I know before I get started?](#what-should-i-know-before-i-get-started)
-  * [Code of Conduct](#code-of-conduct)   
+  * [Code of Conduct](#code-of-conduct)
 
 
 * [How Can I Contribute?](#how-can-i-contribute)
@@ -19,7 +19,7 @@ The following is a set of guidelines for contributing to Typewriter. These are j
 
 This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code.
-Please report unacceptable behavior to [info@Typewriter.org](mailto:info@Typewriter.org).
+<!-- Please report unacceptable behavior to [info@typewriter-editor.com](mailto:info@typewriter-editor.com). -->
 
 ## How Can I Contribute?
 ### Types of Contributors
@@ -107,7 +107,7 @@ Before creating enhancement suggestions, please check [this list](#before-submit
 
 #### How Do I Submit A (Good) Enhancement Suggestion?
 
-Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com/features/issues/). After going through [the necessary first steps](#before-submitting-an-enhancement-suggestion), you can create an issue on and provide the following information:  
+Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com/features/issues/). After going through [the necessary first steps](#before-submitting-an-enhancement-suggestion), you can create an issue on and provide the following information:
 
 * **Use a clear and descriptive title** for the issue to identify the suggestion.
 * **Provide a step-by-step description of the suggested enhancement** in as many details as possible.
@@ -191,7 +191,7 @@ Enhancement suggestions are tracked as [GitHub issues](https://guides.github.com
 
 ## Contact
 When contributing to an open source project you might hit some problems, have some of those Eureka moments, and you simply might want to have a quick chat with us.
-You can always reach out to us at [info@Typewriter.org](mailto:info@Typewriter.org)
+You can always reach out to us at [info@typewriter-editor.com](mailto:info@typewriter-editor.com)
 and you are always welcome to join the Typewriter Community banter on our Gitter channel at [https://gitter.im/Typewriter/Lobby](https://gitter.im/Typewriter/Lobby)
 
 
