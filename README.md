@@ -97,6 +97,19 @@ npm test
 
 [Our documentation](docs/README.md)
 
+## Examples
+
+![Examples screenshot](../typewriter/examples/screenshot.png?raw=true)
+
+There are some examples of use in the examples folder. You can run this locally after cloning Typewriter to your machine by running:
+
+```
+$ npm install
+$ npm start
+```
+
+Then opening your browser to localhost:9000.
+
 ### TODO
 
 * More testing
