@@ -99,7 +99,7 @@ npm test
 
 ## Examples
 
-![Examples screenshot](../typewriter/examples/screenshot.png?raw=true)
+![Examples screenshot](https://raw.githubusercontent.com/typewriter-editor/typewriter/master/examples/screenshot.png)
 
 There are some examples of use in the examples folder. You can run this locally after cloning Typewriter to your machine by running:
 
