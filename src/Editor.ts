@@ -341,14 +341,29 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  getBounds(range: EditorRange | number): DOMRect | undefined {
+  getBounds(range: EditorRange | number, relativeTo?: Element, relativeInside?: boolean): DOMRect | undefined {
     if (typeof range === 'number') range = [ range, range ];
-    return getBoudingBrowserRange(this, range)?.getBoundingClientRect();
+    let rect = getBoudingBrowserRange(this, range)?.getBoundingClientRect();
+    if (rect && relativeTo) {
+      const relative = relativeTo.getBoundingClientRect();
+      const leftOffset = (relativeInside ? relativeTo.scrollLeft : 0) - relative.x;
+      const topOffset = (relativeInside ? relativeTo.scrollTop : 0) - relative.y;
+      rect = new DOMRect(rect.x + leftOffset, rect.y + topOffset, rect.width, rect.height);
+    }
+    return rect;
   }
 
-  getAllBounds(range: EditorRange | number): DOMRectList | undefined {
+  getAllBounds(range: EditorRange | number, relativeTo?: Element, relativeInside?: boolean): DOMRect[] | undefined {
     if (typeof range === 'number') range = [ range, range ];
-    return getBoudingBrowserRange(this, range)?.getClientRects();
+    const collection = getBoudingBrowserRange(this, range)?.getClientRects();
+    let list = collection && Array.from(collection);
+    if (list && relativeTo) {
+      const relative = relativeTo.getBoundingClientRect();
+      const leftOffset = (relativeInside ? relativeTo.scrollLeft : 0) - relative.x;
+      const topOffset = (relativeInside ? relativeTo.scrollTop : 0) - relative.y;
+      list = list.map(rect => new DOMRect(rect.x + leftOffset, rect.y + topOffset, rect.width, rect.height));
+    }
+    return list;
   }
 
   getIndexFromPoint(x: number, y: number) {
