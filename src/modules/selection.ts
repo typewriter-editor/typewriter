@@ -19,10 +19,6 @@ export function selection(editor: Editor) {
         return; // Assuming this is a text composition at the end of the document, allow the entry
       }
       editor.select(selection);
-    } else {
-      paused = true;
-      setTimeout(() => paused = false);
-      setSelection(editor, selection);
     }
   }
 

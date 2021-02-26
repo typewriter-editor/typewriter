@@ -1,7 +1,6 @@
 import Editor, { EditorChangeEvent } from '../Editor';
 import TextDocument from '../doc/TextDocument';
 import { render as renderWhole, renderChanges } from '../rendering/rendering';
-import { setSelection } from '../rendering/selection';
 
 
 export interface RenderWhat {
@@ -18,7 +17,6 @@ export function rendering(editor: Editor) {
     if (!what) {
       const { doc } = editor.modules.decorations as { doc: TextDocument } || editor;
       renderWhole(editor, doc);
-      setSelection(editor, doc.selection);
     } else {
       const { doc, old } = what;
       if (old && doc) {

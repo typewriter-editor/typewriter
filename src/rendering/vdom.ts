@@ -15,7 +15,6 @@ export interface VNode {
 type Node = Element | Text;
 
 
-const EMPTY_OBJ = {}
 const EMPTY_ARR = []
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const domProps = new Set([ 'value', 'selected', 'checked', 'contentEditable' ])

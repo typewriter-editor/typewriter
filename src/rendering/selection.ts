@@ -38,7 +38,7 @@ export function setSelection(editor: Editor, range: EditorRange | null) {
   if (range == null) {
     if (hasFocus) {
       selection.removeAllRanges();
-      root.classList.remove('focus');
+      if (root.classList.contains('focus')) root.classList.remove('focus');
     }
   } else {
     const [ anchorNode, anchorOffset, focusNode, focusOffset ] = getNodesForRange(editor, range);
@@ -51,7 +51,7 @@ export function setSelection(editor: Editor, range: EditorRange | null) {
       }
     }
     if (!hasFocus) root.focus();
-    root.classList.add('focus');
+    if (!root.classList.contains('focus')) root.classList.add('focus');
   }
   root.dispatchEvent(new Event('select', { bubbles: true }));
 }
