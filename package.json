@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.6.0",
+  "version": "0.6.3",
   "description": "A rich text editor using the Delta format with decorations and rendered with a tiny virtual dom",
   "keywords": [
     "typewriter",
@@ -21,12 +21,14 @@
   "main": "lib/index.js",
   "directories": {
     "lib": "lib",
+    "src": "src",
     "doc": "docs",
     "example": "examples",
     "test": "test"
   },
   "files": [
-    "lib"
+    "lib",
+    "src"
   ],
   "repository": {
     "type": "git",
