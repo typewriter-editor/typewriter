@@ -9,6 +9,7 @@ import { deltaFromDom } from './html';
 import { EditorRange } from '../doc/EditorRange';
 import Delta from '../delta/Delta';
 import { applyDecorations } from '../modules/decorations';
+import Op from '../delta/Op';
 
 const EMPTY_ARR = [];
 const BR = h('br', {});
@@ -209,9 +210,10 @@ export function renderInline(editor: Editor, delta: Delta) {
     let children: VChild[] = [];
     if (typeof op.insert === 'string') {
       const prev = array[i - 1];
+      const next = array[i + 1];
       let str: string = op.insert.replace(/  /g, '\xA0 ').replace(/  /g, ' \xA0');
       if (!prev || typeof prev.insert === 'object') str = str.replace(/^ /, '\xA0');
-      str = str.replace(/ $/, '\xA0');
+      if (!next || typeof next.insert === 'object' || startsWithSpace(next)) str = str.replace(/ $/, '\xA0');
       trailingBreak = false;
       children.push(str);
     } else if (op.insert) {
@@ -292,4 +294,8 @@ function mergeChildren(oldChildren: VChild[]) {
     }
   }
   return children;
+}
+
+function startsWithSpace(op: Op) {
+  return typeof op.insert === 'string' && op.insert[0] === ' ';
 }
