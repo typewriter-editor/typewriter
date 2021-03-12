@@ -223,7 +223,7 @@ export class Decorator {
   }
 
   getDecoration() {
-    return (this._decoration || new Delta()).compose(this.change.delta);
+    return this._decoration ? this._decoration.compose(this.change.delta) : this.change.delta;
   }
 
   apply() {

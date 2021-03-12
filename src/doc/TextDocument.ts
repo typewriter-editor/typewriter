@@ -46,9 +46,9 @@ export default class TextDocument {
 
   getText(range?: EditorRange): string {
     if (range) range = normalizeRange(range);
-    return (range ? this.slice(range[0], range[1]) : this.slice())
+    return (range ? this.slice(range[0], range[1]) : this.slice(0, this.length - 1))
       .map(op => typeof op.insert === 'string' ? op.insert : ' ')
-      .join('').slice(0, this.length - 1);
+      .join('');
   }
 
   getLineBy(id: string) {

@@ -88,8 +88,4 @@ namespace Line {
   }
 }
 
-function arrayShallowEqual(value: Array<any>, other: Array<any>) {
-  return value.length === other.length && value.every((item, i) => other[i] === item);
-}
-
 export default Line;
