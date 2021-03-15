@@ -1,8 +1,9 @@
 import cloneDeep from './util/cloneDeep';
 import intersect from './util/intersect';
 import isEqual from './util/isEqual';
+import diff from 'fast-diff';
 import EventDispatcher from './util/EventDispatcher';
-export { cloneDeep, intersect, isEqual, EventDispatcher };
+export { cloneDeep, intersect, isEqual, diff, EventDispatcher };
 
 import AttributeMap from './delta/AttributeMap';
 import Delta from './delta/Delta';

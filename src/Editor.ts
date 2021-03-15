@@ -240,13 +240,13 @@ export default class Editor extends EventDispatcher {
   insert(insert: string | object, format?: AttributeMap, selection = this.doc.selection, options?: { dontFixNewline?: boolean }): this {
     if (!selection) return this;
     if (format == null && typeof insert === 'string' && insert !== '\n') {
-      format = this.activeFormats;
+      format = selection === this.doc.selection ? this.activeFormats : getActiveFormats(this, this.doc, selection);
     }
     const type = this.typeset.lines.findByAttributes(format, true);
     const change = this.change.delete(selection);
     const at = normalizeRange(selection)[0];
 
-    if (insert === '\n' && type.frozen) { // TODO if at end of line, don't need to split the line
+    if (insert === '\n' && type.frozen) {
       const lineFormat = { ...this.doc.getLineFormat(at) };
       const secondLine = { ...format, id: Line.createId(this.doc.byId) };
       let lastLine = { ...lineFormat, id: Line.createId(this.doc.byId) };
@@ -261,6 +261,7 @@ export default class Editor extends EventDispatcher {
     } else {
       change.insert(at, insert, format, options);
     }
+    console.log(change);
     return this.update(change);
   }
 
@@ -414,10 +415,10 @@ function changeFormat(editor: Editor, op: string, format: AttributeMap | null, s
   editor.update(change);
 }
 
-function getActiveFormats(editor: Editor, doc: TextDocument): AttributeMap {
+function getActiveFormats(editor: Editor, doc: TextDocument, selection = doc.selection): AttributeMap {
   const { formats } = editor.typeset;
-  if (!doc.selection || doc.selection[0] === 0) return EMPTY_OBJ;
-  const at = normalizeRange(doc.selection)[0];
+  if (!selection || selection[0] === 0) return EMPTY_OBJ;
+  const at = normalizeRange(selection)[0];
   // If start of a non-empty line, use the format of the first character, otherwise use the format of the preceeding
   let formatAt = at;
   const attributes = doc.getTextFormat(formatAt);
