@@ -8,6 +8,7 @@ import { normalizeRange } from '../doc/EditorRange';
 export function copy(editor: Editor) {
 
   function onCopy(event: ClipboardEvent) {
+    if (!editor.enabled || !editor.doc.selection) return;
     event.preventDefault();
     const dataTransfer = event.clipboardData;
     const { doc } = editor;
