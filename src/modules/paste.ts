@@ -9,14 +9,20 @@ const dontFixNewline = { dontFixNewline: true };
 
 export interface PasteEventInit extends EventInit {
   delta: Delta;
+  html?: string;
+  text?: string;
 }
 
 export class PasteEvent extends Event {
   delta: Delta;
+  html?: string;
+  text?: string;
 
   constructor(type: string, init: PasteEventInit) {
     super(type, init);
     this.delta = init.delta;
+    this.html = init.html;
+    this.text = init.text;
   }
 }
 
@@ -31,10 +37,10 @@ export function paste(editor: Editor) {
     if (!dataTransfer || !selection) return;
     let range = selection.slice() as EditorRange;
     const html = dataTransfer.getData('text/html');
+    const text = dataTransfer.getData('text/plain');
     let delta: Delta;
 
     if (!html) {
-      let text = dataTransfer.getData('text/plain');
       if (!text) return;
       delta = new Delta().insert(text);
     } else {
@@ -73,7 +79,7 @@ export function paste(editor: Editor) {
       }
     }
 
-    const viewEvent = new PasteEvent('paste', { delta, cancelable: true });
+    const viewEvent = new PasteEvent('paste', { delta, html, text, cancelable: true });
     editor.dispatchEvent(viewEvent);
     delta = viewEvent.delta;
 
