@@ -30,6 +30,7 @@ export class PasteEvent extends Event {
 export function paste(editor: Editor) {
 
   function onPaste(event: ClipboardEvent) {
+    if (!editor.enabled || !editor.doc.selection) return;
     event.preventDefault();
     const dataTransfer = event.clipboardData;
     const { doc } = editor;
