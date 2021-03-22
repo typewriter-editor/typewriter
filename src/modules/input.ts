@@ -19,9 +19,15 @@ type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
   let inputHandled = false; // this is only a fallback for when mutate doesn't fire on buggy browsers
+  let inputTimeout: number;
 
   function onInput(event: InputEvent) {
     if (event.isComposing || inputHandled) return;
+    inputTimeout = setTimeout(handleInputEvent);
+  }
+
+  function handleInputEvent() {
+    if (inputHandled) return;
     const range = getLineRange(editor.root);
     const change = getChangeFromRange(range);
     if (change && change.ops.length) {
@@ -33,8 +39,9 @@ export function input(editor: Editor) {
 
   // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce ´
   function onMutate(list: MutationRecord[]) {
-    // Firefox has issues with mutation observers fireing consistently
+    // Firefox has issues with mutation observers firing consistently
     inputHandled = true;
+    clearTimeout(inputTimeout);
     setTimeout(() => inputHandled = false);
 
     if (!editor.enabled) {
