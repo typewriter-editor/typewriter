@@ -56,8 +56,6 @@ export function selection(editor: Editor) {
 
   function onChange(event: EditorChangeEvent) {
     const selection = event.doc?.selection || editor.doc.selection;
-    paused = true;
-    setTimeout(() => paused = false);
     setSelection(editor, selection);
   }
 
