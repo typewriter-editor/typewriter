@@ -18,7 +18,6 @@ const linesType = new WeakMap<AttributeMap, LineType>();
 const linesMultiples = new WeakMap<Line, Line[]>();
 const linesCombined = new WeakMap<Line[], CombinedData>();
 const nodeRanges = new WeakMap<HTMLElement, WeakMap<Node, EditorRange>>();
-(window as any).nodeRanges = nodeRanges;
 
 export type CombinedEntry = Line | Line[];
 export type Combined = CombinedEntry[];

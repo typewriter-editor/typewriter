@@ -261,7 +261,6 @@ export default class Editor extends EventDispatcher {
     } else {
       change.insert(at, insert, format, options);
     }
-    console.log(change);
     return this.update(change);
   }
 
