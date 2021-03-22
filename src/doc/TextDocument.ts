@@ -230,7 +230,7 @@ export default class TextDocument {
   }
 }
 
-function getAttributes(Type: any, data: any, from: number, to: number, filter?: (next: any) => boolean) {
+function getAttributes(Type: any, data: any, from: number, to: number, filter?: (next: any) => boolean): AttributeMap {
   const iter = Type.iterator(data);
   let attributes: AttributeMap | undefined;
   let index = 0;

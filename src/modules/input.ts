@@ -168,7 +168,7 @@ function getChangedLineRange(root: HTMLElement, records: MutationRecord[]): HTML
 }
 
 function getLineRange(root: HTMLElement): HTMLLineRange | undefined {
-  // With & w/o virutalization we may have 0123456789, 123-9, 1-789, 1-456-9, we need to find the "on screen" range
+  // With & w/o virutalization we may have 0123456789, 012-9, 0-789, 0-456-9, we need to find the "on screen" range
   const children = root.children as any as HTMLLineElement[];
   const length = children.length;
   if (!length) return;

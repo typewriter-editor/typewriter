@@ -53,7 +53,9 @@ export default class TextChange {
 
     const lineRange = this.doc.getLineRange(at);
     if (!options?.dontFixNewline && lineRange[1] <= to) {
-      this.formatLine(to, this.doc.getLineFormat(at));
+      const format = this.doc.getLineFormat(at);
+      format.id = this.doc.getLineAt(at).attributes.id;
+      this.formatLine(to, format);
     }
     return this;
   }
@@ -76,6 +78,7 @@ export default class TextChange {
       if (options?.dontFixNewline) {
         this.compose(at, delta => delta.insert('\n', { ...format, id: Line.createId(ids) }));
       } else {
+        lineFormat.id = this.doc.getLineAt(at).attributes.id;
         this.compose(at, delta => delta.insert('\n', lineFormat));
         this.formatLine(at, { ...format, id: Line.createId(ids) });
       }
