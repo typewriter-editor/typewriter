@@ -6,6 +6,7 @@ import { EditorRange, normalizeRange } from '../doc/EditorRange';
 import isEqual from '../util/isEqual';
 
 const dontFixNewline = { dontFixNewline: true };
+const ignoreId = { excludeProps: new Set([ 'id' ]) };
 
 export interface PasteEventInit extends EventInit {
   delta: Delta;
@@ -36,7 +37,7 @@ export function paste(editor: Editor) {
     const { doc } = editor;
     const selection = doc.selection && normalizeRange(doc.selection);
     if (!dataTransfer || !selection) return;
-    let range = selection.slice() as EditorRange;
+    const [ at, to ] = selection;
     const html = dataTransfer.getData('text/html');
     const text = dataTransfer.getData('text/plain');
     let delta: Delta;
@@ -49,14 +50,15 @@ export function paste(editor: Editor) {
     }
 
     const hasLines = delta.filter(op => typeof op.insert === 'string' && op.insert.includes('\n')).length > 0;
+    let length = delta.length();
 
     if (hasLines) {
       // check the boundaries to see if they can be merged with the current line or need to make a new line
       let lines = Line.fromDelta(delta, doc.byId);
       delta = Line.toDelta(lines);
 
-      const startLine = doc.getLineAt(range[0]);
-      const endLine = doc.getLineAt(range[1]);
+      const startLine = doc.getLineAt(at);
+      const endLine = doc.getLineAt(to);
       const startAttrs = getAttributes(startLine);
       const endAttrs = startLine === endLine ? startAttrs : getAttributes(endLine);
 
@@ -71,12 +73,17 @@ export function paste(editor: Editor) {
       const pastedEndLine = lines[lines.length - 1];
       const pastedEndAttrs = pastedStartLine === pastedEndLine ? pastedStartAttrs : getAttributes(pastedEndLine);
 
-      if (!isEqual(startAttrs, pastedStartAttrs)) {
+      if (at !== doc.getLineRange(startLine)[0] && !isEqual(startAttrs, pastedStartAttrs, ignoreId)) {
         delta = new Delta().insert('\n', startAttrs).concat(delta);
+        length++;
       }
 
-      if (isEqual(endAttrs, pastedEndAttrs)) {
-        delta = delta.slice(0, delta.length() - 1);
+      if (to !== doc.getLineRange(endLine)[1] && isEqual(endAttrs, pastedEndAttrs, ignoreId)) {
+        // Multi-line paste always ends in a \n
+        delta = delta.slice(0, --length);
+      } else if (to === doc.getLineRange(endLine)[1] - 1) {
+        delta.delete(1);
+        length--;
       }
     }
 
@@ -84,13 +91,16 @@ export function paste(editor: Editor) {
     editor.dispatchEvent(viewEvent);
     delta = viewEvent.delta;
 
-    if (!viewEvent.defaultPrevented && delta && delta.ops.length) {
-      const change = editor.change
-        .delete(range, dontFixNewline)
-        .insertContent(range[0], delta)
-        .select(selection[0] + delta.length());
-      editor.update(change);
+    if (!viewEvent.defaultPrevented) {
+      if (delta && delta.ops.length) {
+        const change = editor.change.delete(selection, hasLines ? dontFixNewline : undefined);
+        change.insertContent(at, delta).select(at + length);
+        editor.update(change);
+      } else if (at !== to) {
+        editor.delete([ at, to ]);
+      }
     }
+
   }
 
   return {
