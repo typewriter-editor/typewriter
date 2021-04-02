@@ -25,7 +25,7 @@ export function keyboard(editor: Editor) {
     const line = doc.getLineAt(selection[0]);
     const [ start, end ] = doc.getLineRange(selection[0]);
 
-    let attributes = line.attributes;
+    let { id, ...attributes } = line.attributes;
     let options: { dontFixNewline?: boolean } | undefined;
     const type = lines.findByAttributes(attributes, true);
     const contentLength = line.length - 1;
@@ -38,7 +38,7 @@ export function keyboard(editor: Editor) {
     } else {
       if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
         attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
-      } else if (atStart) {
+      } else if (atStart && !atEnd) {
         if (type.defaultFollows) attributes = EMPTY_OBJ;
         options = { dontFixNewline: true };
       }
