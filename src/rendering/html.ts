@@ -196,7 +196,9 @@ function nodeToHTML(node: VChild): string {
   }
   const attr = Object.keys(node.props)
     .reduce((attr, name) =>
-      name === 'key' ? attr : `${attr} ${escapeHtml(name)}="${escapeHtml(node.props[name])}"`, '');
+      name === 'key' || node.props[name] == null
+      ? attr
+      : `${attr} ${escapeHtml(name)}="${escapeHtml(node.props[name])}"`, '');
   const children = childrenToHTML(node.children);
   const closingTag = children || !VOID_ELEMENTS[node.type] ? `</${node.type}>` : '';
   return `<${node.type}${attr}>${children}${closingTag}`;
