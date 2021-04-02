@@ -30,7 +30,7 @@ export default class TextChange {
   }
 
   apply() {
-    // Allow to be overridden;
+    throw new Error('Must be overridden by creator of change (e.g. Editor).');
   }
 
   setDelta(delta: Delta) {
@@ -45,7 +45,9 @@ export default class TextChange {
 
   delete(range: EditorRange | null, options?: { dontFixNewline?: boolean }) {
     if (!range || !this.doc) return this;
-    const [ at, to ] = normalizeRange(range);
+    let [ at, to ] = normalizeRange(range);
+    at = Math.max(0, at);
+    to = Math.min(this.doc.length - 1, to);
     if (at === to) return this;
     const length = to - at;
     if (this.doc.selection) this.selection = [ at, at ];
