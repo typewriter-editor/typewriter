@@ -35,12 +35,12 @@ export interface FromDomOptions {
 
 
 export function docToHTML(editor: Editor, doc: TextDocument) {
-  return childrenToHTML(renderDoc(editor, doc));
+  return childrenToHTML(renderDoc(editor, doc, true));
 }
 
 
 export function inlineToHTML(editor: Editor, delta: Delta) {
-  return childrenToHTML(renderInline(editor, delta));
+  return childrenToHTML(renderInline(editor, delta, true));
 }
 
 

@@ -109,31 +109,31 @@ export function fromNode(editor: Editor, dom: HTMLElement) {
   return lines[0];
 }
 
-export function renderDoc(editor: Editor, doc: TextDocument) {
-  return renderCombined(editor, combineLines(editor, doc.lines).combined);
+export function renderDoc(editor: Editor, doc: TextDocument, forHTML?: boolean) {
+  return renderCombined(editor, combineLines(editor, doc.lines).combined, forHTML);
 }
 
-export function renderCombined(editor: Editor, combined: Combined) {
-  return combined.map(line => renderLine(editor, line)).filter(Boolean) as VNode[];
+export function renderCombined(editor: Editor, combined: Combined, forHTML?: boolean) {
+  return combined.map(line => renderLine(editor, line, forHTML)).filter(Boolean) as VNode[];
 }
 
-export function renderLine(editor: Editor, line: CombinedEntry) {
-  return Array.isArray(line) ? renderMultiLine(editor, line) : renderSingleLine(editor, line);
+export function renderLine(editor: Editor, line: CombinedEntry, forHTML?: boolean) {
+  return Array.isArray(line) ? renderMultiLine(editor, line, forHTML) : renderSingleLine(editor, line, forHTML);
 }
 
-export function renderSingleLine(editor: Editor, line: Line) {
+export function renderSingleLine(editor: Editor, line: Line, forHTML?: boolean) {
   const type = getLineType(editor, line);
   if (!type.render) throw new Error('No render method defined for line');
-  const node = type.render(line.attributes as AttributeMap, renderInline(editor, line.content), editor);
+  const node = type.render(line.attributes as AttributeMap, renderInline(editor, line.content), editor, forHTML);
   applyDecorations(node, line.attributes);
   node.key = line.attributes.id;
   return node;
 }
 
-export function renderMultiLine(editor: Editor, lines: Line[]) {
+export function renderMultiLine(editor: Editor, lines: Line[], forHTML?: boolean) {
   const type = getLineType(editor, lines[0]);
   if (!type.renderMultiple) throw new Error('No render method defined for line');
-  const node = type.renderMultiple(lines.map(line => [ line.attributes, renderInline(editor, line.content) ]), editor);
+  const node = type.renderMultiple(lines.map(line => [ line.attributes, renderInline(editor, line.content) ]), editor, forHTML);
   node.key = lines[0].attributes.id;
   return node;
 }
@@ -200,7 +200,7 @@ export function getChangedRanges(oldC: Combined, newC: Combined): LineRanges {
 }
 
 
-export function renderInline(editor: Editor, delta: Delta) {
+export function renderInline(editor: Editor, delta: Delta, forHTML?: boolean) {
   const { formats, embeds } = editor.typeset;
   let inlineChildren: VChild[] = [];
   let trailingBreak = true;
@@ -218,7 +218,7 @@ export function renderInline(editor: Editor, delta: Delta) {
     } else if (op.insert) {
       const embed = embeds.findByAttributes(op.insert);
       if (embed?.render) {
-        children.push(embed.render(op.insert, EMPTY_ARR, editor));
+        children.push(embed.render(op.insert, EMPTY_ARR, editor, forHTML));
         if (embed.name === 'br') trailingBreak = true;
         else if (!embed.noFill) trailingBreak = false;
       }
@@ -229,7 +229,7 @@ export function renderInline(editor: Editor, delta: Delta) {
       Object.keys(op.attributes).sort((a, b) => formats.priority(b) - formats.priority(a)).forEach(name => {
         const type = formats.get(name);
         if (type?.render) {
-          const node = type.render(op.attributes as AttributeMap, children, editor);
+          const node = type.render(op.attributes as AttributeMap, children, editor, forHTML);
           nodeFormatType.set(node, type); // Store for merging
           children = [ node ];
         }

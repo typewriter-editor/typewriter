@@ -86,7 +86,7 @@ export const list = line({
     return rest;
   },
   shouldCombine: (prev, next) => prev.list === next.list || next.indent,
-  renderMultiple: (lists, editor) => {
+  renderMultiple: (lists, editor, forHTML) => {
     const topLevelChildren: VNode[] = [];
     const levels: VNode[] = [];
     // e.g. levels = [ul, ul]
@@ -117,7 +117,14 @@ export const list = line({
         const childrenArray = levels.length ? levels[levels.length - 1].children : topLevelChildren;
         const lastChild = childrenArray[childrenArray.length - 1];
         if (typeof lastChild === 'object' && lastChild.type === 'li') {
-          lastChild.children.push(newLevel);
+          if (forHTML) {
+            // Correct HTML
+            lastChild.children.push(newLevel);
+          } else {
+            // Technically incorrect HTML needed to fix selection bug: when clicking to the right of a list item with a
+            // sub-item, the selection goes to the start of the line instead of the end
+            childrenArray.push(newLevel);
+          }
         } else {
           childrenArray.push(newLevel);
         }
