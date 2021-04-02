@@ -1,16 +1,6 @@
 import Editor from '../Editor';
 import { createTreeWalker } from './walker';
-
-const SHOW = NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT;
-const FILTER: NodeFilter = {
-  acceptNode(node) {
-    if (node.nodeType === Node.TEXT_NODE && node.nodeValue === '') {
-      return NodeFilter.FILTER_REJECT;
-    } else {
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  }
-};
+import { BLOCK_ELEMENTS } from './html';
 
 
 // Determines if a <br> in the editable area is part of the document or a doorstop at the end of a line.
@@ -25,5 +15,6 @@ function isLastNode(editor: Editor, node: Node) {
   if (!containingLine) return false;
   const walker = createTreeWalker(containingLine);
   walker.currentNode = node;
-  return !walker.nextNode();
+  const next = walker.nextNode();
+  return !next || next instanceof HTMLElement && next.matches(BLOCK_ELEMENTS);
 }

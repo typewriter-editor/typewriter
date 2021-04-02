@@ -10,9 +10,9 @@ import Editor from '../Editor';
 import { EditorRange } from '../doc/EditorRange';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
+export const BLOCK_ELEMENTS = 'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 const BAD_CHARS = /[\0-\x09\x0B\x1F\x7F-\x9F\xAD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB\uE000-\uF8FF]/g;
 const SKIP_ELEMENTS = { STYLE: true, SCRIPT: true, LINK: true, META: true, TITLE: true, };
-const BLOCK_ELEMENTS = 'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
 const VOID_ELEMENTS = {
   area: true, base: true, br: true, col: true, embed: true, hr: true, img: true, input: true,
   link: true, meta: true, param: true, source: true, track: true, wbr: true
