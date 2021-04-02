@@ -58,39 +58,56 @@ export function keyboard(editor: Editor) {
 
 
   function onBackspace(event: KeyboardEvent) {
+    handleDelete(event, -1);
+  }
+
+
+  function onDelete(event: KeyboardEvent) {
+    handleDelete(event, 1);
+  }
+
+
+  function handleDelete(event: KeyboardEvent, direction: 1 | -1) {
     if (event.defaultPrevented) return;
     const { typeset: { lines }, doc } = editor;
     const { selection } = doc;
     if (!selection) return;
-    const isCollapsed = selection[0] === selection[1], at = selection[0];
-    const [ start ] = doc.getLineRange(selection[0]);
+    const [ at, to ] = selection;
+    const isCollapsed = at === to;
+    const [ start, end ] = doc.getLineRange(at);
 
-    if (isCollapsed && at !== start) return; // Allow the system to handle non-line-collapsing deletes
+    // Allow the system to handle non-line-collapsing deletes
+    if (isCollapsed) {
+      if (direction === -1 && at !== start) return;
+      if (direction === 1 && at !== end - 1) return;
+    }
 
     event.preventDefault();
 
-    if (selection[0] + selection[1] === 0) {
+    if (direction === -1 && selection[0] + selection[1] === 0) {
       // At the beginning of the document
-      unindent(doc.getLineAt(selection[0]), true);
+      unindent(doc.getLineAt(at), true);
     } else {
       const range = normalizeRange(selection);
       const line = doc.getLineAt(range[0]);
       const type = lines.findByAttributes(line.attributes, true);
+      const outside = (direction === -1 && at === start) || (direction === 1 && at === end - 1);
 
-      if (selection[0] === selection[1] && selection[0] === doc.getLineRange(selection[0])[0] && !type.contained) {
+      if (isCollapsed && outside && !type.contained) {
         // At the beginning of a line
-        if (unindent(doc.getLineAt(selection[0]))) return;
+        if (direction === -1 && unindent(doc.getLineAt(at))) return;
 
-        // Delete the previous line if it is empty
-        const prev = doc.lines[doc.lines.indexOf(line) - 1];
-        if (prev && prev.length === 1 && line.length !== 1) {
+        // Delete the next line if it is empty
+        const mergingLine = doc.lines[doc.lines.indexOf(line) + direction];
+        const [ first, second ] = direction === 1 ? [ line, mergingLine] : [ mergingLine, line ];
+        if (first && first.length === 1 && second && second.length !== 1) {
           return editor.update(
-            editor.change.delete([ range[0] - 2, range[1] - 1 ]).select(range[0] - 1)
+            editor.change.delete([ range[0] + direction, range[0] ], { dontFixNewline: true })
           );
         }
       }
 
-      editor.delete(-1, { dontFixNewline: type.frozen });
+      editor.delete(direction, { dontFixNewline: type.frozen });
     }
 
 
@@ -107,32 +124,6 @@ export function keyboard(editor: Editor) {
         return true;
       }
     }
-  }
-
-
-  function onDelete(event: KeyboardEvent) {
-    if (event.defaultPrevented) return;
-    const { doc } = editor;
-    const { selection } = doc;
-    if (!selection) return;
-    const isCollapsed = selection[0] === selection[1], at = selection[0];
-    const [ start, end ] = doc.getLineRange(selection[0]);
-
-    if (isCollapsed && at !== end - 1) return; // Allow the system to handle non-line-collapsing deletes
-    event.preventDefault();
-
-    let options: {dontFixNewline: boolean} | undefined;
-    if (selection[0] === selection[1]) {
-      const range = normalizeRange(selection);
-      const line = doc.getLineAt(range[0]);
-      // Delete the next line if it is empty
-      const next = doc.lines[doc.lines.indexOf(line) - 1];
-      if (line.length === 1 && next && next.length !== 1) {
-        options = { dontFixNewline: true };
-      }
-    }
-
-    editor.delete(1, options);
   }
 
 
