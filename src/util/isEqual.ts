@@ -1,5 +1,4 @@
 const EMPTY_OBJ = {};
-const EXCLUDE_NONE = () => false;
 
 interface IsEqualOptions {
   shallow?: boolean;
@@ -41,15 +40,23 @@ export default function isEqual(value: any, other: any, options: IsEqualOptions 
     return valueResult.done === otherResult.done;
   }
 
-  const excluded = options.excludeProps ? options.excludeProps.has.bind(options.excludeProps) : EXCLUDE_NONE;
 
   // Objects
-  const valueKeys = Object.keys(value);
-  const otherKeys = Object.keys(other);
+  let valueKeys = Object.keys(value)
+  let otherKeys = Object.keys(other)
+  if (options.excludeProps) {
+    const isIncluded = createIsIncluded(options.excludeProps);
+    valueKeys = valueKeys.filter(isIncluded);
+    otherKeys = otherKeys.filter(isIncluded);
+  }
   return (options.partial || valueKeys.length === otherKeys.length)
-    && otherKeys.every(key => excluded(key) || (value.hasOwnProperty(key) && compare(other[key], value[key], options)));
+    && otherKeys.every(key => value.hasOwnProperty(key) && compare(other[key], value[key], options));
 }
 
 function exactlyEqual(value: any, other: any) {
   return value === other;
+}
+
+function createIsIncluded(excluded: Set<string>) {
+  return (prop: string) => !excluded.has(prop);
 }
