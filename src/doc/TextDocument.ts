@@ -6,6 +6,7 @@ import LineOp from './LineOp';
 import AttributeMap from '../delta/AttributeMap';
 import { EditorRange, normalizeRange } from './EditorRange';
 import TextChange from './TextChange';
+import { deltaToText } from './deltaToText';
 
 const EMPTY_RANGE: EditorRange = [ 0, 0 ];
 const EMPTY_OBJ = {};
@@ -46,9 +47,7 @@ export default class TextDocument {
 
   getText(range?: EditorRange): string {
     if (range) range = normalizeRange(range);
-    return (range ? this.slice(range[0], range[1]) : this.slice(0, this.length - 1))
-      .map(op => typeof op.insert === 'string' ? op.insert : ' ')
-      .join('');
+    return deltaToText(range ? this.slice(range[0], range[1]) : this.slice(0, this.length - 1));
   }
 
   getLineBy(id: string) {

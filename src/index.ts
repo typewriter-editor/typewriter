@@ -12,6 +12,7 @@ import Op from './delta/Op';
 export { AttributeMap, Delta, OpIterator, Op };
 
 export * from './doc/EditorRange';
+export * from './doc/deltaToText';
 
 import Line from './doc/Line';
 import LineOp from './doc/LineOp';
