@@ -5,6 +5,8 @@ import { EditorRange, normalizeRange } from './EditorRange';
 import Line from './Line';
 import intersect from '../util/intersect';
 import isEqual from '../util/isEqual';
+import { deltaToText } from './deltaToText';
+import Op from '../delta/Op';
 
 
 
@@ -55,8 +57,7 @@ export default class TextChange {
 
     const lineRange = this.doc.getLineRange(at);
     if (!options?.dontFixNewline && lineRange[1] <= to) {
-      const format = this.doc.getLineFormat(at);
-      format.id = this.doc.getLineAt(at).attributes.id;
+      const format = this.doc.getLineAt(at).attributes;
       this.formatLine(to, format);
     }
     return this;
@@ -72,7 +73,7 @@ export default class TextChange {
     }
 
     const ids = this.doc.byId;
-    const lineFormat = this.doc.getLineFormat(at);
+    const lineFormat = this.doc.getLineAt(at).attributes;
 
     if (typeof insert !== 'string') {
       this.compose(at, delta => delta.insert(insert, format));
@@ -80,19 +81,22 @@ export default class TextChange {
       if (options?.dontFixNewline) {
         this.compose(at, delta => delta.insert('\n', { ...format, id: Line.createId(ids) }));
       } else {
-        lineFormat.id = this.doc.getLineAt(at).attributes.id;
         this.compose(at, delta => delta.insert('\n', lineFormat));
         this.formatLine(at, { ...format, id: Line.createId(ids) });
       }
     } else {
       if (!format) format = this.getFormatAt(at);
-      const lines = insert.split('\n');
-      lines.forEach((line, i) => {
-        if (i) this.compose(at, delta => delta.insert('\n', i === 1 ? lineFormat : { id: Line.createId(ids) }));
-        if (line.length) this.compose(at, delta => delta.insert(line, format))
-      });
-      if (lines.length > 1 && lineFormat) {
-        this.formatLine(at, { ...lineFormat, id: Line.createId(ids) });
+      if (insert.includes('\n')) {
+        const lines = insert.split('\n');
+        lines.forEach((line, i) => {
+          if (i) this.compose(at, delta => delta.insert('\n', i === 1 ? lineFormat : { id: Line.createId(ids) }));
+          if (line.length) this.compose(at, delta => delta.insert(line, format))
+        });
+        if (lineFormat) {
+          this.formatLine(at, { ...lineFormat, id: Line.createId(ids) });
+        }
+      } else {
+        this.compose(at, delta => delta.insert(insert, format));
       }
     }
     return this;
@@ -101,6 +105,24 @@ export default class TextChange {
   insertContent(at: number, content: Delta) {
     if (!this.doc) return this;
     at = this.normalizePoint(at);
+
+    if (this.doc.selection) {
+      // Ignore retain ops at the end
+      const ops = content.ops.filter(op => op.delete);
+      while (ops.length && ops[ops.length - 1].retain) ops.pop();
+      const end = at + ops.reduce((length, op) => length + Op.length(op), 0);
+      this.selection = [ end, end ];
+    }
+
+    const text = deltaToText(content);
+    const newlineIndex = text.indexOf('\n');
+    if (newlineIndex !== -1) {
+      const line = this.doc.getLineAt(at);
+      const [ start, end ] = this.doc.getLineRange(line);
+      content = content.compose(new Delta().retain(newlineIndex).retain(1, { id: line.attributes.id }));
+      this.formatLine(at, { ...this.doc.getLineFormat(at), id: Line.createId(this.doc.byId) });
+    }
+
     this.compose(at, delta => delta.concat(content));
     return this;
   }
@@ -142,7 +164,6 @@ export default class TextChange {
       end--;
       if (!decoration) {
         const undoFormat = AttributeMap.invert(doc.getLineFormat(end));
-        delete undoFormat.id;
         format = { ...undoFormat, ...format };
       }
       this.compose(end, delta => delta.retain(1, format), 1);
