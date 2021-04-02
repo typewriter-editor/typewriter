@@ -271,14 +271,15 @@ function getLineType(editor: Editor, line: Line): LineType {
 function mergeChildren(oldChildren: VChild[]) {
   const children: VChild[] = [];
   oldChildren.forEach((next, i) => {
-    let prev = children[children.length - 1];
+    const index = children.length - 1;
+    const prev = children[index];
 
     if (prev && typeof prev !== 'string' && typeof next !== 'string' && nodeFormatType.has(prev) &&
       nodeFormatType.get(prev) === nodeFormatType.get(next) && isEqual(prev.props, next.props))
     {
       prev.children = prev.children.concat(next.children);
     } else if (prev && typeof prev === 'string' && typeof next === 'string') {
-      prev += next; // combine adjacent text nodes
+      children[index] += next; // combine adjacent text nodes
     } else {
       children.push(next);
       if (prev && typeof prev !== 'string' && prev.children) {
