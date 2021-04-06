@@ -33,7 +33,11 @@ export function input(editor: Editor) {
     if (change && change.ops.length) {
       const selection = getSelection(editor);
       cleanText(change);
+      const old = editor.doc;
       editor.update(new TextChange(editor.doc, change, selection));
+      if (editor.doc.lines === old.lines) {
+        editor.render();
+      }
     }
   }
 
@@ -59,7 +63,11 @@ export function input(editor: Editor) {
 
     if (change && change.ops.length) {
       cleanText(change);
+      const old = editor.doc;
       editor.update(new TextChange(editor.doc, change, selection));
+      if (editor.doc.lines === old.lines) {
+        editor.render();
+      }
     }
   }
 
