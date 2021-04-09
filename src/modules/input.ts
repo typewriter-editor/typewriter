@@ -18,36 +18,16 @@ const MUTATION_OPTIONS = {
 type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
-  let inputHandled = false; // this is only a fallback for when mutate doesn't fire on buggy browsers
-  let inputTimeout: number;
 
-  function onInput(event: InputEvent) {
-    if (event.isComposing || inputHandled) return;
-    inputTimeout = setTimeout(handleInputEvent);
+  // Firefox has had issues in the past with mutation observers firing consistently, so use the observer with the input
+  // event as fallback
+  function onInput() {
+    const mutations = observer.takeRecords();
+    if (mutations.length) onMutate(mutations);
   }
 
-  function handleInputEvent() {
-    if (inputHandled) return;
-    const range = getLineRange(editor.root);
-    const change = getChangeFromRange(range);
-    if (change && change.ops.length) {
-      const selection = getSelection(editor);
-      cleanText(change);
-      const old = editor.doc;
-      editor.update(new TextChange(editor.doc, change, selection));
-      if (editor.doc.lines === old.lines) {
-        editor.render();
-      }
-    }
-  }
-
-  // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce ´
+  // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
   function onMutate(list: MutationRecord[]) {
-    // Firefox has issues with mutation observers firing consistently
-    inputHandled = true;
-    clearTimeout(inputTimeout);
-    setTimeout(() => inputHandled = false);
-
     if (!editor.enabled) {
       return editor.render();
     }
@@ -109,7 +89,6 @@ export function input(editor: Editor) {
 
 
   const observer = new window.MutationObserver(onMutate);
-  // observer.observe(root, MUTATION_OPTIONS);
 
   // Don't observe the changes that occur when the view updates, we only want to respond to changes that happen
   // outside of our API to read them back in
