@@ -1,6 +1,6 @@
 import Editor from '../Editor';
 import Line from '../doc/Line';
-import { addShortcutsToEvent, KeyboardEventWithShortcut } from './shortcutFromEvent';
+import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
 import { normalizeRange } from '../doc/EditorRange';
 
 
@@ -150,9 +150,15 @@ export function keyboard(editor: Editor) {
       }
     }
 
-    if (checkShortcut(event.shortcut)) return;
-    if (checkShortcut(event.osShortcut)) return;
-    if (checkShortcut(event.modShortcut)) return;
+    if (
+      !editor.root.dispatchEvent(ShortcutEvent.fromKeyboardEvent(event))
+      || checkShortcut(event.shortcut)
+      || checkShortcut(event.osShortcut)
+      || checkShortcut(event.modShortcut)
+    ) {
+      event.preventDefault();
+      return;
+    }
 
     switch (event.modShortcut) {
       case 'Enter': return onEnter(event);

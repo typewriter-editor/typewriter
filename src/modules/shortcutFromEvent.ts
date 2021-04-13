@@ -7,6 +7,29 @@ const modifierKeys = {
 const isMac = navigator.userAgent.indexOf('Macintosh') !== -1;
 const modExpr = isMac ? /Cmd/ : /Ctrl/;
 
+
+export interface ShortcutEventInit extends KeyboardEventInit {
+  shortcut?: string;
+}
+
+export class ShortcutEvent extends KeyboardEvent {
+  readonly shortcut: string;
+  readonly osShortcut: string;
+  readonly modShortcut: string;
+
+  constructor(type: string, init?: ShortcutEventInit) {
+    super(type, init);
+    this.shortcut = init?.shortcut || '';
+    this.osShortcut = `${isMac ? 'mac' : 'win'}:${this.shortcut}`;
+    this.modShortcut = this.shortcut.replace(modExpr, 'Mod');
+  }
+
+  static fromKeyboardEvent(event: KeyboardEvent) {
+    (event as KeyboardEventWithShortcut).shortcut = shortcutFromEvent(event);
+    return new ShortcutEvent('shortcut', event);
+  }
+}
+
 export interface KeyboardEventWithShortcut extends KeyboardEvent {
   shortcut?: string;
   osShortcut?: string;
