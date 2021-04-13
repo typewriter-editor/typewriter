@@ -26,6 +26,7 @@ export interface EditorOptions {
   enabled?: boolean;
   text?: string;
   html?: string;
+  dev?: boolean;
 }
 
 export interface Shortcuts {
@@ -110,12 +111,14 @@ export default class Editor extends EventDispatcher {
   commands: Commands = {};
   shortcuts: Shortcuts = {};
   modules: Modules = {};
+  catchErrors: boolean;
   _root!: HTMLElement;
   private _modules: ModuleInitializers;
   private _enabled: boolean;
 
   constructor(options: EditorOptions = {}) {
     super();
+    this.catchErrors = !options.dev;
     this.identifier = options.identifier;
     this.typeset = new Typeset(options.types || defaultTypes);
     if (options.doc) {
@@ -187,12 +190,12 @@ export default class Editor extends EventDispatcher {
     }
 
     const changingEvent = new EditorChangeEvent('changing', { cancelable: true, old, doc, change, changedLines, source });
-    this.dispatchEvent(changingEvent);
+    this.dispatchEvent(changingEvent, this.catchErrors);
     if (changingEvent.defaultPrevented || old.equals(changingEvent.doc)) return this;
     this.activeFormats = getActiveFormats(this, changingEvent.doc);
     this.doc = changingEvent.doc;
-    this.dispatchEvent(new EditorChangeEvent('change', { ...changingEvent, cancelable: false }));
-    this.dispatchEvent(new EditorChangeEvent('changed', { ...changingEvent, cancelable: false }));
+    this.dispatchEvent(new EditorChangeEvent('change', { ...changingEvent, cancelable: false }), this.catchErrors);
+    this.dispatchEvent(new EditorChangeEvent('changed', { ...changingEvent, cancelable: false }), this.catchErrors);
     return this;
   }
 

@@ -25,13 +25,23 @@ export default class EventDispatcher {
     events && events.delete(listener);
   }
 
-  dispatchEvent(event: Event) {
-    let uncanceled = true;
+  dispatchEvent(event: Event, catchErrors?: boolean) {
     const events = getEventListeners(this, event.type);
-    if (events) events.forEach(listener => {
-      uncanceled && listener.call(this, event);
-      if (event.cancelBubble) uncanceled = false;
-    });
+    if (!events) return;
+    for (let listener of events) {
+      if (catchErrors) {
+        try {
+          listener.call(this, event);
+        } catch (err) {
+          try {
+            this.dispatchEvent(new ErrorEvent('error', { error: err }));
+          } catch (err) {}
+        }
+      } else {
+        listener.call(this, event);
+      }
+      if (event.cancelBubble) break;
+    }
   }
 }
 
