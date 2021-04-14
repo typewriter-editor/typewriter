@@ -181,7 +181,7 @@ export default class TextDocument {
       lengthAffected -= lineIter.peekLength();
       affectedLines.push(lineIter.next());
     }
-    if (lengthAffected >= 0) {
+    if (lengthAffected >= 0 && lineIter.hasNext()) {
       affectedLines.push(lineIter.next());
     }
 
@@ -251,7 +251,9 @@ function getAttributes(Type: any, data: any, from: number, to: number, filter?: 
 (window as any).AttributeMap = AttributeMap;
 
 function applyDeltaToLines(delta: Delta, lines: Line[], byId: LineIds) {
-  return Line.fromDelta(Line.toDelta(lines, true).compose(delta, true)).map(line => {
+  const applied = Line.toDelta(lines, true).compose(delta, true);
+  while (applied.ops.length && !applied.ops[applied.ops.length - 1].insert) applied.ops.pop();
+  return Line.fromDelta(applied).map(line => {
     const id = Line.getId(line);
     const old = byId[id];
     return old && Line.equal(old, line) ? old : line;
