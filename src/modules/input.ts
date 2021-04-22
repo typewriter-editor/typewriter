@@ -44,7 +44,7 @@ export function input(editor: Editor) {
     if (change && change.ops.length) {
       cleanText(change);
       const old = editor.doc;
-      editor.update(new TextChange(editor.doc, change, selection));
+      editor.update(new TextChange(editor.doc, change, selection, editor.activeFormats));
       if (editor.doc.lines === old.lines) {
         editor.render();
       }

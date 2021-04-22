@@ -11,6 +11,7 @@ import { docFromHTML, docToHTML } from './rendering/html';
 import EventDispatcher from './util/EventDispatcher';
 import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position';
 import { Source } from './Source';
+import isEqual from './util/isEqual';
 
 const EMPTY_OBJ = {};
 const EMPTY_ARR = [];
@@ -192,7 +193,7 @@ export default class Editor extends EventDispatcher {
     const changingEvent = new EditorChangeEvent('changing', { cancelable: true, old, doc, change, changedLines, source });
     this.dispatchEvent(changingEvent, this.catchErrors);
     if (changingEvent.defaultPrevented || old.equals(changingEvent.doc)) return this;
-    this.activeFormats = getActiveFormats(this, changingEvent.doc);
+    this.activeFormats = change?.activeFormats ? change.activeFormats : getActiveFormats(this, changingEvent.doc);
     this.doc = changingEvent.doc;
     this.dispatchEvent(new EditorChangeEvent('change', { ...changingEvent, cancelable: false }), this.catchErrors);
     this.dispatchEvent(new EditorChangeEvent('changed', { ...changingEvent, cancelable: false }), this.catchErrors);
@@ -242,12 +243,14 @@ export default class Editor extends EventDispatcher {
 
   insert(insert: string | object, format?: AttributeMap, selection = this.doc.selection, options?: { dontFixNewline?: boolean }): this {
     if (!selection) return this;
+    const inPlace = isEqual(selection, this.doc.selection);
     if (format == null && typeof insert === 'string' && insert !== '\n') {
-      format = selection === this.doc.selection ? this.activeFormats : getActiveFormats(this, this.doc, selection);
+      format = inPlace ? this.activeFormats : getActiveFormats(this, this.doc, selection);
     }
     const type = this.typeset.lines.findByAttributes(format, true);
     const change = this.change.delete(selection);
     const at = normalizeRange(selection)[0];
+    if (inPlace) change.setActiveFormats(insert !== '\n' && format || getActiveFormats(this, this.doc, selection));
 
     if (insert === '\n' && type.frozen) {
       const lineFormat = { ...this.doc.getLineFormat(at) };
@@ -288,7 +291,8 @@ export default class Editor extends EventDispatcher {
         else range = [ range[0], range[1] + directionOrSelection ];
       }
     }
-    const change = this.change.delete(range, options).select(range[0]);
+    const formats = getActiveFormats(this, this.doc, range);
+    const change = this.change.delete(range, options).select(range[0]).setActiveFormats(formats);
     return this.update(change);
   }
 

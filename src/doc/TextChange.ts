@@ -15,12 +15,14 @@ export default class TextChange {
   doc: TextDocument | null;
   delta: Delta;
   selection?: EditorRange | null;
+  activeFormats?: AttributeMap;
 
-  constructor(doc: TextDocument | null, delta = new Delta(), selection?: EditorRange | null) {
+  constructor(doc: TextDocument | null, delta = new Delta(), selection?: EditorRange | null, activeFormats?: AttributeMap) {
     this._pos = 0;
     this.doc = doc;
     this.delta = delta;
     this.selection = selection;
+    this.activeFormats = activeFormats;
   }
 
   get contentChanged() {
@@ -38,6 +40,12 @@ export default class TextChange {
   setDelta(delta: Delta) {
     this.delta = delta;
     this._pos = delta.length();
+    return this;
+  }
+
+  setActiveFormats(activeFormats: AttributeMap) {
+    this.activeFormats = activeFormats;
+    return this;
   }
 
   select(at: EditorRange | number | null) {
