@@ -147,11 +147,11 @@ export function smartEntry(handlers: Handler[] = defaultHandlers) {
       ignore = false;
     }
 
-    editor.on('change', onTextChange);
+    editor.on('changed', onTextChange);
 
     return {
       destroy() {
-        editor.off('change', onTextChange);
+        editor.off('changed', onTextChange);
       }
     }
   };
