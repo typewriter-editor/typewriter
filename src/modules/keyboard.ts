@@ -13,12 +13,12 @@ export function keyboard(editor: Editor) {
 
   function onEnter(event: KeyboardEvent) {
     if (event.defaultPrevented) return;
-    event.preventDefault();
 
     const { typeset: { lines }, doc } = editor;
     const { selection } = doc;
 
     if (!selection) return;
+    event.preventDefault();
     const [ at, to ] = selection;
     const isCollapsed = at === to;
 
@@ -49,10 +49,10 @@ export function keyboard(editor: Editor) {
 
   function onShiftEnter(event: KeyboardEvent) {
     if (event.defaultPrevented) return;
-    event.preventDefault();
     const { typeset, doc } = editor;
-    if (!typeset.embeds.get('br')) return;
+    if (!typeset.embeds.get('br')) return onEnter(event);
     if (!doc.selection) return;
+    event.preventDefault();
     editor.insert({ br: true });
   }
 
