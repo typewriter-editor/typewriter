@@ -248,8 +248,6 @@ function getAttributes(Type: any, data: any, from: number, to: number, filter?: 
   return attributes || EMPTY_OBJ;
 }
 
-(window as any).AttributeMap = AttributeMap;
-
 function applyDeltaToLines(delta: Delta, lines: Line[], byId: LineIds) {
   const applied = Line.toDelta(lines, true).compose(delta, true);
   while (applied.ops.length && !applied.ops[applied.ops.length - 1].insert) applied.ops.pop();
