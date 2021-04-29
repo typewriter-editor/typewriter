@@ -62,6 +62,7 @@ export function getBoudingBrowserRange(editor: Editor, range: EditorRange): Rang
 
 export function getIndexFromNodeAndOffset(editor: Editor, node: Node, offset: number, current?: number | null): number {
   const { root } = editor;
+  const { lines, embeds } = editor.typeset;
   if (!root.contains(node)) {
     return -1;
   }
@@ -78,7 +79,11 @@ export function getIndexFromNodeAndOffset(editor: Editor, node: Node, offset: nu
     }
     const start = getLineNodeStart(root, node);
     if (start != null) {
-      // Between nodes, if we came from before, we will go inside, if we came from inside, we will skip to before
+      // If the node is frozen, we are getting the index of the start of the node (e.g. <hr>)
+      if (lines.findByNode(node)?.frozen) {
+        return start + offset;
+      }
+      // Otherwise the selection fell between line nodes, if we came from before, we will go inside, if we came from inside, we will skip to before
       return (current == null || current < start ? start : start - 1) + offset;
     }
   }
