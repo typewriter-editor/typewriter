@@ -19,7 +19,7 @@ type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
 
-  // Firefox has had issues in the past with mutation observers firing consistently, so use the observer with the input
+  // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
     const mutations = observer.takeRecords();
@@ -147,6 +147,7 @@ function getChangedLineRange(root: HTMLElement, records: MutationRecord[]): HTML
   for (let i = 0; i < records.length; i++) {
     const record = records[i];
     let line = getTopLine(root, record.target);
+    if (record.removedNodes.length && (record.removedNodes[0] as HTMLLineElement).key) return;
     if (!line && record.nextSibling) line = getTopLine(root, record.nextSibling);
     if (!line && record.previousSibling) line = getTopLine(root, record.previousSibling);
     if (line && line.key) {
@@ -159,17 +160,6 @@ function getChangedLineRange(root: HTMLElement, records: MutationRecord[]): HTML
   }
 
   if (start && end) return [ start, end ];
-}
-
-function getLineRange(root: HTMLElement): HTMLLineRange | undefined {
-  // With & w/o virutalization we may have 0123456789, 012-9, 0-789, 0-456-9, we need to find the "on screen" range
-  const children = root.children as any as HTMLLineElement[];
-  const length = children.length;
-  if (!length) return;
-  if (length === 1 && children[0].key) return [ children[0], children[0] ];
-  const start = children[!children[0].key || getLineNodeEnd(root, children[0]) === getLineNodeStart(root, children[1]) ? 0 : 1];
-  const end = children[!children[length - 1].key || getLineNodeEnd(root, children[length - 2]) === getLineNodeStart(root, children[length - 1]) ? length - 1 : length - 2];
-  return [ start, end ];
 }
 
 function getTopLine(root: HTMLElement, node: any) {

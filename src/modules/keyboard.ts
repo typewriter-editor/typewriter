@@ -6,6 +6,7 @@ import { normalizeRange } from '../doc/EditorRange';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 const EMPTY_OBJ = {};
+const IS_CHROME = (window as any).chrome && typeof (window as any).chrome === 'object';
 
 // Basic keyboard module.
 export function keyboard(editor: Editor) {
@@ -77,7 +78,8 @@ export function keyboard(editor: Editor) {
     const [ start, end ] = doc.getLineRange(at);
 
     // Allow the system to handle non-line-collapsing deletes
-    if (isCollapsed) {
+    // (Bug in Chrome where backspace at the end of a span can delete an entire paragraph)
+    if (isCollapsed && !IS_CHROME) {
       if (direction === -1 && at !== start) return;
       if (direction === 1 && at !== end - 1) return;
     }
