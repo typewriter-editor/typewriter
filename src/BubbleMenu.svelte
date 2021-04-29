@@ -12,6 +12,7 @@ export let padding = 4;
 let menu;
 let popper;
 let oldRoot;
+let oldDoc;
 let mouseDown = false;
 let menuHasFocus = false;
 let placement = 'top';
@@ -69,13 +70,14 @@ function onMouseUp() {
 function updateRoot(root) {
   if (oldRoot) {
     oldRoot.removeEventListener('mousedown', onMouseDown);
-    oldRoot.removeEventListener('mouseup', onMouseUp);
-  }
-  if (root) {
-    root.addEventListener('mousedown', onMouseDown);
-    root.addEventListener('mouseup', onMouseUp);
+    (oldDoc || oldRoot).removeEventListener('mouseup', onMouseUp);
   }
   oldRoot = root;
+  oldDoc = root && root.ownerDocument;
+  if (oldRoot) {
+    oldRoot.addEventListener('mousedown', onMouseDown);
+    (oldDoc || oldRoot).addEventListener('mouseup', onMouseUp);
+  }
 }
 
 function onGainFocus(event) {
