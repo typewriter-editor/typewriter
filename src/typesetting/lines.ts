@@ -4,6 +4,7 @@ import { line } from './typeset';
 import { applyDecorations } from '../modules/decorations';
 import { normalizeRange } from '../doc/EditorRange';
 import Delta from '../delta/Delta';
+import Line from '../doc/Line';
 
 
 export const paragraph = line({
@@ -207,10 +208,12 @@ export const hr = line({
     const change = editor.change.delete(range);
     if (range[0] === range[1] && doc.getLineAt(range[0]).length === 1) {
       change
-        .insert(range[0], '\n', doc.getLineFormat(range[0]))
+        .insert(range[0], '\n', { ...doc.getLineFormat(range[0]), id: Line.createId(doc.byId) })
         .formatLine(range[0], { hr: true });
     } else {
-      const delta = new Delta().insert('\n', doc.getLineAt(range[0]).attributes).insert('\n', { hr: true });
+      const delta = new Delta()
+        .insert('\n', doc.getLineAt(range[0]).attributes)
+        .insert('\n', { hr: true, id: Line.createId(doc.byId) });
       change.insertContent(range[0], delta);
       change.select(range[0] + 2);
     }
