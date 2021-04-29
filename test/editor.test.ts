@@ -232,7 +232,7 @@ describe('======== Editor ========', () => {
 
   describe('setHTML', () => {
     const html = '<p>this is a <b><em>test</em></b>!</p>';
-    const output = '<p>this is a&nbsp;<strong><em>test</em></strong>!</p>';
+    const output = '<p>this is a <strong><em>test</em></strong>!</p>';
 
     it('should set the html', () => {
       editor.setHTML(html);

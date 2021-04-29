@@ -84,7 +84,7 @@ describe('======== dom ========', () => {
                     'The whole problem with the world'
                   ]
                 },
-                ' is that fools and fanatics are always so certain of themselves, and\xA0',
+                ' is that fools and fanatics are always so certain of themselves, and ',
                 {
                   type: 'strong',
                   props: {},
@@ -180,7 +180,7 @@ describe('======== dom ========', () => {
         `<blockquote>` +
           `<p>` +
             `<em>The whole problem with the world</em>` +
-            ` is that fools and fanatics are always so certain of themselves, and&nbsp;` +
+            ` is that fools and fanatics are always so certain of themselves, and ` +
             `<strong>wiser people so full of doubts.</strong>` +
           `</p>` +
         `</blockquote>` +
