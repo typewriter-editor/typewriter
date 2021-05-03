@@ -52,13 +52,15 @@ function getQuoteIndices(ops: Op[]) {
   let pos = 0;
   ops.forEach(op => {
     if (op.retain) pos += op.retain;
-    if (op.delete) pos -= op.delete;
-    if (typeof op.insert === 'string') {
+    else if (op.delete) pos -= op.delete;
+    else if (typeof op.insert === 'string') {
       let result: RegExpExecArray | null;
       while ((result = straitQuotes.exec(op.insert))) {
         indices.push(pos + result.index);
       }
       pos += op.insert.length;
+    } else if (op.insert) {
+      pos += 1;
     }
   });
   return indices;
