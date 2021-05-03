@@ -94,21 +94,21 @@ export default class TextDocument {
     }
   }
 
-  getLineFormat(at: number | EditorRange) {
+  getLineFormat(at: number | EditorRange = this.selection as EditorRange) {
     let to = at as number;
     if (Array.isArray(at)) [ at, to ] = normalizeRange(at);
     if (at === to) to++;
     return getAttributes(Line, this.lines, at, to);
   }
 
-  getTextFormat(at: number | EditorRange) {
+  getTextFormat(at: number | EditorRange = this.selection as EditorRange) {
     let to = at as number;
     if (Array.isArray(at)) [ at, to ] = normalizeRange(at);
     if (at === to) at--;
     return getAttributes(LineOp, this.lines, at, to, op => op.insert !== '\n');
   }
 
-  getFormats(at: number | EditorRange): AttributeMap {
+  getFormats(at: number | EditorRange = this.selection as EditorRange): AttributeMap {
     return { ...this.getTextFormat(at), ...this.getLineFormat(at) };
   }
 
