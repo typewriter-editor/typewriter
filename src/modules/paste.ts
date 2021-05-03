@@ -78,10 +78,15 @@ export function paste(editor: Editor) {
         length++;
       }
 
-      if (to !== doc.getLineRange(endLine)[1] && isEqual(endAttrs, pastedEndAttrs, ignoreId)) {
-        // Multi-line paste always ends in a \n
+      const lastInsert = delta.ops[delta.ops.length - 1].insert;
+      const endsInNewline = typeof lastInsert === 'string' && lastInsert.endsWith('\n');
+
+      // Does the last line of a multi-line paste merge with the last line?
+      if (endsInNewline && to !== doc.getLineRange(endLine)[1] && isEqual(endAttrs, pastedEndAttrs, ignoreId)) {
+        // Remove the trailing newline to merge with the last line
         delta = delta.slice(0, --length);
-      } else if (to === doc.getLineRange(endLine)[1] - 1) {
+      // If a multi-line paste is inserted at the end of a line, delete the line's newline and let the inserted one take
+      } else if (endsInNewline && to === doc.getLineRange(endLine)[1] - 1) {
         delta.delete(1);
         length--;
       }
