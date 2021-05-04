@@ -146,14 +146,13 @@ function getChangedLineRange(root: HTMLElement, records: MutationRecord[]): HTML
 
   for (let i = 0; i < records.length; i++) {
     const record = records[i];
-    let line = getTopLine(root, record.target);
-    if (record.removedNodes.length && (record.removedNodes[0] as HTMLLineElement).key) return;
-    if (!line && record.nextSibling) line = getTopLine(root, record.nextSibling);
-    if (!line && record.previousSibling) line = getTopLine(root, record.previousSibling);
+    if (record.target === root) return; // line added/removed
+
+    const line = getTopLine(root, record.target);
     if (line && line.key) {
       if (!start || getLineNodeStart(root, line) < getLineNodeStart(root, start)) start = line;
       if (!end || getLineNodeStart(root, line) > getLineNodeStart(root, end)) end = line;
-    } else if ((record.target as HTMLLineElement).key) {
+    } else {
       // If a line is deleted or new line added we will return null and diff the whole thing (rare fallback case)
       return;
     }
@@ -163,9 +162,6 @@ function getChangedLineRange(root: HTMLElement, records: MutationRecord[]): HTML
 }
 
 function getTopLine(root: HTMLElement, node: any) {
-  if (node === root) {
-
-  }
   while (node && node.parentNode !== root) node = node.parentNode;
   return node as HTMLLineElement | null;
 }
