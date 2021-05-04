@@ -46,7 +46,7 @@ function update() {
           { name: 'dataOutput', enabled: true, phase: 'write', fn({ state }) { placement = state.placement.split('-')[0] }}
         ],
       });
-      requestAnimationFrame(() => menu.classList.add('active'))
+      requestAnimationFrame(() => menu && menu.classList.add('active'))
     }
   } else {
     if (popper && !menuHasFocus) {
