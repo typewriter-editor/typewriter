@@ -90,11 +90,24 @@ export function renderChanges(editor: Editor, oldDoc: TextDocument, newDoc: Text
   const oldCombined = combineLines(editor, oldDoc.lines).combined;
   const newCombined = combineLines(editor, newDoc.lines).combined;
   const [ oldRange, newRange ] = getChangedRanges(oldCombined, newCombined);
+
+  // If the changes include added or deleted lines, expand ranges by 1 on each side to ensure the vdom can rerender
+  if (!isEqual(oldRange, newRange)) {
+    oldRange[0] = Math.max(0, oldRange[0] - 1);
+    newRange[0] = Math.max(0, newRange[0] - 1);
+    oldRange[1] = Math.min(oldCombined.length, oldRange[1] + 1);
+    newRange[1] = Math.min(newCombined.length, newRange[1] + 1);
+    if (root.childNodes.length !== oldCombined.length) {
+      // The DOM has changed since we last rendered, adjust the oldRange accordingly to get the correct slice
+      oldRange[1] += root.childNodes.length - oldCombined.length;
+    }
+  }
+
   const oldSlice = Array.from(root.childNodes).slice(oldRange[0], oldRange[1]);
   const newSlice = newCombined.slice(newRange[0], newRange[1]);
   if (!oldSlice.length && !newSlice.length) return render(editor, newDoc);
   editor.dispatchEvent(new Event('rendering'));
-  patch(root, renderCombined(editor, newSlice), oldSlice, oldSlice.length ? undefined : root.children[oldRange[1]]) as HTMLElement;
+  patch(root, renderCombined(editor, newSlice), oldSlice) as HTMLElement;
   setLineNodesRanges(editor);
   editor.dispatchEvent(new Event('render'));
   editor.dispatchEvent(new Event('rendered'));
@@ -190,9 +203,8 @@ export function getChangedRanges(oldC: Combined, newC: Combined): LineRanges {
   }
   for (let i = 0; i < minLength; i++) {
     if (!isSame(oldC[oldLength - i - 1], newC[newLength - i - 1])) {
-      const end = Math.max(i - 1, 0);
-      oldEnd = oldLength - end;
-      newEnd = newLength - end;
+      oldEnd = oldLength - i;
+      newEnd = newLength - i;
       break;
     }
   }

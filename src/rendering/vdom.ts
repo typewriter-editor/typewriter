@@ -118,7 +118,7 @@ const patchDom = (parent: Node, dom: Node, oldDom: Node | null, newVdom: VChild,
   return dom
 }
 
-const patchChildren = (dom: Node, newVKids: VChild[], isSvg?: boolean, oldKids: Node[] = Array.from(dom.childNodes) as Node[], endNode?: Node) => {
+const patchChildren = (dom: Node, newVKids: VChild[], isSvg?: boolean, oldKids: Node[] = Array.from(dom.childNodes) as Node[]) => {
   var tmpKid: Node,
     oldKid: Node,
     oldKey: any,
@@ -167,7 +167,7 @@ const patchChildren = (dom: Node, newVKids: VChild[], isSvg?: boolean, oldKids: 
 
   if (oldHead > oldTail) {
     // All old matched, so new nodes were inserted
-    const insertBefore = oldKids[oldHead] || (oldKids[oldHead - 1] && oldKids[oldHead - 1].nextSibling || null) || endNode;
+    const insertBefore = oldKids[oldHead] || (oldKids[oldHead - 1] && oldKids[oldHead - 1].nextSibling || null);
     while (newHead <= newTail) {
       dom.insertBefore(
         createNode((newVKids[newHead] = vdomify(newVKids[newHead++])), isSvg),
@@ -304,9 +304,9 @@ export const h = (type: string | Function, props?: Props | null, ch?: VChild | V
 // Add `import { React } from 'typewriter-editor';` at the top of any .tsx page to use JSX.
 export const React = { createElement: h };
 
-export const patch = (dom: Node, vdom: VNode | VNode[], oldKids?: ChildNode[], endNode?: Node) => {
+export const patch = (dom: Node, vdom: VNode | VNode[], oldKids?: ChildNode[]) => {
   if (Array.isArray(vdom)) {
-    dom = patchChildren(dom, vdom, dom instanceof window.SVGElement, oldKids as Node[], endNode);
+    dom = patchChildren(dom, vdom, dom instanceof window.SVGElement, oldKids as Node[]);
   } else {
     dom = patchDom(dom.parentNode as Node, dom, dom, vdom)
   }
