@@ -8,6 +8,8 @@ let className = 'bubble-menu';
 export { className as class };
 export let offset = 0;
 export let padding = 4;
+let forLineType;
+export { forLineType as for };
 
 let menu;
 let popper;
@@ -55,6 +57,15 @@ function update() {
 }
 
 function getActive(mouseDown, menuHasFocus, selection) {
+  let lineType;
+  if (selection && selection[0] === selection[1] - 1) {
+    const line = editor.doc.getLineAt(selection[0]);
+    const type = editor.typeset.lines.findByAttributes(line.attributes, true);
+    if (type.frozen) {
+      lineType = type.name;
+    }
+  }
+  if (lineType != forLineType) selection = null;
   return mouseDown || menuHasFocus ? activeSelection : selection;
 }
 

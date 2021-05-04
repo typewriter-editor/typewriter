@@ -68,7 +68,7 @@ export default class TextDocument {
       const [ start, end ] = this.getLineRange(line);
       return encompassed
         ? start >= at && end <= to
-        : start <= to && end > at;
+        : (start < to || start === at) && end > at;
     });
   }
 

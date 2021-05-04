@@ -13,6 +13,15 @@ export function selection(editor: Editor) {
   function onSelectionChange() {
     if (paused) return;
     const selection = getSelection(editor);
+    if (selection && selection[0] === selection[1] && editor.doc.selection && editor.doc.selection[0] === selection[0] && editor.doc.selection[1] === selection[0] + 1) {
+      // Allow a frozen line (e.g. hr) to move the cursor left with a left arrow key
+      const line = editor.doc.getLineAt(selection[0]);
+      const type = editor.typeset.lines.findByAttributes(line.attributes, true);
+      if (type.frozen) {
+        selection[0]--;
+        selection[1]--;
+      }
+    }
     const { doc } = editor;
     if (!isEqual(doc.selection, selection)) {
       if (selection && selection[0] === selection[1] && selection[0] >= doc.length) {
@@ -45,7 +54,9 @@ export function selection(editor: Editor) {
 
   function onMouseDown(event: MouseEvent) {
     // Helps select lines that are not easily selectable (e.g. <hr>)
-    const start = getLineNodeStart(editor.root, event.target as Node);
+    let node = event.target as Node;
+    while (node.parentNode && node.parentNode !== editor.root) node = node.parentNode;
+    const start = getLineNodeStart(editor.root, node);
     const line = start != null && editor.doc.getLineAt(start);
     const type = line && editor.typeset.lines.findByAttributes(line.attributes);
     if (start != null && line && line.length === 1 && type && type.frozen) {

@@ -8,8 +8,12 @@ import BubbleMenu from './BubbleMenu.svelte';
 import InlineMenu from './InlineMenu.svelte';
 import Virtualized from './Virtualized.svelte';
 import Placeholder from './Placeholder.svelte';
+import MediumImages from './MediumImages.svelte';
 
 let url = globalHistory.location.pathname;
+const fullWidthRoutes = new Set(['/medium-images']);
+
+$: fullWidth = fullWidthRoutes.has(url);
 globalHistory.listen(() => url = globalHistory.location.pathname);
 </script>
 
@@ -31,9 +35,10 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
         <a href="/inline-menu" class="menu-item" class:current={url === '/inline-menu'} use:link>Inline Menu</a>
         <a href="/virtualized" class="menu-item" class:current={url === '/virtualized'} use:link>Virtualized Rendering</a>
         <a href="/placeholder" class="menu-item" class:current={url === '/placeholder'} use:link>Placeholders</a>
+        <a href="/medium-images" class="menu-item" class:current={url === '/medium-images'} use:link>Medium-like Images</a>
       </div>
 
-      <div class="app-content">
+      <div class="app-content" class:full-width={fullWidth}>
         <Route path="/" component={Basic}/>
         <Route path="/custom-root" component={CustomRoot}/>
         <Route path="/toolbar" component={Toolbar}/>
@@ -41,6 +46,7 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
         <Route path="/inline-menu" component={InlineMenu}/>
         <Route path="/virtualized" component={Virtualized}/>
         <Route path="/placeholder" component={Placeholder}/>
+        <Route path="/medium-images" component={MediumImages}/>
       </div>
     </div>
 
@@ -98,5 +104,8 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
   flex: 1;
   padding: 16px 32px;
   max-width: 760px;
+}
+.app-content.full-width {
+  max-width: none;;
 }
 </style>

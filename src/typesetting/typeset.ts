@@ -153,6 +153,12 @@ export class Types<T extends BasicType = BasicType> {
     this.init();
   }
 
+  remove(type: T | string) {
+    const name = typeof type === 'string' ? type : type.name;
+    this.list = this.list.filter(type => type.name !== name);
+    this.init();
+  }
+
   get(name: string) {
     return this.types[name];
   }

@@ -2,7 +2,7 @@ import { escapeHtml } from './escape-html';
 import { isBRPlaceholder } from './br';
 import { VChild } from './vdom';
 import TextDocument from '../doc/TextDocument';
-import { renderInline } from '../rendering/rendering';
+import { HTMLLineElement, renderInline } from '../rendering/rendering';
 import { createTreeWalker } from './walker';
 import Delta from '../delta/Delta';
 import { renderDoc } from './rendering';
@@ -31,6 +31,7 @@ export interface FromDomOptions {
   endNode?: Node;
   offset?: number;
   possiblePartial?: boolean;
+  includeIds?: boolean;
 }
 
 
@@ -150,6 +151,12 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
         continue;
       }
 
+      // Ensure next iteration skips any internal nodes in a frozen line
+      if (line.frozen) {
+        // Skip to the last child in this node so that .nextNode() will move on to outside this frozen line
+        while (walker.lastChild());
+      }
+
       if (firstLineSeen) {
         if (!currentLine || !currentLine.unknownLine || !empty) {
           delta.insert('\n', !currentLine || currentLine.unknownLine ? {} : currentLine);
@@ -165,6 +172,9 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
         currentLine = line.fromDom ? line.fromDom(node) : { [line.name]: true };
       } else {
         currentLine = {};
+      }
+      if (options.includeIds && (node as HTMLLineElement).key) {
+        currentLine.id = (node as HTMLLineElement).key;
       }
     }
   }
