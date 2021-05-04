@@ -16,7 +16,7 @@ export function keyboard(editor: Editor) {
     if (event.defaultPrevented) return;
 
     const { typeset: { lines }, doc } = editor;
-    const { selection } = doc;
+    let { selection } = doc;
 
     if (!selection) return;
     event.preventDefault();
@@ -37,7 +37,10 @@ export function keyboard(editor: Editor) {
       // Convert a bullet point into a paragraph
       editor.formatLine(EMPTY_OBJ);
     } else {
-      if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
+      if (at === start && to === end && type.frozen) {
+        selection = [ to, to ];
+        attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
+      } else if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
         attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
       } else if (atStart && !atEnd) {
         if (type.defaultFollows) attributes = EMPTY_OBJ;
@@ -79,7 +82,7 @@ export function keyboard(editor: Editor) {
 
     // Allow the system to handle non-line-collapsing deletes
     // (Bug in Chrome where backspace at the end of a span can delete an entire paragraph)
-    if (isCollapsed && !IS_CHROME) {
+    if (isCollapsed && (!IS_CHROME || event.ctrlKey || event.altKey || event.metaKey)) {
       if (direction === -1 && at !== start) return;
       if (direction === 1 && at !== end - 1) return;
     }
