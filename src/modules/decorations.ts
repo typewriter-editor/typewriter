@@ -316,8 +316,8 @@ export function applyDecorations(vnode: VNode, attributes: AttributeMap | undefi
   });
 
   const className = Array.from(classes).join(' ').trim();
-  if (className) props.class ? props.class + ' ' + className : className;
-  if (style) props.style = style;
+  if (className) props.class = props.class ? props.class + ' ' + className : className;
+  if (style) props.style = props.style ? props.style + ';' + style : style;
 
   vnode.props = props;
 
