@@ -11,9 +11,9 @@ import Placeholder from './Placeholder.svelte';
 import MediumImages from './MediumImages.svelte';
 
 let url = globalHistory.location.pathname;
-const fullWidthRoutes = new Set(['/medium-images']);
+const fullScreenRoutes = new Set(['/medium-images']);
 
-$: fullWidth = fullWidthRoutes.has(url);
+$: fullScreen = fullScreenRoutes.has(url);
 globalHistory.listen(() => url = globalHistory.location.pathname);
 </script>
 
@@ -21,11 +21,12 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
   <div class="app">
 
     <div class="app-header">
-      <div class="app-name">Typewriter</div>
+      <div class="app-name"><a href="/">Typewriter</a></div>
     </div>
 
     <div class="app-body">
 
+      {#if !fullScreen}
       <div class="app-menu">
         <div class="menu-title">Examples</div>
         <a href="/" class="menu-item" class:current={url === '/'} use:link>Basic Editor</a>
@@ -37,8 +38,9 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
         <a href="/placeholder" class="menu-item" class:current={url === '/placeholder'} use:link>Placeholders</a>
         <a href="/medium-images" class="menu-item" class:current={url === '/medium-images'} use:link>Medium-like Images</a>
       </div>
+      {/if}
 
-      <div class="app-content" class:full-width={fullWidth}>
+      <div class="app-content" class:full-width={fullScreen}>
         <Route path="/" component={Basic}/>
         <Route path="/custom-root" component={CustomRoot}/>
         <Route path="/toolbar" component={Toolbar}/>
@@ -70,6 +72,10 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
 .app-name {
   font-weight: bold;
   font-size: 24px;
+}
+.app-name a {
+  text-decoration: none;
+  color: inherit;
 }
 .app-body {
   flex: 1;
@@ -106,6 +112,8 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
   max-width: 760px;
 }
 .app-content.full-width {
+  display: flex;
+  flex-direction: column;
   max-width: none;;
 }
 </style>

@@ -150,59 +150,66 @@ onMount(() => {
  </div>
 </BubbleMenu>
 
-<div class="page">
-  <div use:asRoot={editor} class="editor">
-    <h1>Images as Lines</h1>
-    <p>
-      Typewriter is a free, open source rich text editor built for the modern web. With its modular architecture and
-      expressive API, it is completely customizable to fit any need.
-    </p>
-    <div class="image"><img src="https://images.unsplash.com/photo-1612392062422-ef19b42f74df?fit=crop&w=600" alt="hotdogs"></div>
-    <p>
-      Typewriter is a free, open source rich text editor built for the modern web. With its modular architecture and
-      expressive API, it is completely customizable to fit any need.
-    </p>
-  </div>
+<div use:asRoot={editor} class="text-content">
+  <h1>Images as Lines</h1>
+  <p>
+    Typewriter is a free, open source rich text editor built for the modern web. With its modular architecture and
+    expressive API, it is completely customizable to fit any need.
+  </p>
+  <div class="image"><img src="https://images.unsplash.com/photo-1612392062422-ef19b42f74df?fit=crop&w=600" alt="hotdogs"></div>
+  <p>
+    Typewriter is a free, open source rich text editor built for the modern web. With its modular architecture and
+    expressive API, it is completely customizable to fit any need.
+  </p>
 </div>
 
 <style>
-.editor {
+.text-content {
+  flex: 1;
   outline: none;
-}
-.editor > :global(*) {
   max-width: 600px;
   margin: 0 auto;
+  box-shadow: none;
+  border: none;
+  overflow: visible;
 }
-
-.editor :global(.image) {
+.text-content :global(.image) {
   display: flex;
   flex-direction: column;
   cursor: default;
-  margin: 40px auto 20px;
+  margin: 1em 0;
 }
-.editor :global(.image img) {
+.text-content :global(.image img) {
   width: 100%;
   height: 100%;
 }
-.editor :global(.image *::selection) {
-    background-color: rgba(0,0,0,0);
+.text-content :global(.image.focus) {
+  outline: 4px solid var(--selection-color);
+  outline-offset: 2px;
 }
-.editor :global(.image *::-moz-selection) {
-    background-color: rgba(0,0,0,0);
+.text-content :global(.image.focus *::selection) {
+  background-color: rgba(0,0,0,0);
+}
+.text-content :global(.image.focus *::selection) {
+  background-color: rgba(0,0,0,0);
+}
+.text-content :global(.image.selected *::-moz-selection) {
+  background-color: rgba(0,0,0,0);
 }
 
-.editor :global(.image[data-style="outset-left"] img) {
+.text-content :global(.image[data-style="outset-left"]) {
   float: left;
-  margin-left: -50%;
-  margin-right: 20px;
+  margin: 0 2em 0 -50%;
 }
-.editor :global(.image[data-style="outset-center"]) {
+.text-content :global(.image[data-style="outset-center"]) {
   max-width: 1032px;
-  width: 100%;
+  width: 140%;
+  margin: 1em -20%;
 }
-.editor :global(.image[data-style="fill-width"]) {
+.text-content :global(.image[data-style="fill-width"]) {
   max-width: none;
-  width: 100%;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
 }
 
 .bubble-menu {
