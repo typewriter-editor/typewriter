@@ -44,7 +44,7 @@ export function selection(editor: Editor) {
     if (selection) {
       doc.getLinesAt(selection).forEach(line => {
         if (line.length === 1 && lines.findByAttributes(line.attributes, true).frozen) {
-          const focused = selection[0] === selection[1];
+          const focused = isEqual(selection, doc.getLineRange(line));
           decorator.decorateLine(doc.getLineRange(line)[0], { class: 'selected' + (focused ? ' focus' : '') });
         }
       });
