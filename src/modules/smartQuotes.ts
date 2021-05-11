@@ -52,7 +52,6 @@ function getQuoteIndices(ops: Op[]) {
   let pos = 0;
   ops.forEach(op => {
     if (op.retain) pos += op.retain;
-    else if (op.delete) pos -= op.delete;
     else if (typeof op.insert === 'string') {
       let result: RegExpExecArray | null;
       while ((result = straitQuotes.exec(op.insert))) {
@@ -61,7 +60,7 @@ function getQuoteIndices(ops: Op[]) {
       pos += op.insert.length;
     } else if (op.insert) {
       pos += 1;
-    }
+    } // Delete shouldn't change anything
   });
   return indices;
 }
