@@ -77,9 +77,11 @@ export class EditorChangeEvent extends Event {
     this.change = init.change;
     this.changedLines = init.changedLines;
     this.source = init.source;
+    // Fix Safari bug, see https://stackoverflow.com/a/58471803
+    Object.setPrototypeOf(this, EditorChangeEvent.prototype);
   }
 
-  // Modify the data in during changing event before doc is committed
+  // Modify the data during a "changing" event before doc is committed
   modify(delta: Delta) {
     if (!this.cancelable) throw new Error('Cannot modify an applied change, listen to the "changing" event');
     this.doc = this.doc.apply(delta);
