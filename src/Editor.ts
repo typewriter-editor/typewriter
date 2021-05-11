@@ -352,6 +352,7 @@ export default class Editor extends EventDispatcher {
 
   getBounds(range: EditorRange | number, relativeTo?: Element, relativeInside?: boolean): DOMRect | undefined {
     if (typeof range === 'number') range = [ range, range ];
+    if (!range) return range;
     let rect = getBoudingBrowserRange(this, range)?.getBoundingClientRect();
     if (rect && relativeTo) {
       const relative = relativeTo.getBoundingClientRect();
