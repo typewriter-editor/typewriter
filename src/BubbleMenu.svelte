@@ -1,6 +1,7 @@
 <script>
 import { onDestroy } from 'svelte';
 import { createPopper } from '@popperjs/core';
+import { OFFSCREEN_RECT } from './popper';
 import { editorStores } from './stores';
 
 export let editor;
@@ -33,7 +34,7 @@ function update() {
       popper.update();
     } else {
       const element = {
-        getBoundingClientRect: () => editor.getBounds(activeSelection),
+        getBoundingClientRect: () => editor.getBounds(activeSelection) || OFFSCREEN_RECT,
         contextElement: editor.root,
       };
       popper = createPopper(element, menu, {
