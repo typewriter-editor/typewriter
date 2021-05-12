@@ -6,6 +6,7 @@ import { editorStores } from './stores';
 
 export let editor;
 export let hover;
+export let any; // Show on any empty line, not just a default (paragraph) line
 let className = 'inline-menu';
 export { className as class };
 
@@ -17,11 +18,11 @@ const { active, doc, selection, focus, root, updateEditor } = editorStores(edito
 
 $: updateEditor(editor);
 $: activeSelection = getActive(menuHasFocus, $selection);
-$: sel = !hover && $selection && $selection[0] === $selection[1] && $selection;
+$: sel = !hover && activeSelection && activeSelection[0] === activeSelection[1];
 $: at = sel && sel[0];
 $: line = at || at === 0 ? $doc.getLineAt(at) : null;
 $: lineElement = line && getLineElementAt(editor, at);
-$: show = line && line.length === 1 && !editor.typeset.lines.findByAttributes(line.attributes);
+$: show = canShow(line);
 $: update(menu, lineElement);
 $: listen(hover && $root);
 
@@ -32,7 +33,7 @@ function update() {
       popper.update();
     } else {
       const element = {
-        getBoundingClientRect: () => editor.getBounds(activeSelection) || OFFSCREEN_RECT,
+        getBoundingClientRect: () => editor.getBounds(at) || OFFSCREEN_RECT,
         contextElement: editor.root,
       };
       popper = createPopper(element, menu, {
@@ -46,6 +47,13 @@ function update() {
       popper = null;
     }
   }
+}
+
+function canShow(line) {
+  if (!line || line.length !== 1) return false;
+  const { lines } = editor.typeset;
+  const type = lines.findByAttributes(line.attributes, true);
+  return type === lines.default || (any && !type.frozen);
 }
 
 function getActive(menuHasFocus, selection) {
@@ -85,10 +93,16 @@ function onLoseFocus() {
   editor.modules.selection.resume();
   menuHasFocus = false;
 }
+
+function onMouseDown() {
+  if (!activeSelection || activeSelection[0] !== at) {
+    editor.select(at);
+  }
+}
 </script>
 
 {#if show}
-<div class={className} on:focusin={onGainFocus} on:focusout={onLoseFocus} bind:this={menu}>
+<div class={className} on:focusin={onGainFocus} on:focusout={onLoseFocus} on:mousedown={onMouseDown} bind:this={menu}>
   <slot commands={editor.commands} active={$active} selection={$selection} focus={$focus}></slot>
 </div>
 {/if}
