@@ -9,6 +9,7 @@ export let hover;
 export let any; // Show on any empty line, not just a default (paragraph) line
 let className = 'inline-menu';
 export { className as class };
+export let line;
 
 let menu;
 let popper;
@@ -18,7 +19,7 @@ const { active, doc, selection, focus, root, updateEditor } = editorStores(edito
 
 $: updateEditor(editor);
 $: activeSelection = getActive(menuHasFocus, $selection);
-$: sel = !hover && activeSelection && activeSelection[0] === activeSelection[1];
+$: sel = !hover && activeSelection && activeSelection[0] === activeSelection[1] ? activeSelection : null;
 $: at = sel && sel[0];
 $: line = at || at === 0 ? $doc.getLineAt(at) : null;
 $: lineElement = line && getLineElementAt(editor, at);
@@ -39,7 +40,7 @@ function update() {
       popper = createPopper(element, menu, {
         placement: 'right',
       });
-      requestAnimationFrame(() => menu.classList.add('active'))
+      requestAnimationFrame(() => menu && menu.classList.add('active'))
     }
   } else {
     if (popper && !menuHasFocus) {
@@ -72,12 +73,21 @@ function onMouseOver(event) {
   }
 }
 
+function onMouseLeave(event) {
+  if (menu && menu.contains(event.relatedTarget)) {
+    return;
+  }
+  at = null;
+}
+
 function listen(root) {
   if (oldRoot) {
     oldRoot.removeEventListener('mouseover', onMouseOver);
+    oldRoot.removeEventListener('mouseleave', onMouseLeave);
   }
   if (root) {
     root.addEventListener('mouseover', onMouseOver);
+    root.addEventListener('mouseleave', onMouseLeave);
   }
   oldRoot = root;
 }
