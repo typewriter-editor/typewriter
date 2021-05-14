@@ -29,11 +29,10 @@ export function keyboard(editor: Editor) {
     let { id, ...attributes } = line.attributes;
     let options: { dontFixNewline?: boolean } | undefined;
     const type = lines.findByAttributes(attributes, true);
-    const contentLength = line.length - 1;
     const atStart = to === start;
     const atEnd = to === end - 1;
 
-    if (!contentLength && type !== lines.default && !type.contained && !type.defaultFollows && !type.frozen && isCollapsed) {
+    if (isEmpty(line) && type !== lines.default && !type.contained && !type.defaultFollows && !type.frozen && isCollapsed) {
       // Convert a bullet point into a paragraph
       editor.formatLine(EMPTY_OBJ);
     } else {
@@ -105,7 +104,7 @@ export function keyboard(editor: Editor) {
         // Delete the next line if it is empty
         const mergingLine = doc.lines[doc.lines.indexOf(line) + direction];
         const [ first, second ] = direction === 1 ? [ line, mergingLine] : [ mergingLine, line ];
-        if (first && first.length === 1 && second && second.length !== 1) {
+        if (first && isEmpty(first) && second && !isEmpty(second)) {
           return editor.update(
             editor.change.delete([ range[0] + direction, range[0] ], { dontFixNewline: true })
           );
@@ -179,6 +178,10 @@ export function keyboard(editor: Editor) {
       case 'Delete': return onDelete(event);
       default: return;
     }
+  }
+
+  function isEmpty(line: Line) {
+    return line.length === 1 && !editor.typeset.lines.findByAttributes(line.attributes)?.frozen;
   }
 
   return {
