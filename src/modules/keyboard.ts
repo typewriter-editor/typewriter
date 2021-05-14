@@ -46,6 +46,9 @@ export function keyboard(editor: Editor) {
         options = { dontFixNewline: true };
       }
       editor.insert('\n', attributes, selection, options);
+      if (at === start && to === end && type.frozen) {
+        editor.select(to);
+      }
     }
   }
 
