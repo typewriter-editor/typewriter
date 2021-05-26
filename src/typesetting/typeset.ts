@@ -164,7 +164,11 @@ export class Types<T extends BasicType = BasicType> {
   }
 
   priority(name: string) {
-    return this.priorities[name];
+    // Attribute keys that do not have types assigned to them need a default sorting value.
+    // A default value of -1 means that "loose" attribute keys do not corrupt priority sorting
+    //   and are sorted to the back of the list in rendering.ts::renderInline()
+    const priority = this.priorities[name];
+    return priority !== undefined ? priority : -1;
   }
 
   // Whether or not the provided element is one of our types
