@@ -7,6 +7,7 @@ import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from '../rendering/
 import { getSelection } from '../rendering/selection';
 import { getIndexFromNode } from '../rendering/position';
 import { cleanText } from '../rendering/html';
+import { normalizeRange } from '../doc/EditorRange';
 
 const MUTATION_OPTIONS = {
   characterData: true,
@@ -58,7 +59,18 @@ export function input(editor: Editor) {
     const change = new Delta();
     const index = getIndexFromNode(editor, mutation.target);
     change.retain(index);
-    const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '));
+    
+    let relativeEditLocation: undefined | number = undefined;
+    if (editor.doc.selection) {
+      const selection = normalizeRange(editor.doc.selection);
+      relativeEditLocation = selection[0] - index;
+
+      if (relativeEditLocation < 0) {
+        relativeEditLocation = 0;
+      }
+    }
+
+    const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '), relativeEditLocation);
     diffs.forEach(([ action, string ]) => {
       if (action === diff.EQUAL) change.retain(string.length);
       else if (action === diff.DELETE) change.delete(string.length);
