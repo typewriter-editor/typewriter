@@ -177,13 +177,32 @@ export default class TextDocument {
 
     const affectedLines: Line[] = [];
     let lengthAffected = delta.reduce((length, op) => length + (op.insert ? 0 : Op.length(op)), 0);
-    while (lineIter.peekLength() <= lengthAffected) {
+    do {
       lengthAffected -= lineIter.peekLength();
       affectedLines.push(lineIter.next());
-    }
-    if (lengthAffected >= 0 && lineIter.hasNext()) {
-      affectedLines.push(lineIter.next());
-    }
+    } while (lineIter.peekLength() <= lengthAffected)
+
+    // if (lengthAffected > 0) {
+    //   if (lineIter.hasNext()) {
+    //     lengthAffected -= lineIter.peekLength();
+    //     affectedLines.push(lineIter.next());
+    //     if (lengthAffected > 0) {
+    //       console.log('Extending last line!!!!!!!');
+    //       const lastIndex = affectedLines.length - 1;
+    //       const lastLine = affectedLines[lastIndex];
+    //       affectedLines[lastIndex] = {
+    //         ...lastLine,
+    //         content: lastLine.content.slice().insert('#'.repeat(lengthAffected), lastLine.content.ops[lastLine.content.ops.length - 1].attributes),
+    //       };
+    //     }
+    //   } else {
+    //     console.log('Adding new line');
+    //     // const lastLine = { ...this.lines[this.lines.length - 1] };
+    //     affectedLines.push(Line.create(new Delta().insert('#'.repeat(lengthAffected)), undefined, this.byId));
+    //     // lastLine.content = lastLine.content.slice().insert('#'.repeat(lengthAffected));
+    //     // affectedLines.push(lastLine);
+    //   }
+    // }
 
     const updated = applyDeltaToLines(delta, affectedLines, this.byId);
     if (updated.length === affectedLines.length && updated.every((b, i) => b === affectedLines[i])) {
