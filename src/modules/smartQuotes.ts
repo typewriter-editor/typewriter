@@ -1,3 +1,4 @@
+import AttributeMap from '../delta/AttributeMap';
 import Delta from '../delta/Delta';
 import Op from '../delta/Op';
 import Editor, { EditorChangeEvent } from '../Editor';
@@ -10,7 +11,7 @@ const conversions = {
 }
 
 /**
- * Replaces regular quotes with smart quotes as they are typed. Does not affect pasted content.
+ * Replaces regular quotes with smart quotes as they are typed. Also affects pasted content.
  * Uses the text-changing event to prevent the original change and replace it with the new one. This makes the smart-
  * quotes act more seemlessly and includes them as part of regular text undo/redo instead of breaking it like the smart-
  * entry conversions do.
@@ -29,10 +30,10 @@ export function smartQuotes(editor: Editor) {
     let pos = 0;
 
     for (let i = 0; i < indices.length; i++) {
-      const index = indices[i];
+      const [ index, attributes ] = indices[i];
       const quote = text[index] as '"' | "'";
       const converted = !index || nonchar.test(text[index - 1]) ? conversions[quote].left : conversions[quote].right;
-      convert.retain(index - pos).delete(1).insert(converted);
+      convert.retain(index - pos).delete(1).insert(converted, attributes);
       pos = index + 1;
     }
     event.modify(convert);
@@ -48,14 +49,14 @@ export function smartQuotes(editor: Editor) {
 }
 
 function getQuoteIndices(ops: Op[]) {
-  const indices: number[] = [];
+  const indices: Array<[number, AttributeMap | undefined]> = [];
   let pos = 0;
   ops.forEach(op => {
     if (op.retain) pos += op.retain;
     else if (typeof op.insert === 'string') {
       let result: RegExpExecArray | null;
       while ((result = straitQuotes.exec(op.insert))) {
-        indices.push(pos + result.index);
+        indices.push([ pos + result.index, op.attributes ]);
       }
       pos += op.insert.length;
     } else if (op.insert) {
