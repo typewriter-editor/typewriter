@@ -1,11 +1,13 @@
 <script>
 import { createPopper } from '@popperjs/core';
+import { text } from 'svelte/internal';
 import { OFFSCREEN_RECT } from './popper';
 import { getLineElementAt } from './rendering/position';
 import { editorStores } from './stores';
 
 export let editor;
-export let hover;
+export let atLine; // Whether to display at the line left-most point or the cursor left-most point (this point will be different with indented text)
+export let hover; // Display on empty lines when hovering over them with the mouse vs where the text cursor is at
 export let any; // Show on any empty line, not just a default (paragraph) line
 let className = 'inline-menu';
 export { className as class };
@@ -34,7 +36,14 @@ function update() {
       popper.update();
     } else {
       const element = {
-        getBoundingClientRect: () => editor.getBounds(at) || OFFSCREEN_RECT,
+        getBoundingClientRect: () => {
+          if (atLine) {
+            if (!lineElement) return OFFSCREEN_RECT;
+            const { x, y, left, top, bottom, height } = lineElement.getBoundingClientRect();
+            return { x, y, left, right: left, top, bottom, height, width: 0 };
+          }
+          else return editor.getBounds(at) || OFFSCREEN_RECT;
+        },
         contextElement: editor.root,
       };
       popper = createPopper(element, menu, {
