@@ -256,8 +256,8 @@ export default class Editor extends EventDispatcher {
 
     if (insert === '\n' && type.frozen) {
       const lineFormat = { ...this.doc.getLineFormat(at) };
-      const secondLine = { ...format, id: Line.createId(this.doc.byId) };
-      let lastLine = { ...lineFormat, id: Line.createId(this.doc.byId) };
+      const secondLine = { ...format };
+      let lastLine = { ...lineFormat };
       const newlines = new Delta()
         .insert('\n', lineFormat);
       if (this.doc.getLineRange(at)[1] - 1 !== at) {

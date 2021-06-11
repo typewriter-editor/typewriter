@@ -4,11 +4,10 @@ import Iterator from './Iterator';
 import { EditorRange } from './EditorRange';
 import isEqual from '../util/isEqual';
 
-const EMPTY_OBJ = {};
-const lineInfoCache = new WeakMap<Line[], LineInfo>();
+const EMPTY_MAP = new Map();
 
 export type LineRanges = Map<Line, EditorRange>;
-export type LineIds = Record<string, Line>;
+export type LineIds = Map<string, Line>;
 export type LineInfo = {ranges: LineRanges, ids: LineIds};
 
 interface Line {
@@ -35,11 +34,15 @@ namespace Line {
     return isEqual(value.attributes, other.attributes) && isEqual(value.content.ops, other.content.ops);
   }
 
-  export function fromDelta(delta: Delta, existing: LineIds = EMPTY_OBJ) {
+  export function fromDelta(delta: Delta, existing?: LineIds) {
     const lines: Line[] = [];
 
-    delta.eachLine((line, attr) => {
-      lines.push(Line.create(line, Object.keys(attr).length ? attr : undefined, existing));
+    const ids = new Map(existing || []);
+
+    delta.eachLine((content, attr) => {
+      const line = Line.create(content, Object.keys(attr).length ? attr : undefined, ids);
+      ids.set(Line.getId(line), line);
+      lines.push(line);
     });
 
     return lines;
@@ -59,29 +62,22 @@ namespace Line {
     return delta;
   }
 
-  export function create(content: Delta = new Delta(), attributes: AttributeMap = {}, existing: LineIds = EMPTY_OBJ): Line {
+  export function create(content: Delta = new Delta(), attributes: AttributeMap = {}, existing?: LineIds): Line {
     const length = content.length() + 1;
     if (!attributes.id) attributes = { ...attributes, id: createId(existing) };
     return { attributes, content: content, length };
   }
 
-  export function getLineInfo(lines: Line[]) {
-    let info = lineInfoCache.get(lines) as LineInfo;
-    if (!info) {
-      const ranges = new Map<Line, EditorRange>() as LineRanges;
-      const ids: LineIds = {};
-      let pos = 0;
-      lines.forEach(line => {
-        ids[getId(line)] = line;
-        ranges.set(line, [ pos, pos += line.length ])
-      });
-      info = { ranges, ids };
-      lineInfoCache.set(lines, info);
-    }
-    return info;
+  export function getLineRanges(lines: Line[]) {
+    const ranges = new Map<Line, EditorRange>() as LineRanges;
+    let pos = 0;
+    lines.forEach(line => {
+      ranges.set(line, [ pos, pos += line.length ])
+    });
+    return ranges;
   }
 
-  export function createId(existing: LineIds = EMPTY_OBJ) {
+  export function createId(existing: LineIds = EMPTY_MAP) {
     let id: string;
     while (existing[(id = Math.random().toString(36).slice(2))]);
     return id;

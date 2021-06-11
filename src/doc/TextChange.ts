@@ -80,28 +80,27 @@ export default class TextChange {
       this.selection = [ end, end ];
     }
 
-    const ids = this.doc.byId;
-    const lineFormat = this.doc.getLineAt(at).attributes;
+    const { id, ...lineFormat } = this.doc.getLineAt(at).attributes;
 
     if (typeof insert !== 'string') {
       this.compose(at, delta => delta.insert(insert, format));
     } else if (insert === '\n') {
       if (options?.dontFixNewline) {
-        this.compose(at, delta => delta.insert('\n', { ...format, id: Line.createId(ids) }));
+        this.compose(at, delta => delta.insert('\n', { ...format }));
       } else {
         this.compose(at, delta => delta.insert('\n', lineFormat));
-        this.formatLine(at, { ...format, id: Line.createId(ids) });
+        this.formatLine(at, { ...format });
       }
     } else {
       if (!format) format = this.getFormatAt(at);
       if (insert.includes('\n')) {
         const lines = insert.split('\n');
         lines.forEach((line, i) => {
-          if (i) this.compose(at, delta => delta.insert('\n', i === 1 ? lineFormat : { id: Line.createId(ids) }));
+          if (i) this.compose(at, delta => delta.insert('\n', i === 1 ? lineFormat : {}));
           if (line.length) this.compose(at, delta => delta.insert(line, format))
         });
         if (lineFormat) {
-          this.formatLine(at, { ...lineFormat, id: Line.createId(ids) });
+          this.formatLine(at, { ...lineFormat });
         }
       } else {
         this.compose(at, delta => delta.insert(insert, format));
@@ -125,10 +124,7 @@ export default class TextChange {
     const text = deltaToText(content);
     const newlineIndex = text.indexOf('\n');
     if (newlineIndex !== -1) {
-      const line = this.doc.getLineAt(at);
-      const [ start, end ] = this.doc.getLineRange(line);
-      content = content.compose(new Delta().retain(newlineIndex).retain(1, { id: line.attributes.id }));
-      this.formatLine(at, { ...this.doc.getLineFormat(at), id: Line.createId(this.doc.byId) });
+      this.formatLine(at, { ...this.doc.getLineFormat(at) });
     }
 
     this.compose(at, delta => delta.concat(content));
@@ -176,6 +172,7 @@ export default class TextChange {
       }
       this.compose(end, delta => delta.retain(1, format), 1);
     });
+    this.delta.chop();
     return this;
   }
 

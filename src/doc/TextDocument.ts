@@ -21,21 +21,33 @@ export default class TextDocument {
   length: number;
   selection: EditorRange | null;
 
-  constructor(lines?: Line[] | Delta, selection: EditorRange | null = null) {
-    if (Array.isArray(lines)) {
-      this.lines = lines;
-    } else if (lines) {
-      this.lines = Line.fromDelta(lines);
+  constructor(lines?: TextDocument | Line[] | Delta, selection: EditorRange | null = null) {
+    if (lines instanceof TextDocument) {
+      this.lines = lines.lines;
+      this.byId = lines.byId;
+      this._ranges = lines._ranges;
+      this.length = lines.length;
     } else {
-      this.lines = [ Line.create() ];
+      this.byId = new Map();
+      if (Array.isArray(lines)) {
+        this.lines = lines;
+      } else if (lines) {
+        this.lines = Line.fromDelta(lines);
+      } else {
+        this.lines = [ Line.create() ];
+      }
+      if (!this.lines.length) {
+        this.lines.push(Line.create());
+      }
+      this.lines.forEach(line => this.byId.set(Line.getId(line) || Line.createId(this.byId), line));
+      // Check for line id duplicates (should never happen, indicates bug)
+      this.lines.forEach(line => {
+        if (this.byId.get(Line.getId(line)) !== line)
+          throw new Error('TextDocument has duplicate line ids: ' + Line.getId(line));
+      });
+      this._ranges = Line.getLineRanges(this.lines);
+      this.length = this.lines.reduce((length, line) => length + line.length, 0);
     }
-    if (!this.lines.length) {
-      this.lines.push(Line.create());
-    }
-    const info = Line.getLineInfo(this.lines);
-    this._ranges = info.ranges;
-    this.byId = info.ids;
-    this.length = this.lines.reduce((length, line) => length + line.length, 0);
     this.selection = selection && selection.map(index => Math.min(this.length - 1, Math.max(0, index))) as EditorRange;
   }
 
@@ -51,7 +63,7 @@ export default class TextDocument {
   }
 
   getLineBy(id: string) {
-    return this.byId[id];
+    return this.byId.get(id) as Line;
   }
 
   getLineAt(at: number) {
@@ -145,7 +157,7 @@ export default class TextDocument {
 
     // Optimization for selection change
     if (!delta.ops.length && selection) {
-      return new TextDocument(this.lines, selection);
+      return new TextDocument(this, selection);
     }
 
     if (selection === undefined && this.selection) {
@@ -180,7 +192,7 @@ export default class TextDocument {
     do {
       lengthAffected -= lineIter.peekLength();
       affectedLines.push(lineIter.next());
-    } while (lineIter.peekLength() <= lengthAffected)
+    } while (lineIter.hasNext() && lengthAffected >= 0)
 
     // if (lengthAffected > 0) {
     //   if (lineIter.hasNext()) {
@@ -206,7 +218,7 @@ export default class TextDocument {
 
     const updated = applyDeltaToLines(delta, affectedLines, this.byId);
     if (updated.length === affectedLines.length && updated.every((b, i) => b === affectedLines[i])) {
-      return this.selection === selection ? this : new TextDocument(this.lines, selection);
+      return this.selection === selection ? this : new TextDocument(this, selection);
     }
 
     lines = lines.concat(updated);
@@ -268,11 +280,12 @@ function getAttributes(Type: any, data: any, from: number, to: number, filter?: 
 }
 
 function applyDeltaToLines(delta: Delta, lines: Line[], byId: LineIds) {
+  if (!lines.length) return lines;
   const applied = Line.toDelta(lines, true).compose(delta, true);
   while (applied.ops.length && !applied.ops[applied.ops.length - 1].insert) applied.ops.pop();
-  return Line.fromDelta(applied).map(line => {
+  return Line.fromDelta(applied, byId).map(line => {
     const id = Line.getId(line);
-    const old = byId[id];
+    const old = byId.get(id);
     return old && Line.equal(old, line) ? old : line;
   });
 }

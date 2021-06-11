@@ -52,7 +52,7 @@ export const list = line({
     outdent: () => editor.outdent(),
     toggleCheck: (id: string) => {
       const line = typeof id === 'string'
-        ? editor.doc.byId[id]
+        ? editor.doc.getLineBy(id)
         : editor.doc.selection
         ? editor.doc.getLineAt(editor.doc.selection[0])
         : null;
@@ -208,12 +208,12 @@ export const hr = line({
     const change = editor.change.delete(range);
     if (range[0] === range[1] && doc.getLineAt(range[0]).length === 1) {
       change
-        .insert(range[0], '\n', { ...doc.getLineFormat(range[0]), id: Line.createId(doc.byId) })
+        .insert(range[0], '\n', { ...doc.getLineFormat(range[0]) })
         .formatLine(range[0], { hr: true });
     } else {
       const delta = new Delta()
         .insert('\n', doc.getLineAt(range[0]).attributes)
-        .insert('\n', { hr: true, id: Line.createId(doc.byId) });
+        .insert('\n', { hr: true });
       change.insertContent(range[0], delta);
       change.select(range[0] + 2);
     }

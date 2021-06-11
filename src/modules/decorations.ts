@@ -273,7 +273,7 @@ export class Decorator {
     const line = typeof value === 'number'
       ? doc.getLineAt(value)
       : typeof value === 'string'
-      ? doc.byId[value]
+      ? doc.getLineBy(value) as Line
       : value;
     return this.clearLines([ line ]);
   }

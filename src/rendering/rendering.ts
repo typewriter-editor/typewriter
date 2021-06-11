@@ -55,7 +55,7 @@ export function setLineNodesRanges(editor: Editor) {
       const lineElements = child.querySelectorAll(editor.typeset.lines.selector) as any as HTMLLineElement[];
       for (let i = 0; i < lineElements.length; i++) {
         const lineElement = lineElements[i];
-        const line = doc.byId[lineElement.key];
+        const line = doc.getLineBy(lineElement.key);
         if (!line) continue;
         ranges.set(lineElement, doc.getLineRange(line));
       }
@@ -67,7 +67,7 @@ export function setLineNodesRanges(editor: Editor) {
   for (let i = 0; i < lineElements.length; i++) {
     const lineElement = lineElements[i];
     if (ranges.has(lineElement) || !lineElement.key) continue;
-    const line = doc.byId[lineElement.key];
+    const line = doc.getLineBy(lineElement.key);
     ranges.set(lineElement, doc.getLineRange(line));
   }
   nodeRanges.set(root, ranges);
@@ -115,7 +115,7 @@ export function renderChanges(editor: Editor, oldDoc: TextDocument, newDoc: Text
 
 // Return a line or multi-line array from the top-level node
 export function fromNode(editor: Editor, dom: HTMLElement) {
-  const lines = Line.fromDelta(deltaFromDom(editor, { root: dom }));
+  const lines = Line.fromDelta(deltaFromDom(editor, { root: dom }), editor.doc.byId);
   if (!lines.length) return;
   const type = editor.typeset.lines.findByAttributes(lines[0].attributes, true);
   if (type.renderMultiple) return lines;

@@ -1,6 +1,11 @@
 import Delta from '../delta/Delta';
 import Line from './Line';
 
+const INFINITY = {
+  attributes: {},
+  content: new Delta([ { retain: Infinity } ]),
+  length: Infinity
+};
 
 export default class Iterator {
   lines: Line[];
@@ -35,10 +40,14 @@ export default class Iterator {
       if (offset === 0 && length >= nextLine.length) {
         return nextLine;
       } else {
-        return Line.create(nextLine.content.slice(offset, length), nextLine.attributes);
+        return {
+          attributes: nextLine.attributes,
+          content: nextLine.content.slice(offset, length),
+          length: length - offset
+        };
       }
     } else {
-      return Line.create(new Delta([ { retain: Infinity } ]));
+      return INFINITY;
     }
   }
 

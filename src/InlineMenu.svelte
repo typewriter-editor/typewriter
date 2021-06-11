@@ -67,7 +67,7 @@ function onMouseOver(event) {
   while (node !== root && node.parentNode !== root) {
     node = node.parentNode;
   }
-  const line = $doc.byId[node.key];
+  const line = $doc.getLineBy(node.key);
   if (line) {
     at = $doc.getLineRange(line)[0];
   }
