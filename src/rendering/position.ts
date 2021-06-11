@@ -4,6 +4,7 @@ import { isBRPlaceholder } from './br';
 import { createTreeWalker } from './walker';
 import { EditorRange } from '../doc/EditorRange';
 import { Types } from '../typesetting';
+import Line from '../doc/Line';
 
 
 type NodeAndOffset = [Node | null, number];
@@ -12,6 +13,12 @@ type NodeOffsetAndFrozen = [Node | null, number, boolean?];
 const EMPTY_NODE_OFFSET: NodeAndOffset = [ null, 0 ];
 
 
+export interface LineInfo {
+  line: Line;
+  element: HTMLLineElement;
+  rect: DOMRect;
+  belowMid: boolean;
+}
 
 
 export function getIndexFromPoint(editor: Editor, x: number, y: number) {
@@ -33,6 +40,21 @@ export function getIndexFromPoint(editor: Editor, x: number, y: number) {
   }
 
   return null;
+}
+
+// Return the line that matches a point and true if the point comes after the midpoint of the line display
+export function getLineInfoFromPoint(editor: Editor, y: number): LineInfo | undefined {
+  const { root } = editor;
+  if (!root.ownerDocument) return;
+  const lineElements = Array.from(root.querySelectorAll(editor.typeset.lines.selector))
+    .filter(elem => (elem as any).key) as HTMLLineElement[];
+  for (const element of lineElements) {
+    const rect = element.getBoundingClientRect();
+    if (rect.bottom >= y) {
+      const line = editor.doc.getLineBy(element.key);
+      return { line, element, rect, belowMid: y > rect.top + rect.height/2 };
+    }
+  }
 }
 
 
