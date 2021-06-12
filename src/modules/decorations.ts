@@ -160,6 +160,16 @@ export function decorations(editor: Editor): DecorationsModule {
           else decorations.delete(key); // all content with decoration was deleted
         }
         doc = decorations.size ? doc.apply(change.delta, null) : original;
+
+        if (decorations.size) {
+          // Ensure the id of each line is the same
+          doc.lines.forEach((line, i) => {
+            const origLine = original.lines[i];
+            if (line !== origLine && Line.getId(line) !== Line.getId(origLine)) {
+              line.attributes.id = origLine.attributes.id;
+            }
+          })
+        }
       }
     } else {
       clearDecorations();
