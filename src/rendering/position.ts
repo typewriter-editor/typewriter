@@ -84,7 +84,7 @@ export function getBoudingBrowserRange(editor: Editor, range: EditorRange): Rang
 
 export function getIndexFromNodeAndOffset(editor: Editor, node: Node, offset: number, current?: number | null): number {
   const { root } = editor;
-  const { lines, embeds } = editor.typeset;
+  const { lines } = editor.typeset;
   if (!root.contains(node)) {
     return -1;
   }
@@ -172,11 +172,13 @@ export function getNodesForRange(editor: Editor, range: EditorRange): [Node | nu
     return [ null, 0, null, 0 ];
   } else {
     const anchorFirst = range[0] <= range[1];
+    const direction = anchorFirst ? 1 : -1;
+    const isCollapsed = range[0] === range[1];
     const [ anchorNode, anchorOffset, frozen ] = getNodeAndOffset(editor, range[0], anchorFirst ? 0 : 1);
-    const [ focusNode, focusOffset ] = range[0] === range[1]
-      ? frozen
-        ? [ anchorNode, anchorOffset + (anchorFirst ? 1 : -1) ]
-        : [ anchorNode, anchorOffset ]
+    const [ focusNode, focusOffset ] = isCollapsed && !frozen
+      ? [ anchorNode, anchorOffset ]
+      : frozen && (isCollapsed || range[1] - range[0] === direction * editor.doc.getLineAt(range[0]).length)
+      ? [ anchorNode, anchorOffset + (anchorFirst ? 1 : -1) ]
       : getNodeAndOffset(editor, range[1], anchorFirst ? 1 : 0);
 
     return [ anchorNode, anchorOffset, focusNode, focusOffset ];

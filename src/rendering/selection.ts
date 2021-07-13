@@ -12,14 +12,18 @@ export function getSelection(editor: Editor): EditorRange | null {
   const current = editor.doc.selection;
   if (!root.ownerDocument) return null;
   const selection = root.ownerDocument.getSelection();
+  const { lines } = editor.typeset;
 
   if (selection == null || selection.anchorNode == null || selection.focusNode == null || !root.contains(selection.anchorNode)) {
     return null;
   } else {
     const anchorIndex = getIndexFromNodeAndOffset(editor, selection.anchorNode, selection.anchorOffset, current && current[0]);
     const isCollapsed = selection.anchorNode === selection.focusNode && selection.anchorOffset === selection.focusOffset;
+    const isFrozen = lines.findByAttributes(editor.doc.getLineAt(anchorIndex)?.attributes, true).frozen;
     // selection.isCollapsed causes a re-layout on Chrome, manual detection does not.
-    const focusIndex = isCollapsed ? anchorIndex : getIndexFromNodeAndOffset(editor, selection.focusNode, selection.focusOffset, current && current[1]);
+    let focusIndex = isCollapsed
+      ? anchorIndex
+      : getIndexFromNodeAndOffset(editor, selection.focusNode, selection.focusOffset, !isFrozen && current ? current[1] : null);
 
     return [ anchorIndex, focusIndex ];
   }
