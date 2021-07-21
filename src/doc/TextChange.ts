@@ -88,8 +88,10 @@ export default class TextChange {
       if (options?.dontFixNewline) {
         this.compose(at, delta => delta.insert('\n', { ...format }));
       } else {
-        this.compose(at, delta => delta.insert('\n', lineFormat));
-        this.formatLine(at, { ...format });
+        // Steal the ID from the current line
+        this.compose(at, delta => delta.insert('\n', { id, ...lineFormat }));
+        // Clear the ID so that it acts as the new line
+        this.formatLine(at, { id: null, ...format });
       }
     } else {
       if (!format) format = this.getFormatAt(at);
