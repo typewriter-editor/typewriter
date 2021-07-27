@@ -56,6 +56,7 @@ export function paste(editor: Editor) {
       // check the boundaries to see if they can be merged with the current line or need to make a new line
       let lines = Line.fromDelta(delta, doc.byId);
       delta = Line.toDelta(lines);
+      length = delta.length();
 
       const startLine = doc.getLineAt(at);
       const endLine = doc.getLineAt(to);
