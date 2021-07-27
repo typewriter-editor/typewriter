@@ -13,7 +13,7 @@
     "build": "tsc && webpack && cp src/*.svelte lib/",
     "start": "webpack serve --config webpack.dev.config.js",
     "dev": "tsc --watch",
-    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
     "test": "TS_NODE_PROJECT=test/tsconfig.json mocha",
     "tdd": "TS_NODE_PROJECT=test/tsconfig.json mocha -w --reporter progress"
   },
