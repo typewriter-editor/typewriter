@@ -154,7 +154,7 @@ export default class TextDocument {
       return this;
     }
 
-    // Optimization for selection change
+    // Optimization for selection-only change
     if (!delta.ops.length && selection) {
       return new TextDocument(this, selection);
     }
@@ -167,61 +167,87 @@ export default class TextDocument {
       }
     }
 
-    const lineIter = Line.iterator(this.lines, this.byId);
-    const changeIter = Op.iterator(delta.ops);
+    const thisIter = LineOp.iterator(this.lines, this.byId);
+    const otherIter = Op.iterator(delta.ops);
     let lines: Line[] = [];
-    const firstChange = changeIter.peek();
+    const firstChange = otherIter.peek();
     if (firstChange && firstChange.retain && !firstChange.attributes) {
       let firstLeft = firstChange.retain;
-      while (lineIter.peekLength() <= firstLeft) {
-        firstLeft -= lineIter.peekLength();
-        lines.push(lineIter.next());
+      while (thisIter.peekLineLength() <= firstLeft) {
+        firstLeft -= thisIter.peekLineLength();
+        lines.push(thisIter.nextLine());
       }
       if (firstChange.retain - firstLeft > 0) {
-        changeIter.next(firstChange.retain - firstLeft);
+        otherIter.next(firstChange.retain - firstLeft);
       }
     }
 
-    if (changeIter.index !== 0 || changeIter.offset !== 0) {
-      delta = new Delta(changeIter.rest());
+    let line = Line.createFrom(thisIter.peekLine());
+
+    function addLine(line: Line) {
+      line.length = line.content.length() + 1;
+      lines.push(line);
     }
 
-    const affectedLines: Line[] = [];
-    let lengthAffected = delta.reduce((length, op) => length + (op.insert ? 0 : Op.length(op)), 0);
-    do {
-      lengthAffected -= lineIter.peekLength();
-      affectedLines.push(lineIter.next());
-    } while (lineIter.hasNext() && lengthAffected >= 0)
+    while (thisIter.hasNext() || otherIter.hasNext()) {
+      if (otherIter.peekType() === 'insert') {
+        const otherOp = otherIter.peek();
+        const index = typeof otherOp.insert === 'string' ? otherOp.insert.indexOf('\n', otherIter.offset) : -1;
+        if (index < 0) {
+          line.content.push(otherIter.next());
+        } else {
+          if (index) line.content.push(otherIter.next(index));
+          const newlineOp = otherIter.next(1);
+          const nextAttributes = line.attributes;
+          line.attributes = newlineOp.attributes || {};
+          addLine(line);
+          line = Line.create(undefined, nextAttributes, this.byId);
+        }
+      } else {
+        const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
+        const thisOp = thisIter.next(length);
+        const otherOp = otherIter.next(length);
+        if (typeof thisOp.retain === 'number') {
+          // throw new Error('apply() called with change that extends beyond document');
+          continue;
+        }
 
-    // if (lengthAffected > 0) {
-    //   if (lineIter.hasNext()) {
-    //     lengthAffected -= lineIter.peekLength();
-    //     affectedLines.push(lineIter.next());
-    //     if (lengthAffected > 0) {
-    //       console.log('Extending last line!!!!!!!');
-    //       const lastIndex = affectedLines.length - 1;
-    //       const lastLine = affectedLines[lastIndex];
-    //       affectedLines[lastIndex] = {
-    //         ...lastLine,
-    //         content: lastLine.content.slice().insert('#'.repeat(lengthAffected), lastLine.content.ops[lastLine.content.ops.length - 1].attributes),
-    //       };
-    //     }
-    //   } else {
-    //     console.log('Adding new line');
-    //     // const lastLine = { ...this.lines[this.lines.length - 1] };
-    //     affectedLines.push(Line.create(new Delta().insert('#'.repeat(lengthAffected)), undefined, this.byId));
-    //     // lastLine.content = lastLine.content.slice().insert('#'.repeat(lengthAffected));
-    //     // affectedLines.push(lastLine);
-    //   }
-    // }
+        if (typeof otherOp.retain === 'number') {
+          const isLine = thisOp.insert === '\n';
+          let newOp: Op = thisOp;
+          // Preserve null when composing with a retain, otherwise remove it for inserts
+          const attributes = otherOp.attributes && AttributeMap.compose(thisOp.attributes, otherOp.attributes);
+          if (otherOp.attributes && !isEqual(attributes, thisOp.attributes)) {
+            if (isLine) {
+              line.attributes = attributes || {};
+            } else {
+              newOp = { insert: thisOp.insert };
+              if (attributes) newOp.attributes = attributes;
+            }
+          }
+          if (isLine) {
+            addLine(line);
+            line = Line.createFrom(thisIter.peekLine());
+          } else {
+            line.content.push(newOp);
+          }
 
-    const updated = applyDeltaToLines(delta, affectedLines, this.byId);
-    if (updated.length === affectedLines.length && updated.every((b, i) => b === affectedLines[i])) {
-      return this.selection === selection ? this : new TextDocument(this, selection);
+          // Optimization if at the end of other
+          if (otherOp.retain === Infinity || !otherIter.hasNext()) {
+            if (thisIter.opIterator.index !== 0 || thisIter.opIterator.offset !== 0) {
+              const ops = thisIter.restCurrentLine();
+              for (let i = 0; i < ops.length; i++) {
+                line.content.push(ops[i]);
+              }
+              addLine(line);
+              thisIter.nextLine();
+            }
+            lines.push(...thisIter.restLines());
+            break;
+          }
+        } // else ... otherOp should be a delete so we won't add the next thisOp insert
+      }
     }
-
-    lines = lines.concat(updated);
-    lines = lines.concat(lineIter.rest());
 
     return new TextDocument(lines, selection);
   }
@@ -274,18 +300,6 @@ function getAttributes(Type: any, data: any, from: number, to: number, filter?: 
     }
   }
   return attributes || EMPTY_OBJ;
-}
-
-function applyDeltaToLines(delta: Delta, lines: Line[], byId: LineIds) {
-  if (!lines.length) return lines;
-  const ids = lines.map(line => line.id);
-  const applied = Line.toDelta(lines).compose(delta, true);
-  while (applied.ops.length && !applied.ops[applied.ops.length - 1].insert) applied.ops.pop();
-  return Line.fromDelta(applied, byId).map((line, i) => {
-    if (ids[i]) line.id = ids[i];
-    const old = byId.get(line.id);
-    return old && Line.equal(old, line) ? old : line;
-  });
 }
 
 // Intersect 2 attibute maps, keeping only those that are equal in both

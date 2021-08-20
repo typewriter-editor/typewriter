@@ -22,7 +22,7 @@ export default class Iterator {
   }
 
   hasNext(): boolean {
-    return this.peekLength() < Infinity;
+    return !!this.peek();
   }
 
   next(length?: number): Line {

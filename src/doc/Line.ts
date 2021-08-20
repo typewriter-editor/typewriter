@@ -70,6 +70,12 @@ namespace Line {
     return { id, attributes, content: content, length };
   }
 
+  export function createFrom(line?: Line, lineIds?: LineIds): Line {
+    const id = line ? line.id : createId(lineIds);
+    const attributes = line ? line.attributes : {};
+    return { id, attributes, content: new Delta(), length: 1 };
+  }
+
   export function getLineRanges(lines: Line[]) {
     const ranges = new Map<Line, EditorRange>() as LineRanges;
     let pos = 0;

@@ -16,34 +16,22 @@ export default LineOp;
 
 class LineOpIterator {
   lineIterator: LineIterator;
-  opsIterator: OpIterator;
+  opIterator: OpIterator;
 
   constructor(lines: Line[], lineIds?: LineIds) {
     this.lineIterator = new LineIterator(lines, lineIds);
     const line = this.lineIterator.peek();
-    this.opsIterator = new OpIterator(line?.content.ops || []);
+    this.opIterator = new OpIterator(line?.content.ops || []);
   }
 
   hasNext(): boolean {
-    return this.opsIterator.hasNext() || this.lineIterator.hasNext();
-  }
-
-  skip(length: number) {
-    let skipped = 0;
-    while (this.lineIterator.peekLength() < length) {
-      const len = Line.length(this.nextLine());
-      length -= len;
-      skipped += len;
-    }
-    return skipped;
+    return this.opIterator.hasNext() || this.lineIterator.hasNext();
   }
 
   next(length?: number): Op {
-    let op = this.opsIterator.next(length);
+    let op = this.opIterator.next(length);
     if (op.retain === Infinity) {
-      op = { insert: '\n' };
-      const line = this.nextLine();
-      if (line.attributes) op.attributes = line.attributes;
+      op = getLineOp(this.nextLine());
     }
     return op;
   }
@@ -51,15 +39,58 @@ class LineOpIterator {
   nextLine() {
     const line = this.lineIterator.next();
     const nextLine = this.lineIterator.peek();
-    this.opsIterator = new OpIterator(nextLine?.content.ops || []);
+    this.opIterator = new OpIterator(nextLine?.content.ops || []);
     return line;
   }
 
   peek(): Op {
-    return this.opsIterator.peek();
+    if (this.opIterator.hasNext() || !this.lineIterator.hasNext()) {
+      return this.opIterator.peek();
+    } else {
+      return getLineOp(this.peekLine());
+    }
+  }
+
+  peekLine(): Line {
+    return this.lineIterator.peek();
   }
 
   peekLength(): number {
-    return this.opsIterator.peekLength();
+    if (this.opIterator.hasNext() || !this.lineIterator.hasNext()) {
+      return this.opIterator.peekLength();
+    } else {
+      return 1; // a newline is length 1
+    }
   }
+
+  peekLineLength(): number {
+    return this.lineIterator.peekLength();
+  }
+
+  peekType(): string {
+    if (this.opIterator.hasNext()) {
+      return this.opIterator.peekType();
+    } else if (this.lineIterator.hasNext()) {
+      return 'insert'; // insert: '\n'
+    } else {
+      return 'retain';
+    }
+  }
+
+  restCurrentLine(): Op[] {
+    return this.opIterator.rest();
+  }
+
+  restLines(): Line[] {
+    if (this.opIterator.offset) {
+      this.lineIterator.next(this.opIterator.offset);
+    }
+    return this.lineIterator.rest();
+  }
+}
+
+function getLineOp(line: Line) {
+  const op = { insert: '\n' } as Op;
+  if (line.attributes) op.attributes = line.attributes;
+  return op;
 }
