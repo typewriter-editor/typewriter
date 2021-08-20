@@ -140,7 +140,7 @@ export default class TextDocument {
     return new Delta(ops);
   }
 
-  apply(change: Delta | TextChange, selection?: EditorRange | null): TextDocument {
+  apply(change: Delta | TextChange, selection?: EditorRange | null, throwOnError?: boolean): TextDocument {
     let delta: Delta;
     if (change instanceof TextChange) {
       delta = change.delta;
@@ -208,7 +208,7 @@ export default class TextDocument {
         const thisOp = thisIter.next(length);
         const otherOp = otherIter.next(length);
         if (typeof thisOp.retain === 'number') {
-          // throw new Error('apply() called with change that extends beyond document');
+          if (throwOnError) throw new Error('apply() called with change that extends beyond document');
           continue;
         }
 

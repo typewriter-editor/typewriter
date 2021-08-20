@@ -28,6 +28,7 @@ export interface EditorOptions {
   text?: string;
   html?: string;
   dev?: boolean;
+  throwOnError?: boolean;
 }
 
 export interface Shortcuts {
@@ -115,6 +116,7 @@ export default class Editor extends EventDispatcher {
   shortcuts: Shortcuts = {};
   modules: Modules = {};
   catchErrors: boolean;
+  throwOnError: boolean;
   _root!: HTMLElement;
   private _modules: ModuleInitializers;
   private _enabled: boolean;
@@ -133,6 +135,7 @@ export default class Editor extends EventDispatcher {
     } else {
       this.doc = new TextDocument();
     }
+    this.throwOnError = options.throwOnError || false;
     this._enabled = options.enabled === undefined ? true : options.enabled;
     this._modules = { ...defaultModules, ...options.modules };
     if (options.root) this.setRoot(options.root);
@@ -177,7 +180,7 @@ export default class Editor extends EventDispatcher {
       change = new TextChange(this.doc, change);
     }
     const old = this.doc;
-    const doc = old.apply(change);
+    const doc = old.apply(change, undefined, this.throwOnError);
     const changedLines = old.lines === doc.lines ? EMPTY_ARR : getChangedLines(old, doc);
     this.set(doc, source, change, changedLines);
     return this;
