@@ -14,12 +14,12 @@ const TableType: LineType = {
     const table = h('table', null, [ row ]);
 
     for (let i = 0; i < lines.length; i++) {
-      const [ attributes, children ] = lines[i];
+      const [ attributes, children, id ] = lines[i];
       if (row.key !== attributes.table) {
         row = h(attributes.table.startsWith('th-') ? 'th' : 'tr', { key: attributes.table });
         table.children.push(row);
       }
-      row.children.push(h('td', { key: attributes.id }));
+      row.children.push(h('td', { key: id }));
     }
 
     return table;

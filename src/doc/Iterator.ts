@@ -1,7 +1,8 @@
 import Delta from '../delta/Delta';
-import Line from './Line';
+import Line, { LineIds } from './Line';
 
 const INFINITY = {
+  id: '',
   attributes: {},
   content: new Delta([ { retain: Infinity } ]),
   length: Infinity
@@ -11,11 +12,13 @@ export default class Iterator {
   lines: Line[];
   index: number;
   offset: number;
+  lineIds: LineIds;
 
-  constructor(lines: Line[]) {
+  constructor(lines: Line[], lineIds?: LineIds) {
     this.lines = lines;
     this.index = 0;
     this.offset = 0;
+    this.lineIds = lineIds ? new Map(lineIds) : Line.linesToLineIds(lines);
   }
 
   hasNext(): boolean {
@@ -40,11 +43,15 @@ export default class Iterator {
       if (offset === 0 && length >= nextLine.length) {
         return nextLine;
       } else {
-        return {
+        const id = offset === 0 ? nextLine.id : Line.createId(this.lineIds);
+        const partialLine = {
+          id,
           attributes: nextLine.attributes,
           content: nextLine.content.slice(offset, length),
           length: length - offset
         };
+        if (offset !== 0) this.lineIds.set(id, partialLine);
+        return partialLine;
       }
     } else {
       return INFINITY;

@@ -114,7 +114,7 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       const action = getAction(change);
       stack.redo.length = 0;
 
-      const undo = new TextChange(null, change.delta.invert(oldDoc.toDelta(true)), oldDoc.selection);
+      const undo = new TextChange(null, change.delta.invert(oldDoc.toDelta()), oldDoc.selection);
 
       // Break combining if actions are different (e.g. a delete then an insert should break it)
       if (!action || lastAction !== action) cutoffHistory();

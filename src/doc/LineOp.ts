@@ -1,12 +1,12 @@
 import LineIterator from './Iterator';
 import OpIterator from '../delta/Iterator';
-import Line from './Line';
+import Line, { LineIds } from './Line';
 import Op from '../delta/Op';
 
 
 namespace LineOp {
-  export function iterator(lines: Line[]) {
-    return new LineOpIterator(lines);
+  export function iterator(lines: Line[], lineIds?: LineIds) {
+    return new LineOpIterator(lines, lineIds);
   }
 
   export const length = Op.length;
@@ -18,8 +18,8 @@ class LineOpIterator {
   lineIterator: LineIterator;
   opsIterator: OpIterator;
 
-  constructor(lines: Line[]) {
-    this.lineIterator = new LineIterator(lines);
+  constructor(lines: Line[], lineIds?: LineIds) {
+    this.lineIterator = new LineIterator(lines, lineIds);
     const line = this.lineIterator.peek();
     this.opsIterator = new OpIterator(line?.content.ops || []);
   }

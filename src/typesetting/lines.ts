@@ -93,15 +93,15 @@ export const list = line({
     const levels: VNode[] = [];
     // e.g. levels = [ul, ul]
 
-    lists.forEach(([ attributes, children ]) => {
+    lists.forEach(([ attributes, children, id ]) => {
       const type = attributes.list === 'ordered' ? 'ol' : 'ul';
       const index = attributes.indent as number || 0;
-      let props: Props = { key: attributes.id };
+      let props: Props = { key: id };
       if (attributes.list === 'check') {
         function toggle(event: any) {
           if (!editor.enabled) return;
           event.preventDefault();
-          editor.commands.toggleCheck(attributes.id);
+          editor.commands.toggleCheck(id);
         }
         const check = h('button', { class: 'check-list-check', onmousedown: toggle, ontouchstart: toggle, });
         if (children.length === 1 && (children[0] as VNode).type === 'br') children.push(check);
@@ -173,7 +173,7 @@ export const blockquote = line({
   renderMultiple: quotes => {
     const type = quotes[0][0].blockquote;
     const props = typeof type === 'string' ? { className: `quote-${type}`} : null;
-    const children = quotes.map(([attributes, children]) => h('p', { key: attributes.id }, children));
+    const children = quotes.map(([ attributes, children, id ]) => h('p', { key: id }, children));
     return h('blockquote', props, children);
   }
 });
@@ -185,11 +185,11 @@ export const codeblock = line({
   commands: editor => () => editor.toggleLineFormat({ ['code-block']: true }),
   renderMultiple: lines => {
     const children: VChild[] = [];
-    lines.forEach(([ attributes, inlineChildren ]) => {
+    lines.forEach(([ attributes, inlineChildren, id ]) => {
       if (inlineChildren.length && ((inlineChildren[inlineChildren.length - 1] as VNode).type === 'br')) {
         inlineChildren.pop();
       }
-      children.push(h('code', { key: attributes.id }, inlineChildren));
+      children.push(h('code', { key: id }, inlineChildren));
       children.push('\n');
     });
     return h('pre', { spellcheck: false }, children);

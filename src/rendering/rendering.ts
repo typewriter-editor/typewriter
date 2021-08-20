@@ -139,15 +139,15 @@ export function renderSingleLine(editor: Editor, line: Line, forHTML?: boolean) 
   if (!type.render) throw new Error('No render method defined for line');
   const node = type.render(line.attributes as AttributeMap, renderInline(editor, line.content), editor, forHTML);
   applyDecorations(node, line.attributes);
-  node.key = line.attributes.id;
+  node.key = line.id;
   return node;
 }
 
 export function renderMultiLine(editor: Editor, lines: Line[], forHTML?: boolean) {
   const type = getLineType(editor, lines[0]);
   if (!type.renderMultiple) throw new Error('No render method defined for line');
-  const node = type.renderMultiple(lines.map(line => [ line.attributes, renderInline(editor, line.content) ]), editor, forHTML);
-  node.key = lines[0].attributes.id;
+  const node = type.renderMultiple(lines.map(line => [ line.attributes, renderInline(editor, line.content), line.id ]), editor, forHTML);
+  node.key = lines[0].id;
   return node;
 }
 
@@ -175,12 +175,12 @@ export function combineLines(editor: Editor, lines: Line[]): CombinedData {
           linesMultiples.set(collect[0], collect);
         }
         combined.push(collect);
-        byKey[Line.getId(collect[0])] = collect;
+        byKey[collect[0].id] = collect;
         collect = [];
       }
     } else if (type.render) {
       combined.push(line);
-      byKey[Line.getId(line)] = line;
+      byKey[line.id] = line;
     }
   });
 

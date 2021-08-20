@@ -11,7 +11,6 @@ import { deltaToText } from './deltaToText';
 const EMPTY_RANGE: EditorRange = [ 0, 0 ];
 const EMPTY_OBJ = {};
 const DELTA_CACHE = new WeakMap<TextDocument, Delta>();
-const DELTA_ID_CACHE = new WeakMap<TextDocument, Delta>();
 const excludeProps = new Set([ 'id' ]);
 
 export default class TextDocument {
@@ -39,11 +38,11 @@ export default class TextDocument {
       if (!this.lines.length) {
         this.lines.push(Line.create());
       }
-      this.lines.forEach(line => this.byId.set(Line.getId(line) || Line.createId(this.byId), line));
+      this.byId = Line.linesToLineIds(this.lines);
       // Check for line id duplicates (should never happen, indicates bug)
       this.lines.forEach(line => {
-        if (this.byId.get(Line.getId(line)) !== line)
-          throw new Error('TextDocument has duplicate line ids: ' + Line.getId(line));
+        if (this.byId.get(line.id) !== line)
+          throw new Error('TextDocument has duplicate line ids: ' + line.id);
       });
       this._ranges = Line.getLineRanges(this.lines);
       this.length = this.lines.reduce((length, line) => length + line.length, 0);
@@ -168,7 +167,7 @@ export default class TextDocument {
       }
     }
 
-    const lineIter = Line.iterator(this.lines);
+    const lineIter = Line.iterator(this.lines, this.byId);
     const changeIter = Op.iterator(delta.ops);
     let lines: Line[] = [];
     const firstChange = changeIter.peek();
@@ -231,11 +230,11 @@ export default class TextDocument {
     return new TextDocument(delta, selection);
   }
 
-  toDelta(keepIds?: boolean): Delta {
-    const cache = keepIds ? DELTA_ID_CACHE : DELTA_CACHE;
+  toDelta(): Delta {
+    const cache = DELTA_CACHE;
     let delta = cache.get(this);
     if (!delta) {
-      delta = Line.toDelta(this.lines, keepIds);
+      delta = Line.toDelta(this.lines);
       cache.set(this, delta);
     }
     return delta;
@@ -270,10 +269,8 @@ function getAttributes(Type: any, data: any, from: number, to: number, filter?: 
     index += Type.length(next);
     if (index > from && (!filter || filter(next))) {
       if (!next.attributes) attributes = {};
-      else if (!attributes) {
-        attributes = { ...next.attributes };
-        if (attributes) delete attributes.id;
-      } else attributes = intersectAttributes(attributes, next.attributes);
+      else if (!attributes) attributes = { ...next.attributes };
+      else attributes = intersectAttributes(attributes, next.attributes);
     }
   }
   return attributes || EMPTY_OBJ;
@@ -281,11 +278,12 @@ function getAttributes(Type: any, data: any, from: number, to: number, filter?: 
 
 function applyDeltaToLines(delta: Delta, lines: Line[], byId: LineIds) {
   if (!lines.length) return lines;
-  const applied = Line.toDelta(lines, true).compose(delta, true);
+  const ids = lines.map(line => line.id);
+  const applied = Line.toDelta(lines).compose(delta, true);
   while (applied.ops.length && !applied.ops[applied.ops.length - 1].insert) applied.ops.pop();
-  return Line.fromDelta(applied, byId).map(line => {
-    const id = Line.getId(line);
-    const old = byId.get(id);
+  return Line.fromDelta(applied, byId).map((line, i) => {
+    if (ids[i]) line.id = ids[i];
+    const old = byId.get(line.id);
     return old && Line.equal(old, line) ? old : line;
   });
 }
