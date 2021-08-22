@@ -103,7 +103,7 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       if (typeof entry[source] === 'function') {
         entry[source]();
       } else {
-        editor.update(entry[source]);
+        editor.update(entry[source], Source.undo);
       }
       ignoreChange = false;
     }
