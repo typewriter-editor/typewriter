@@ -34,6 +34,7 @@ namespace Line {
   }
 
   export function getId(line: Line): string {
+    console.warn('getId() is deprecated');
     return line.id;
   }
 
