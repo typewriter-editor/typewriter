@@ -196,7 +196,8 @@ export default class TextDocument {
         if (index < 0) {
           line.content.push(otherIter.next());
         } else {
-          if (index) line.content.push(otherIter.next(index));
+          const nextIndex = index - otherIter.offset;
+          if (nextIndex) line.content.push(otherIter.next(nextIndex));
           const newlineOp = otherIter.next(1);
           const nextAttributes = line.attributes;
           line.attributes = newlineOp.attributes || {};
