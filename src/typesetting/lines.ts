@@ -115,7 +115,7 @@ export const list = line({
       const item = applyDecorations(h('li', props, children), attributes);
 
       while (index >= levels.length) {
-        const newLevel = h(type, { start: attributes.start, type: attributes.type });
+        const newLevel = h(type, { start: attributes.start, type: attributes.type, key: `${id}-outer` });
         const childrenArray = levels.length ? levels[levels.length - 1].children : topLevelChildren;
         const lastChild = childrenArray[childrenArray.length - 1];
         if (typeof lastChild === 'object' && lastChild.type === 'li') {
