@@ -12,17 +12,28 @@ export interface VNode {
   key: any
 }
 
+// Expose to allow debugging of keys on line elements
+export const options = {
+  renderKeys: false,
+};
+
 type Node = Element | Text;
 
 
 const EMPTY_ARR = []
 const SVG_NS = 'http://www.w3.org/2000/svg'
+const KEY_ATTR = 'data-key';
 const domProps = new Set([ 'value', 'selected', 'checked', 'contentEditable' ])
 
 const getKey = (vdom: VChild | Node) => (vdom == null ? vdom : (vdom as any).key)
 const setKey = (dom: any, key?: string) => {
-  if (key && key !== dom.key) dom.key = key
-  if (!key && dom.key) delete dom.key
+  if (key && key !== dom.key) {
+    dom.key = key
+    options.renderKeys && dom.setAttribute(KEY_ATTR, key);
+  } if (!key && dom.key) {
+    delete dom.key
+    options.renderKeys && dom.removeAttribute(KEY_ATTR);
+  }
 }
 
 const listener = (event: Event) => {
@@ -70,7 +81,7 @@ const getDomProps = (dom: Element, isSvg?: boolean): Props => {
     const { name, value } = dom.attributes[i]
     if (name in dom && name !== 'list' && !isSvg) {
       props[name] = dom[name]
-    } else {
+    } else if (!options.renderKeys || name !== KEY_ATTR) {
       props[name] = value === '' ? true : value
     }
   }

@@ -165,8 +165,8 @@ export function decorations(editor: Editor): DecorationsModule {
           // Ensure the id of each line is the same
           doc.lines.forEach((line, i) => {
             const origLine = original.lines[i];
-            if (line !== origLine && Line.getId(line) !== Line.getId(origLine)) {
-              line.attributes.id = origLine.attributes.id;
+            if (line !== origLine && line.id !== origLine.id) {
+              line.id = origLine.id;
             }
           })
         }

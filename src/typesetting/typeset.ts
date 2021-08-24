@@ -42,7 +42,7 @@ export function embed(type: EmbedType) {
 }
 
 export type FromDom = (node: Node) => any;
-export type LineData = [attributes: AttributeMap, children: VChild[] ];
+export type LineData = [attributes: AttributeMap, children: VChild[], id:string];
 export type Renderer = (attributes: AttributeMap, children: VChild[], editor: Editor, forHTML?: boolean) => VNode;
 export type MultiLineRenderer = (lines: LineData[], editor: Editor, forHTML?: boolean) => VNode;
 export type ShouldCombine = (prev: AttributeMap, next: AttributeMap) => boolean;

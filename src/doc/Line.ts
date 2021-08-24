@@ -11,6 +11,7 @@ export type LineIds = Map<string, Line>;
 export type LineInfo = {ranges: LineRanges, ids: LineIds};
 
 interface Line {
+  id: string;
   attributes: AttributeMap;
   content: Delta;
   length: number;
@@ -18,8 +19,14 @@ interface Line {
 
 
 namespace Line {
-  export function iterator(lines: Line[]) {
-    return new Iterator(lines);
+  export function iterator(lines: Line[], lineIds?: LineIds) {
+    return new Iterator(lines, lineIds);
+  }
+
+  export function linesToLineIds(lines: Line[]) {
+    const lineIds = new Map();
+    lines.forEach(line => lineIds.set(line.id || Line.createId(lineIds), line));
+    return lineIds;
   }
 
   export function length(line: Line): number {
@@ -27,7 +34,8 @@ namespace Line {
   }
 
   export function getId(line: Line): string {
-    return line.attributes.id;
+    console.warn('getId() is deprecated');
+    return line.id;
   }
 
   export function equal(value: Line, other: Line) {
@@ -41,31 +49,32 @@ namespace Line {
 
     delta.eachLine((content, attr) => {
       const line = Line.create(content, Object.keys(attr).length ? attr : undefined, ids);
-      ids.set(Line.getId(line), line);
+      ids.set(line.id, line);
       lines.push(line);
     });
 
     return lines;
   }
 
-  export function toDelta(lines: Line[], keepIds?: boolean): Delta {
+  export function toDelta(lines: Line[]): Delta {
     let delta = new Delta();
     lines.forEach(line => {
       delta = delta.concat(line.content);
-      let attributes = line.attributes;
-      if (!keepIds) {
-        const { id, ...rest } = attributes;
-        attributes = rest;
-      }
-      delta.insert('\n', attributes);
+      delta.insert('\n', line.attributes);
     });
     return delta;
   }
 
-  export function create(content: Delta = new Delta(), attributes: AttributeMap = {}, existing?: LineIds): Line {
+  export function create(content: Delta = new Delta(), attributes: AttributeMap = {}, id?: string | LineIds): Line {
     const length = content.length() + 1;
-    if (!attributes.id) attributes = { ...attributes, id: createId(existing) };
-    return { attributes, content: content, length };
+    if (typeof id !== 'string') id = createId(id);
+    return { id, attributes, content: content, length };
+  }
+
+  export function createFrom(line?: Line, lineIds?: LineIds): Line {
+    const id = line ? line.id : createId(lineIds);
+    const attributes = line ? line.attributes : {};
+    return { id, attributes, content: new Delta(), length: 1 };
   }
 
   export function getLineRanges(lines: Line[]) {
