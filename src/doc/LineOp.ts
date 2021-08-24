@@ -30,7 +30,7 @@ class LineOpIterator {
 
   next(length?: number): Op {
     let op = this.opIterator.next(length);
-    if (op.retain === Infinity) {
+    if (op.retain === Infinity && this.lineIterator.hasNext()) {
       op = getLineOp(this.nextLine());
     }
     return op;
