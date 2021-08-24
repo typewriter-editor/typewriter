@@ -182,7 +182,11 @@ export default class TextDocument {
       }
     }
 
+    if (!thisIter.hasNext()) {
+      if (throwOnError) throw new Error('apply() called with change that extends beyond document');
+    }
     let line = Line.createFrom(thisIter.peekLine());
+    // let wentBeyond = false;
 
     function addLine(line: Line) {
       line.length = line.content.length() + 1;
@@ -210,6 +214,8 @@ export default class TextDocument {
         const otherOp = otherIter.next(length);
         if (typeof thisOp.retain === 'number') {
           if (throwOnError) throw new Error('apply() called with change that extends beyond document');
+          // line.content.push({ insert: '#'.repeat(otherOp.retain || 1) });
+          // wentBeyond = true;
           continue;
         }
 
@@ -249,6 +255,11 @@ export default class TextDocument {
         } // else ... otherOp should be a delete so we won't add the next thisOp insert
       }
     }
+
+    // if (wentBeyond) {
+    //   console.log('went beyond:', line);
+    //   addLine(line);
+    // }
 
     return new TextDocument(lines, selection);
   }
