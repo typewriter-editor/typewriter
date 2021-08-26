@@ -112,7 +112,7 @@ export function selection(editor: Editor) {
       rootDocument.removeEventListener('selectionchange', onSelectionChange);
       rootWindow.removeEventListener('focus', onWindowFocus);
       rootWindow.removeEventListener('blur', onWindowFocus);
-      editor.root.addEventListener('mousedown', onMouseDown);
+      editor.root.removeEventListener('mousedown', onMouseDown);
       editor.off('change', onChange);
       editor.off('decorate', onDecorate);
       paused = false;
