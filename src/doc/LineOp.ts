@@ -1,7 +1,5 @@
-import LineIterator from './Iterator';
-import OpIterator from '../delta/Iterator';
-import Line, { LineIds } from './Line';
-import Op from '../delta/Op';
+import Line, { LineIds, LineIterator } from './Line';
+import Op, { OpIterator } from '../delta/Op';
 
 
 namespace LineOp {
@@ -9,19 +7,21 @@ namespace LineOp {
     return new LineOpIterator(lines, lineIds);
   }
 
-  export const length = Op.length;
+  export function length(op: Op): number {
+    return Op.length(op);
+  }
 }
 
 export default LineOp;
 
-class LineOpIterator {
+export class LineOpIterator {
   lineIterator: LineIterator;
   opIterator: OpIterator;
 
   constructor(lines: Line[], lineIds?: LineIds) {
-    this.lineIterator = new LineIterator(lines, lineIds);
+    this.lineIterator = Line.iterator(lines, lineIds);
     const line = this.lineIterator.peek();
-    this.opIterator = new OpIterator(line?.content.ops || []);
+    this.opIterator = Op.iterator(line?.content.ops || []);
   }
 
   hasNext(): boolean {

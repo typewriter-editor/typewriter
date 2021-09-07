@@ -5,7 +5,6 @@ import Editor from '../Editor';
 import AttributeMap from '../delta/AttributeMap';
 import Line from '../doc/Line';
 import { LineType } from '../typesetting/typeset';
-import { deltaFromDom } from './html';
 import { EditorRange } from '../doc/EditorRange';
 import Delta from '../delta/Delta';
 import { applyDecorations } from '../modules/decorations';
@@ -111,15 +110,6 @@ export function renderChanges(editor: Editor, oldDoc: TextDocument, newDoc: Text
   setLineNodesRanges(editor);
   editor.dispatchEvent(new Event('render'));
   editor.dispatchEvent(new Event('rendered'));
-}
-
-// Return a line or multi-line array from the top-level node
-export function fromNode(editor: Editor, dom: HTMLElement) {
-  const lines = Line.fromDelta(deltaFromDom(editor, { root: dom }), editor.doc.byId);
-  if (!lines.length) return;
-  const type = editor.typeset.lines.findByAttributes(lines[0].attributes, true);
-  if (type.renderMultiple) return lines;
-  return lines[0];
 }
 
 export function renderDoc(editor: Editor, doc: TextDocument, forHTML?: boolean) {

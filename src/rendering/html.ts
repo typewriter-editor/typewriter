@@ -1,5 +1,4 @@
 import { escapeHtml } from './escape-html';
-import { isBRPlaceholder } from './br';
 import { VChild } from './vdom';
 import TextDocument from '../doc/TextDocument';
 import { HTMLLineElement, renderInline } from '../rendering/rendering';
@@ -8,6 +7,7 @@ import Delta from '../delta/Delta';
 import { renderDoc } from './rendering';
 import Editor from '../Editor';
 import { EditorRange } from '../doc/EditorRange';
+import Line from '../doc/Line';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 export const BLOCK_ELEMENTS = 'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
@@ -32,6 +32,23 @@ export interface FromDomOptions {
   offset?: number;
   possiblePartial?: boolean;
   includeIds?: boolean;
+}
+
+
+// Determines if a <br> in the editable area is part of the document or a doorstop at the end of a line.
+export function isBRPlaceholder(editor: Editor, node: Node) {
+  if (node.nodeName !== 'BR') return false;
+  return isLastNode(editor, node);
+}
+
+// Check if this is the last node (not counting empty text nodes)
+function isLastNode(editor: Editor, node: Node) {
+  const containingLine = (node as Element).closest && (node as Element).closest(editor.typeset.lines.selector);
+  if (!containingLine) return false;
+  const walker = createTreeWalker(containingLine);
+  walker.currentNode = node;
+  const next = walker.nextNode();
+  return !next || next instanceof HTMLElement && next.matches(BLOCK_ELEMENTS);
 }
 
 
@@ -61,6 +78,15 @@ export function deltaFromHTML(editor: Editor, html: string, options?: DeltaFromH
 
 export function docFromDom(editor: Editor, root: HTMLElement) {
   return new TextDocument(deltaFromDom(editor, { root }));
+}
+
+// Return a line or multi-line array from the top-level node
+export function fromNode(editor: Editor, dom: HTMLElement) {
+  const lines = Line.fromDelta(deltaFromDom(editor, { root: dom }), editor.doc.byId);
+  if (!lines.length) return;
+  const type = editor.typeset.lines.findByAttributes(lines[0].attributes, true);
+  if (type.renderMultiple) return lines;
+  return lines[0];
 }
 
 

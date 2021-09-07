@@ -7,19 +7,17 @@ export { cloneDeep, intersect, isEqual, diff, EventDispatcher };
 
 import AttributeMap from './delta/AttributeMap';
 import Delta from './delta/Delta';
-import OpIterator from './delta/Iterator';
-import Op from './delta/Op';
-export { AttributeMap, Delta, OpIterator, Op };
+import Op, { OpIterator } from './delta/Op';
+export { AttributeMap, Delta, Op, OpIterator };
 
 export * from './doc/EditorRange';
 export * from './doc/deltaToText';
 
-import Line from './doc/Line';
-import LineOp from './doc/LineOp';
-import LineIterator from './doc/Iterator';
+import Line, { LineIterator } from './doc/Line';
+import LineOp, { LineOpIterator } from './doc/LineOp';
 import TextChange from './doc/TextChange';
 import TextDocument from './doc/TextDocument';
-export { Line, LineOp, LineIterator, TextChange as TextChange, TextDocument as TextDocument };
+export { Line, LineIterator, LineOp, LineOpIterator, TextChange as TextChange, TextDocument as TextDocument };
 
 export * from './rendering/vdom';
 export * from './typesetting/typeset';

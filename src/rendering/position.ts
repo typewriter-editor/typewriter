@@ -1,6 +1,6 @@
 import Editor from '../Editor';
 import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from './rendering';
-import { isBRPlaceholder } from './br';
+import { isBRPlaceholder } from './html';
 import { createTreeWalker } from './walker';
 import { EditorRange } from '../doc/EditorRange';
 import { Types } from '../typesetting';
