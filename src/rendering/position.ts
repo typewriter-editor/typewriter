@@ -23,9 +23,9 @@ export interface LineInfo {
 
 export function getIndexFromPoint(editor: Editor, x: number, y: number) {
   const document = editor.root.ownerDocument
-  if (document.caretPositionFromPoint) {
+  if ('caretPositionFromPoint' in document) {
     try {
-      const pos = document.caretPositionFromPoint(x, y);
+      const pos = (document as any).caretPositionFromPoint(x, y);
       if (pos) {
         return getIndexFromNodeAndOffset(editor, pos.offsetNode, pos.offset);
       }
