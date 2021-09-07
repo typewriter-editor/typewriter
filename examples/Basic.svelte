@@ -1,10 +1,7 @@
 <script>
-import { Editor, h } from 'typewriter-editor';
-import { options } from 'typewriter-editor/lib/rendering/vdom';
+import { Editor } from 'typewriter-editor';
 import Root from 'typewriter-editor/lib/Root.svelte';
 
-options.renderKeys = true;
-window.h = h;
 const editor = window.editor = new Editor();
 </script>
 
