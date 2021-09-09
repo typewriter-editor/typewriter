@@ -315,19 +315,20 @@ export class Decorator {
 export function applyDecorations(vnode: VNode, attributes: AttributeMap | undefined, defaultClasses?: string[]) {
   if (!attributes || !attributes.decoration) return vnode;
   const classes = new Set(defaultClasses);
-  let style = '';
+  let styles = '';
   let props: Props = vnode.props;
 
   Object.values(attributes.decoration).forEach((decorations: Decorations) => {
-    if (decorations.class) classes.add(decorations.class);
-    if (decorations.style) style += decorations.style;
-    if (style && !endInSemicolon.test(style)) style += ';';
-    props = { ...decorations, ...props };
+    const { class: className, style, ...attributes } = decorations;
+    if (className) classes.add(className.trim());
+    if (style) styles += style.trim();
+    if (styles && !endInSemicolon.test(styles)) styles += ';';
+    props = { ...attributes, ...props };
   });
 
   const className = Array.from(classes).join(' ').trim();
   if (className) props.class = props.class ? props.class + ' ' + className : className;
-  if (style) props.style = props.style ? props.style + ';' + style : style;
+  if (styles) props.style = props.style ? props.style + ';' + styles : styles;
 
   vnode.props = props;
 
