@@ -132,7 +132,7 @@ export function getIndexFromNode(editor: Editor, startNode: Node): number {
     } else if (node.nodeType === Node.TEXT_NODE) index += textNodeLength(lines, node);
     else if ((node as HTMLElement).classList?.contains('decoration')) index;
     else if (embeds.matches(node) && !isBRPlaceholder(editor, node as HTMLElement)) index++;
-    else if (lines.matches(node)) index++;
+    else if (lines.matches(node) && editor.doc.lines[0].id !== (node as any).key) index++;
   }
   return index;
 }
@@ -153,6 +153,8 @@ export function getNodeLength(editor: Editor, parentNode: Node): number {
   if (embeds.matches(parentNode) && !isBRPlaceholder(editor, parentNode as HTMLElement)) {
     return 1;
   }
+
+  if (parentNode.nodeType === Node.TEXT_NODE) return textNodeLength(lines, parentNode);
 
   const walker = createTreeWalker(parentNode);
   let length = lines.findByNode(parentNode) ? 1 : 0, node: Node | null;
