@@ -250,5 +250,5 @@ export default class TextChange {
 
 
 export function hasFormat(format: AttributeMap, attributes: AttributeMap) {
-  return Object.keys(format).every(name => attributes[name] === format[name]);
+  return Object.keys(format).every(name => isEqual(attributes[name], format[name]));
 }

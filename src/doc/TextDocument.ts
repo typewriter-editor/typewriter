@@ -13,6 +13,11 @@ const EMPTY_OBJ = {};
 const DELTA_CACHE = new WeakMap<TextDocument, Delta>();
 const excludeProps = new Set([ 'id' ]);
 
+export interface FormattingOptions {
+  nameOnly?: boolean;
+  allFormats?: boolean;
+}
+
 export default class TextDocument {
   private _ranges: LineRanges;
   byId: LineIds;
@@ -105,22 +110,22 @@ export default class TextDocument {
     }
   }
 
-  getLineFormat(at: number | EditorRange = this.selection as EditorRange) {
+  getLineFormat(at: number | EditorRange = this.selection as EditorRange, options?: FormattingOptions) {
     let to = at as number;
     if (Array.isArray(at)) [ at, to ] = normalizeRange(at);
     if (at === to) to++;
-    return getAttributes(Line, this.lines, at, to);
+    return getAttributes(Line, this.lines, at, to, undefined, options);
   }
 
-  getTextFormat(at: number | EditorRange = this.selection as EditorRange) {
+  getTextFormat(at: number | EditorRange = this.selection as EditorRange, options?: FormattingOptions) {
     let to = at as number;
     if (Array.isArray(at)) [ at, to ] = normalizeRange(at);
     if (at === to) at--;
-    return getAttributes(LineOp, this.lines, at, to, op => op.insert !== '\n');
+    return getAttributes(LineOp, this.lines, at, to, op => op.insert !== '\n', options);
   }
 
-  getFormats(at: number | EditorRange = this.selection as EditorRange): AttributeMap {
-    return { ...this.getTextFormat(at), ...this.getLineFormat(at) };
+  getFormats(at: number | EditorRange = this.selection as EditorRange, options?: FormattingOptions): AttributeMap {
+    return { ...this.getTextFormat(at, options), ...this.getLineFormat(at, options) };
   }
 
   slice(start: number = 0, end: number = Infinity): Delta {
@@ -297,7 +302,7 @@ export default class TextDocument {
   }
 }
 
-function getAttributes(Type: any, data: any, from: number, to: number, filter?: (next: any) => boolean): AttributeMap {
+function getAttributes(Type: any, data: any, from: number, to: number, filter?: (next: any) => boolean, options?: FormattingOptions): AttributeMap {
   const iter = Type.iterator(data);
   let attributes: AttributeMap | undefined;
   let index = 0;
@@ -308,16 +313,23 @@ function getAttributes(Type: any, data: any, from: number, to: number, filter?: 
     if (index > from && (!filter || filter(next))) {
       if (!next.attributes) attributes = {};
       else if (!attributes) attributes = { ...next.attributes };
-      else attributes = intersectAttributes(attributes, next.attributes);
+      else if (options?.allFormats) attributes = AttributeMap.compose(attributes, next.attributes);
+      else attributes = intersectAttributes(attributes, next.attributes, options?.nameOnly);
     }
   }
   return attributes || EMPTY_OBJ;
 }
 
 // Intersect 2 attibute maps, keeping only those that are equal in both
-function intersectAttributes(attributes: AttributeMap, other: AttributeMap) {
+function intersectAttributes(attributes: AttributeMap, other: AttributeMap, nameOnly?: boolean) {
   return Object.keys(other).reduce(function(intersect, name) {
-    if (attributes[name] === other[name]) intersect[name] = attributes[name];
+    if (nameOnly) {
+      if (name in attributes && name in other) intersect[name] = true;
+    } else if (isEqual(attributes[name], other[name], { partial: true })) {
+      intersect[name] = other[name];
+    } else if (isEqual(other[name], attributes[name], { partial: true })) {
+      intersect[name] = attributes[name];
+    }
     return intersect;
   }, {});
 }
