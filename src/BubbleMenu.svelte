@@ -11,6 +11,7 @@ export let offset = 0;
 export let padding = 4;
 let forLineType;
 export { forLineType as for };
+export let placement = 'top';
 
 let menu;
 let popper;
@@ -18,7 +19,7 @@ let oldRoot;
 let oldDoc;
 let mouseDown = false;
 let menuHasFocus = false;
-let placement = 'top';
+let actualPlacement = placement;
 const { active, doc, selection, focus, root, updateEditor } = editorStores(editor);
 
 $: updateEditor(editor);
@@ -38,13 +39,13 @@ function update() {
         contextElement: editor.root,
       };
       popper = createPopper(element, menu, {
-        placement: 'top',
+        placement,
         modifiers: [
           { name: 'arrow', options: { element: '[data-arrow]' }},
           { name: 'computeStyles', options: { adaptive: false }},
           { name: 'offset', options: { offset: [0, offset] }},
           { name: 'preventOverflow', options: { padding }},
-          { name: 'dataOutput', enabled: true, phase: 'write', fn({ state }) { placement = state.placement.split('-')[0] }}
+          { name: 'dataOutput', enabled: true, phase: 'write', fn({ state }) { actualPlacement = state.placement.split('-')[0] }}
         ],
       });
       requestAnimationFrame(() => menu && menu.classList.add('active'))
@@ -115,6 +116,6 @@ onDestroy(() => {
 
 {#if activeSelection && activeSelection[0] !== activeSelection[1]}
 <div class={className} on:focusin={onGainFocus} on:focusout={onLoseFocus} bind:this={menu}>
-  <slot commands={editor.commands} active={$active} selection={activeSelection} focus={$focus} {placement}></slot>
+  <slot commands={editor.commands} active={$active} selection={activeSelection} focus={$focus} placement={actualPlacement}></slot>
 </div>
 {/if}
