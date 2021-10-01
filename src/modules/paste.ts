@@ -27,8 +27,11 @@ export class PasteEvent extends Event {
   }
 }
 
+export interface PasteOptions {
+  htmlParser?: (editor: Editor, html: string) => Delta;
+}
 
-export function paste(editor: Editor) {
+export function paste(editor: Editor, options?: PasteOptions) {
 
   function onPaste(event: ClipboardEvent) {
     if (!editor.enabled || !editor.doc.selection) return;
@@ -45,6 +48,8 @@ export function paste(editor: Editor) {
     if (!html) {
       if (!text) return;
       delta = new Delta().insert(text);
+    } else if (options?.htmlParser) {
+      delta = options.htmlParser(editor, html);
     } else {
       delta = deltaFromHTML(editor, html, { possiblePartial: true });
     }

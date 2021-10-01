@@ -23,6 +23,7 @@ const defaultOptions = {};
 
 export interface DeltaFromHTMLOptions {
   possiblePartial?: boolean;
+  collapseWhitespace?: boolean;
 }
 
 export interface FromDomOptions {
@@ -32,6 +33,7 @@ export interface FromDomOptions {
   offset?: number;
   possiblePartial?: boolean;
   includeIds?: boolean;
+  collapseWhitespace?: boolean;
 }
 
 
@@ -70,7 +72,11 @@ export function docFromHTML(editor: Editor, html: string, selection?: EditorRang
 export function deltaFromHTML(editor: Editor, html: string, options?: DeltaFromHTMLOptions) {
   const parser = new window.DOMParser();
   const doc = parser.parseFromString(html, 'text/html' );
-  const delta = deltaFromDom(editor, { root: doc.body, possiblePartial: options && options.possiblePartial });
+  const delta = deltaFromDom(editor, {
+    root: doc.body,
+    possiblePartial: options?.possiblePartial,
+    collapseWhitespace: options?.collapseWhitespace
+  });
   cleanText(delta);
   return delta;
 }
@@ -102,6 +108,8 @@ export function cleanText(delta: Delta) {
 export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOptions): Delta {
   const { lines, embeds } = editor.typeset;
   const root = options.root || editor.root;
+
+  const collapseWhitespace = options.collapseWhitespace != undefined ? options.collapseWhitespace : true
 
   var walker = createTreeWalker(root, node => !SKIP_ELEMENTS[node.nodeName]);
   const delta = new Delta();
@@ -137,8 +145,11 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
           }
       }
 
-      // non-breaking spaces (&nbsp;) are spaces in a delta, but first collapse all whitespace to 1
-      const text = node.nodeValue.replace(whitespaceExp, ' ').replace(/\xA0/g, ' ');
+      const nodeText = node.nodeValue
+      // optionally collapse whitespace (the default)
+      const filteredWhitespace = collapseWhitespace ? nodeText.replace(whitespaceExp, ' ') : nodeText
+      // non-breaking spaces (&nbsp;) are spaces
+      const text = filteredWhitespace.replace(/\xA0/g, ' ');
 
       // Word gives us end-of-paragraph nodes with a single space. Ignore them.
       if (!text || (text === ' ' && parent.classList.contains('EOP'))) continue;
