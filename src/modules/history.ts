@@ -2,7 +2,7 @@ import TextDocument from '../doc/TextDocument';
 import TextChange from '../doc/TextChange';
 import Editor, { EditorChangeEvent } from '../Editor';
 import Delta from '../delta/Delta';
-import { Source } from '../Source';
+import { Sources } from '../Source';
 
 export interface StackEntry {
   redo: TextChange;
@@ -142,7 +142,7 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       if (!change) return clearHistory();
       if (ignoreChange) return;
       if (!change.contentChanged) return cutoffHistory();
-      if (source === Source.user) {
+      if (source !== Sources.api) {
         record(change, old);
       } else {
         transformHistoryStack(stack, change);

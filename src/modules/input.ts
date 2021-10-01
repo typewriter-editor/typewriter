@@ -8,6 +8,7 @@ import { getSelection } from '../rendering/selection';
 import { getIndexFromNode } from '../rendering/position';
 import { cleanText } from '../rendering/html';
 import { normalizeRange } from '../doc/EditorRange';
+import { Sources } from '../Source';
 
 const MUTATION_OPTIONS = {
   characterData: true,
@@ -45,7 +46,7 @@ export function input(editor: Editor) {
     if (change && change.ops.length) {
       cleanText(change);
       const old = editor.doc;
-      editor.update(new TextChange(editor.doc, change, selection, editor.activeFormats));
+      editor.update(new TextChange(editor.doc, change, selection, editor.activeFormats), Sources.input);
       if (editor.doc.lines === old.lines) {
         editor.render();
       }

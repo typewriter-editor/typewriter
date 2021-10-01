@@ -10,7 +10,7 @@ import Line from './doc/Line';
 import { docFromHTML, docToHTML } from './rendering/html';
 import EventDispatcher from './util/EventDispatcher';
 import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position';
-import { Source } from './Source';
+import { Source, Sources } from './Source';
 import isEqual from './util/isEqual';
 
 const EMPTY_OBJ = {};
@@ -159,7 +159,7 @@ export default class Editor extends EventDispatcher {
 
   get change() {
     const change = new TextChange(this.doc);
-    change.apply = (source: Source = Source.user) => this.update(change, source);
+    change.apply = (source: Source = Sources.user) => this.update(change, source);
     return change;
   }
 
@@ -172,8 +172,8 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  update(change: TextChange | Delta, source: Source = Source.user): this {
-    if (!this.enabled && source === Source.user) {
+  update(change: TextChange | Delta, source: Source = Sources.user): this {
+    if (!this.enabled && source !== Sources.api) {
       return this;
     }
     if (change instanceof Delta) {
@@ -186,12 +186,12 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  set(doc: TextDocument | Delta, source: Source = Source.user, change?: TextChange, changedLines?: Line[]): this {
+  set(doc: TextDocument | Delta, source: Source = Sources.user, change?: TextChange, changedLines?: Line[]): this {
     const old = this.doc;
     if (doc instanceof Delta) {
       doc = new TextDocument(doc);
     }
-    if ((!this.enabled && source === Source.user) || !doc || old.equals(doc)) {
+    if ((!this.enabled && source !== Sources.api) || !doc || old.equals(doc)) {
       return this;
     }
 
