@@ -153,8 +153,11 @@ export default class Editor extends EventDispatcher {
   }
 
   set enabled(value: boolean) {
+    value = !!value;
+    const changed = this._enabled !== value;
     this._enabled = value;
     if (this._root) this._root.contentEditable = value ? 'true' : 'inherit';
+    if (changed) this.dispatchEvent(new Event('enabledchange'));
   }
 
   get change() {
