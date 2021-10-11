@@ -48,9 +48,10 @@ export function getLineInfoFromPoint(editor: Editor, y: number): LineInfo | unde
   if (!root.ownerDocument) return;
   const lineElements = Array.from(root.querySelectorAll(editor.typeset.lines.selector))
     .filter(elem => (elem as any).key) as HTMLLineElement[];
+  const last = lineElements[lineElements.length - 1];
   for (const element of lineElements) {
     const rect = element.getBoundingClientRect();
-    if (rect.bottom >= y) {
+    if (rect.bottom >= y || element === last) {
       const line = editor.doc.getLineBy(element.key);
       return { line, element, rect, belowMid: y > rect.top + rect.height/2 };
     }
