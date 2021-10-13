@@ -155,6 +155,7 @@ export default class Editor extends EventDispatcher {
   set enabled(value: boolean) {
     value = !!value;
     const changed = this._enabled !== value;
+    if (!value && this.doc.selection) this.select(null, Source.api);
     this._enabled = value;
     if (this._root) this._root.contentEditable = value ? 'true' : 'inherit';
     if (changed) this.dispatchEvent(new Event('enabledchange'));
@@ -245,8 +246,8 @@ export default class Editor extends EventDispatcher {
     return active;
   }
 
-  select(at: EditorRange | number | null): this {
-    return this.update(this.change.select(at));
+  select(at: EditorRange | number | null, source?: Source): this {
+    return this.update(this.change.select(at), source);
   }
 
   insert(insert: string | object, format?: AttributeMap, selection = this.doc.selection, options?: { dontFixNewline?: boolean }): this {
