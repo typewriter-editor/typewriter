@@ -11,8 +11,10 @@ export function selection(editor: Editor) {
   let paused = false;
 
   function onSelectionChange() {
-    if (paused || !editor.enabled) return;
+    if (!editor.enabled) return;
     const selection = getSelection(editor);
+    if (!selection && paused) return;
+    if (paused) paused = false;
     if (selection && selection[0] === selection[1] && editor.doc.selection && editor.doc.selection[0] === selection[0] && editor.doc.selection[1] === selection[0] + 1) {
       // Allow a frozen line (e.g. hr) to move the cursor left with a left arrow key
       const line = editor.doc.getLineAt(selection[0]);

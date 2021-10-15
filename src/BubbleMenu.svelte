@@ -95,7 +95,6 @@ function updateRoot(root) {
 
 function onGainFocus(event) {
   if (menuHasFocus || event.target.nodeName === 'BUTTON') return;
-  console.log('paused');
   editor.modules.selection.pause();
   menuHasFocus = true;
 }
@@ -103,7 +102,6 @@ function onGainFocus(event) {
 function onLoseFocus() {
   if (!menuHasFocus) return;
   editor.modules.selection.resume();
-  console.log('resumed');
   menuHasFocus = false;
 }
 
