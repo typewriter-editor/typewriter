@@ -232,8 +232,10 @@ export function renderInline(editor: Editor, delta: Delta, forHTML?: boolean) {
         const type = formats.get(name);
         if (type?.render) {
           const node = type.render(op.attributes as AttributeMap, children, editor, forHTML);
-          nodeFormatType.set(node, type); // Store for merging
-          children = [ node ];
+          if (node) {
+            nodeFormatType.set(node, type); // Store for merging
+            children = [ node ];
+          }
         }
       });
     }
