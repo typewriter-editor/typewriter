@@ -1,7 +1,7 @@
 
-export type Source = Sources | string
+export type SourceString = Source | string
 
-export enum Sources {
+export enum Source {
   api = 'api',
   user = 'user',
   history = 'history',

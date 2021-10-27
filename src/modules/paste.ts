@@ -4,7 +4,7 @@ import { deltaFromHTML } from '../rendering/html';
 import Line from '../doc/Line';
 import { normalizeRange } from '../doc/EditorRange';
 import isEqual from '../util/isEqual';
-import { Sources } from '../Source';
+import { Source } from '../Source';
 
 const dontFixNewline = { dontFixNewline: true };
 const ignoreId = { excludeProps: new Set([ 'id' ]) };
@@ -102,7 +102,7 @@ export function paste(editor: Editor) {
       if (delta && delta.ops.length) {
         const change = editor.change.delete(selection, hasLines ? dontFixNewline : undefined);
         change.insertContent(at, delta).select(at + length);
-        editor.update(change, Sources.paste);
+        editor.update(change, Source.paste);
       } else if (at !== to) {
         editor.delete([ at, to ]);
       }

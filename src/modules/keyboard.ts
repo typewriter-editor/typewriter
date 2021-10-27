@@ -2,7 +2,7 @@ import Editor from '../Editor';
 import Line from '../doc/Line';
 import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
 import { normalizeRange } from '../doc/EditorRange';
-import { Sources } from '../Source';
+import { Source } from '../Source';
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
@@ -111,7 +111,7 @@ export function keyboard(editor: Editor) {
         if (first && isEmpty(first) && second && !isEmpty(second)) {
           return editor.update(
             editor.change.delete([ range[0] + direction, range[0] ], { dontFixNewline: true }),
-            Sources.input
+            Source.input
           );
         }
       }
