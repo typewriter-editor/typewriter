@@ -89,12 +89,12 @@ export function input(editor: Editor) {
       const [ startNode, endNode ] = range;
       const start = getLineNodeStart(editor.root, startNode);
       const end = getLineNodeEnd(editor.root, endNode);
-      const delta = deltaFromDom(editor, { startNode, endNode: endNode.nextElementSibling || undefined });
+      const delta = deltaFromDom(editor, { startNode, endNode: endNode.nextElementSibling || undefined, collapseWhitespace: false });
       let change = doc.toDelta().slice(start, end).diff(delta);
       if (change.ops.length && start) change = new Delta().retain(start).concat(change);
       return change;
     } else {
-      const delta = deltaFromDom(editor);
+      const delta = deltaFromDom(editor, { collapseWhitespace: false });
       return doc.toDelta().diff(delta);
     }
   }

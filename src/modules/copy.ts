@@ -3,9 +3,17 @@ import { docToHTML, inlineToHTML } from '../rendering/html';
 import TextDocument from '../doc/TextDocument';
 import { normalizeRange } from '../doc/EditorRange';
 
+const defaultOptions: CopyOptions = {
+  copyPlainText: true,
+  copyHTML: true
+}
 
+export interface CopyOptions {
+  copyPlainText?: boolean;
+  copyHTML?: boolean;
+}
 
-export function copy(editor: Editor) {
+export function copy(editor: Editor, options: CopyOptions = defaultOptions) {
 
   function onCopy(event: ClipboardEvent) {
     if (!editor.enabled || !editor.doc.selection) return;
@@ -21,15 +29,19 @@ export function copy(editor: Editor) {
     const text = slice
       .map(op => typeof op.insert === 'string' ? op.insert : ' ')
       .join('');
-    let html: string;
-    if (text.includes('\n')) {
-      slice.push({ insert: '\n', attributes: doc.getLineFormat(range[1]) });
-      html = docToHTML(editor, new TextDocument(slice));
-    } else {
-      html = inlineToHTML(editor, slice);
+    if (options.copyHTML) {
+      let html: string;
+      if (text.includes('\n')) {
+        slice.push({ insert: '\n', attributes: doc.getLineFormat(range[1]) });
+        html = docToHTML(editor, new TextDocument(slice));
+      } else {
+        html = inlineToHTML(editor, slice);
+      }
+      dataTransfer.setData('text/html', html);
     }
-    dataTransfer.setData('text/plain', text);
-    dataTransfer.setData('text/html', html);
+    if (options.copyPlainText) {
+      dataTransfer.setData('text/plain', text);
+    }
   }
 
   function onCut(event: ClipboardEvent) {
