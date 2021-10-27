@@ -10,7 +10,7 @@ import Line from './doc/Line';
 import { docFromHTML, docToHTML } from './rendering/html';
 import EventDispatcher from './util/EventDispatcher';
 import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position';
-import { Source } from './Source';
+import { SourceString, Source } from './Source';
 import isEqual from './util/isEqual';
 
 const EMPTY_OBJ = {};
@@ -61,7 +61,7 @@ export interface EditorChangeEventInit extends EventInit {
   doc: TextDocument;
   change?: TextChange;
   changedLines?: Line[];
-  source: Source;
+  source: SourceString;
 }
 
 export class EditorChangeEvent extends Event {
@@ -69,7 +69,7 @@ export class EditorChangeEvent extends Event {
   doc: TextDocument;
   change?: TextChange;
   changedLines?: Line[];
-  source: Source;
+  source: SourceString;
 
   constructor(type: string, init: EditorChangeEventInit) {
     super(type, init);
@@ -163,7 +163,7 @@ export default class Editor extends EventDispatcher {
 
   get change() {
     const change = new TextChange(this.doc);
-    change.apply = (source: Source = Source.user) => this.update(change, source);
+    change.apply = (source: SourceString = Source.user) => this.update(change, source);
     return change;
   }
 
@@ -176,8 +176,8 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  update(change: TextChange | Delta, source: Source = Source.user): this {
-    if (!this.enabled && source === Source.user) {
+  update(change: TextChange | Delta, source: SourceString = Source.user): this {
+    if (!this.enabled && source !== Source.api) {
       return this;
     }
     if (change instanceof Delta) {
@@ -190,12 +190,12 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  set(doc: TextDocument | Delta, source: Source = Source.user, change?: TextChange, changedLines?: Line[]): this {
+  set(doc: TextDocument | Delta, source: SourceString = Source.user, change?: TextChange, changedLines?: Line[]): this {
     const old = this.doc;
     if (doc instanceof Delta) {
       doc = new TextDocument(doc);
     }
-    if ((!this.enabled && source === Source.user) || !doc || old.equals(doc)) {
+    if ((!this.enabled && source !== Source.api) || !doc || old.equals(doc)) {
       return this;
     }
 
@@ -213,7 +213,7 @@ export default class Editor extends EventDispatcher {
     return docToHTML(this, this.doc);
   }
 
-  setHTML(html: string, selection: EditorRange | null = this.doc.selection, source?: Source): this {
+  setHTML(html: string, selection: EditorRange | null = this.doc.selection, source?: SourceString): this {
     return this.set(docFromHTML(this, html, selection));
   }
 
@@ -221,7 +221,7 @@ export default class Editor extends EventDispatcher {
     return this.doc.toDelta();
   }
 
-  setDelta(delta: Delta, selection: EditorRange | null = this.doc.selection, source?: Source): this {
+  setDelta(delta: Delta, selection: EditorRange | null = this.doc.selection, source?: SourceString): this {
     return this.set(new TextDocument(delta, selection), source);
   }
 
@@ -229,7 +229,7 @@ export default class Editor extends EventDispatcher {
     return this.doc.getText(range);
   }
 
-  setText(text: string, selection: EditorRange | null = this.doc.selection, source?: Source): this {
+  setText(text: string, selection: EditorRange | null = this.doc.selection, source?: SourceString): this {
     return this.set(new TextDocument(new Delta().insert(text), selection), source);
   }
 

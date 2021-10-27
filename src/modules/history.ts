@@ -103,7 +103,7 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       if (typeof entry[source] === 'function') {
         entry[source]();
       } else {
-        editor.update(entry[source]);
+        editor.update(entry[source], Source.history);
       }
       ignoreChange = false;
     }
@@ -142,7 +142,7 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       if (!change) return clearHistory();
       if (ignoreChange) return;
       if (!change.contentChanged) return cutoffHistory();
-      if (source === Source.user) {
+      if (source !== Source.api) {
         record(change, old);
       } else {
         transformHistoryStack(stack, change);
