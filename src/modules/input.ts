@@ -70,10 +70,10 @@ export function input(editor: Editor) {
       }
 
       // advance to next line
-      if (selection !== null) {
+      /*if (selection !== null) {
         selection[0]++;
         selection[1]++;
-      }
+      }*/
       gboardEnter = false;
     }
 

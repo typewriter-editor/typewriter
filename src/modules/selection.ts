@@ -4,16 +4,31 @@ import { getSelection, setSelection } from '../rendering/selection';
 import { getLineNodeStart } from '../rendering/rendering';
 import { DecorationsModule } from './decorations';
 
+const isIPad = navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform);
+const isIOS = isIPad || /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+const isAndroid = !isIOS && /Mobi|Android/.test(navigator.userAgent) && !(window as any).MSStream;
 
 export function selection(editor: Editor) {
   let rootDocument: Document;
   let rootWindow: Window;
   let paused = false;
+  let gboardEnter = false;
 
   function onSelectionChange() {
     if (!editor.enabled) return;
     const selection = getSelection(editor);
     if (!selection && paused) return;
+
+    // Gboard fix to move to next line
+    if (gboardEnter) {
+      // advance to next line
+      if (selection !== null) {
+        selection[0]++;
+        selection[1]++;
+      }
+      gboardEnter = false;
+    }
+
     if (paused) paused = false;
     if (selection && selection[0] === selection[1] && editor.doc.selection && editor.doc.selection[0] === selection[0] && editor.doc.selection[1] === selection[0] + 1) {
       // Allow a frozen line (e.g. hr) to move the cursor left with a left arrow key
@@ -95,6 +110,14 @@ export function selection(editor: Editor) {
     setTimeout(renderSelection);
   }
 
+  // Function to detect if Gboard is sending new lines with composed input
+  function onBeforeInput(event: InputEvent) {
+    if (! event.data) return;
+    if (event.data.includes('\n')) {
+      gboardEnter = true;
+    }
+  }
+
   return {
     pause,
     resume,
@@ -109,6 +132,9 @@ export function selection(editor: Editor) {
       editor.root.addEventListener('mousedown', onMouseDown);
       editor.on('change', onChange);
       editor.on('decorate', onDecorate);
+      if (isAndroid) {
+        editor.root.addEventListener('beforeinput', onBeforeInput); // gboard fix
+      }
     },
     destroy() {
       rootDocument.removeEventListener('selectionchange', onSelectionChange);
@@ -120,6 +146,9 @@ export function selection(editor: Editor) {
       paused = false;
       rootDocument = null as any;
       rootWindow = null as any;
+      if (isAndroid) {
+        editor.root.removeEventListener('beforeinput', onBeforeInput); // gboard fix
+      }
     }
   }
 };
