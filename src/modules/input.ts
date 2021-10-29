@@ -46,7 +46,7 @@ export function input(editor: Editor) {
     return isBr;
   }
 
-// Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
+  // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
   function onMutate(list: MutationRecord[]) {
     if (!editor.enabled) {
       return editor.render();
@@ -94,7 +94,7 @@ export function input(editor: Editor) {
     const change = new Delta();
     const index = getIndexFromNode(editor, mutation.target);
     change.retain(index);
-    
+
     let relativeEditLocation: undefined | number = undefined;
     if (editor.doc.selection) {
       const selection = normalizeRange(editor.doc.selection);
