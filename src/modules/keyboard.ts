@@ -148,6 +148,7 @@ export function keyboard(editor: Editor) {
 
   function onKeyDown(event: KeyboardEventWithShortcut) {
     if (event.isComposing) return;
+
     addShortcutsToEvent(event);
 
     const checkShortcut = shortcut => {
