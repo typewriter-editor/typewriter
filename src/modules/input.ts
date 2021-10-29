@@ -33,7 +33,20 @@ export function input(editor: Editor) {
     if (mutations.length) onMutate(mutations);
   }
 
-  // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
+  // for Gboard fix -- checks if start of line is an insert br
+  function isBr(change: Delta) {
+    let isBr = false;
+    const lastOp = change.ops[change.ops.length - 1];
+    if (lastOp.insert) {
+      const insert = lastOp.insert as any;
+      if (insert.br) {
+        isBr = true;
+      }
+    }
+    return isBr;
+  }
+
+// Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
   function onMutate(list: MutationRecord[]) {
     if (!editor.enabled) {
       return editor.render();
@@ -48,19 +61,10 @@ export function input(editor: Editor) {
       change = getChangeFromRange(range);
     }
 
-    let isBr = false;
-    const lastOp = change.ops[change.ops.length -1];
-    if (lastOp.insert) {
-      const insert = lastOp.insert as any;
-      if (insert.br) {
-        isBr = true;
-      }
-    }
-
     // Gboard fix to move to next line
     if (gboardEnter) {
       // Sometimes gBoard adds a br instead of a new line (seen with h2)
-      if (isBr) {
+      if (isBr(change)) {
         change.ops.pop();
         change.insert('\n');
       }
