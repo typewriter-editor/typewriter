@@ -15,7 +15,7 @@ import isEqual from './util/isEqual';
 
 const EMPTY_OBJ = {};
 const EMPTY_ARR = [];
-const PROXIED_EVENTS = [ 'focus', 'blur', 'keydown', 'mousedown', 'mouseup', 'click'];
+const PROXIED_EVENTS = [ 'focus', 'blur', 'keydown', 'mousedown', 'mouseup', 'click' ];
 const eventProxies = new WeakMap<Editor, EventListener>();
 
 export interface EditorOptions {
