@@ -20,6 +20,7 @@ const MUTATION_OPTIONS = {
 type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
+  let gboardEnter = false;
   // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
@@ -42,6 +43,21 @@ export function input(editor: Editor) {
       change = getChangeFromRange(range);
     }
 
+    let isBr = false;
+    const lastOp = change.ops[change.ops.length -1];
+    if(lastOp.insert) {
+      const insert = lastOp.insert as any;
+      if(insert.br) {
+        isBr = true;
+      }
+    }
+
+    // Sometimes gBoard adds a br instead of a new line (seen with h2)
+    if(gboardEnter && isBr) {
+      change.ops.pop();
+      change.insert('\n');
+    }
+
     if (change && change.ops.length) {
       cleanText(change);
       const old = editor.doc;
@@ -49,6 +65,15 @@ export function input(editor: Editor) {
       if (editor.doc.lines === old.lines) {
         editor.render();
       }
+    }
+
+    // Gboard fix to move to next line
+    if(gboardEnter) {
+      if(editor.doc.selection !== null) {
+        const nextLine = editor.doc.selection[0] + 1;
+        editor.select([nextLine,nextLine]);
+      }
+      gboardEnter = false;
     }
   }
 
@@ -112,15 +137,25 @@ export function input(editor: Editor) {
     observer.observe(editor.root, MUTATION_OPTIONS);
   }
 
+  // Function to detect if Gboard is sending new lines with composed input
+  function onBeforeInput(event: InputEvent) {
+    if(! event.data) return;
+    if(event.data.includes('\n')) {
+      gboardEnter = true;
+    }
+  }
+
   return {
     init() {
       editor.root.addEventListener('input', onInput);
+      document.addEventListener('beforeinput', onBeforeInput); // needed for Gboard fix
       editor.on('rendering', onRendering);
       editor.on('render', onRender);
     },
     destroy() {
       observer.disconnect();
       editor.root.removeEventListener('input', onInput);
+      document.removeEventListener('beforeinput', onBeforeInput); // gboard fix
       editor.off('rendering', onRendering);
       editor.off('render', onRender);
     }

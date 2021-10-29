@@ -188,30 +188,12 @@ export function keyboard(editor: Editor) {
     return line.length === 1 && !editor.typeset.lines.findByAttributes(line.attributes)?.frozen;
   }
 
-  // Gboard new line after character fix
-  // Gboard adds a br instead of a \n and does not advance to the next line
-  function onCompositionEnd(event: CompositionEvent) {
-    if(event.data.includes('\n')) {
-      const selection = editor.doc.selection;
-      if(selection === null) return;
-      const nextLineSelection = selection[0] + 1;
-      //const nextLine = editor.doc.getLineAt(nextLineSelection);
-
-      editor
-        .delete([nextLineSelection,nextLineSelection + 1]) // delete br
-        .insert('\n',{},[nextLineSelection,nextLineSelection]); // add \n
-      editor.select(nextLineSelection); // move to new line
-    }
-  }
-
   return {
     init() {
       editor.root.addEventListener('keydown', onKeyDown);
-      editor.root.addEventListener('compositionend', onCompositionEnd);
     },
     destroy() {
       editor.root.removeEventListener('keydown', onKeyDown);
-      editor.root.removeEventListener('compositionend', onCompositionEnd);
     }
   }
 }
