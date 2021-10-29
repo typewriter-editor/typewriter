@@ -10,6 +10,11 @@ import { cleanText } from '../rendering/html';
 import { normalizeRange } from '../doc/EditorRange';
 import { Source } from '../Source';
 
+const isIPad = navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform);
+const isIOS = isIPad || /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+const isAndroid = !isIOS && /Mobi|Android/.test(navigator.userAgent) && !(window as any).MSStream;
+
+
 const MUTATION_OPTIONS = {
   characterData: true,
   characterDataOldValue: true,
@@ -20,12 +25,25 @@ const MUTATION_OPTIONS = {
 type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
-
+  let gboardEnter = false;
   // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
     const mutations = observer.takeRecords();
     if (mutations.length) onMutate(mutations);
+  }
+
+  // for Gboard fix -- checks if start of line is an insert br
+  function isBr(change: Delta) {
+    let isBr = false;
+    const lastOp = change.ops[change.ops.length - 1];
+    if (lastOp.insert) {
+      const insert = lastOp.insert as any;
+      if (insert.br) {
+        isBr = true;
+      }
+    }
+    return isBr;
   }
 
   // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
@@ -36,11 +54,27 @@ export function input(editor: Editor) {
 
     // Optimize for text changes (typing text)
     let change = getTextChange(list) as Delta;
-    const selection = getSelection(editor);
+    let selection = getSelection(editor);
 
     if (!change) {
       const range = getChangedLineRange(editor.root, list);
       change = getChangeFromRange(range);
+    }
+
+    // Gboard fix to move to next line
+    if (gboardEnter) {
+      // Sometimes gBoard adds a br instead of a new line (seen with h2)
+      if (isBr(change)) {
+        change.ops.pop();
+        change.insert('\n');
+      }
+
+      // advance to next line
+      if (selection !== null) {
+        selection[0]++;
+        selection[1]++;
+      }
+      gboardEnter = false;
     }
 
     if (change && change.ops.length) {
@@ -60,7 +94,7 @@ export function input(editor: Editor) {
     const change = new Delta();
     const index = getIndexFromNode(editor, mutation.target);
     change.retain(index);
-    
+
     let relativeEditLocation: undefined | number = undefined;
     if (editor.doc.selection) {
       const selection = normalizeRange(editor.doc.selection);
@@ -113,17 +147,31 @@ export function input(editor: Editor) {
     observer.observe(editor.root, MUTATION_OPTIONS);
   }
 
+  // Function to detect if Gboard is sending new lines with composed input
+  function onBeforeInput(event: InputEvent) {
+    if (! event.data) return;
+    if (event.data.includes('\n')) {
+      gboardEnter = true;
+    }
+  }
+
   return {
     init() {
       editor.root.addEventListener('input', onInput);
       editor.on('rendering', onRendering);
       editor.on('render', onRender);
+      if (isAndroid) {
+        editor.root.addEventListener('beforeinput', onBeforeInput); // needed for Gboard fix
+      }
     },
     destroy() {
       observer.disconnect();
       editor.root.removeEventListener('input', onInput);
       editor.off('rendering', onRendering);
       editor.off('render', onRender);
+      if (isAndroid) {
+        editor.root.removeEventListener('beforeinput', onBeforeInput); // gboard fix
+      }
     }
   }
 }
