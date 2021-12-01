@@ -136,7 +136,7 @@ export function smartEntry(handlers: Handler[] = defaultHandlers) {
     let ignore = false;
 
     function onTextChange({ change, source }: EditorChangeEvent) {
-      if (ignore || source !== 'user' || !editor.doc.selection || !change || !isTextEntry(change.delta)) return;
+      if (ignore || source === 'api' || !editor.doc.selection || !change || !isTextEntry(change.delta)) return;
       const index = editor.doc.selection[1];
       const text = editor.doc.getText();
       const lineStart = text.lastIndexOf('\n', index - 2) + 1;

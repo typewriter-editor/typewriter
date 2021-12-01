@@ -20,7 +20,7 @@ export function smartQuotes(editor: Editor) {
 
   function onTextChange(event: EditorChangeEvent) {
     const { change, source, doc, old } = event;
-    if (source !== 'user' || !old.selection || !change) return;
+    if (source === 'api' || !old.selection || !change) return;
 
     const indices = getQuoteIndices(change.delta.ops);
     if (!indices.length) return;
