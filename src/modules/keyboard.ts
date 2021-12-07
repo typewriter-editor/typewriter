@@ -3,6 +3,7 @@ import Line from '../doc/Line';
 import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
 import { normalizeRange } from '../doc/EditorRange';
 import { Source } from '../Source';
+import Delta from "../delta/Delta";
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
@@ -37,7 +38,13 @@ export function keyboard(editor: Editor) {
       // Convert a bullet point into a paragraph
       editor.formatLine(EMPTY_OBJ);
     } else {
-      if (at === start && to === end && type.frozen) {
+      // if single selection and line element (hr, image etc) insert new line before
+      if (at === 0 && type.frozen) {
+        editor.insertContent(new Delta().insert('\n'), [0,0])
+        editor.select(0);
+        return;
+      } else if (at === start && to === end && type.frozen) {
+        options = { dontFixNewline: true };
         selection = [ to, to ];
         attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
       } else if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
