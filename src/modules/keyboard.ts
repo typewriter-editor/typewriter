@@ -116,7 +116,7 @@ export function keyboard(editor: Editor) {
         }
       }
 
-      editor.delete(direction, { dontFixNewline: type.frozen });
+      editor.delete(direction, { dontFixNewline: type.frozen }).formatLine({});
     }
 
 
