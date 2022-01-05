@@ -115,8 +115,13 @@ export function keyboard(editor: Editor) {
           );
         }
       }
+      if (line.attributes.image) {
+        editor.delete(direction, {dontFixNewline: type.frozen})
+          .formatLine({}); // required to remove attributes otherwise image remains
 
-      editor.delete(direction, { dontFixNewline: type.frozen }).formatLine({});
+      } else {
+        editor.delete(direction, {dontFixNewline: type.frozen});
+      }
     }
 
 
