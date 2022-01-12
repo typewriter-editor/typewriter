@@ -502,7 +502,7 @@ We have complete control over the rendering of the Toolbar and it provides the h
 ```svelte
 <script>
 import { Editor } from 'typewriter-editor';
-import Root from 'typewriter-editor/lib/Root.svelte';=
+import Root from 'typewriter-editor/lib/Root.svelte';
 
 const editor = new Editor();
 </script>
