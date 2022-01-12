@@ -76,10 +76,10 @@ namespace Line {
     return { id, attributes, content: content, length };
   }
 
-  export function createFrom(line?: Line, lineIds?: LineIds): Line {
+  export function createFrom(line?: Line, content = new Delta(), lineIds?: LineIds): Line {
     const id = line ? line.id : createId(lineIds);
     const attributes = line ? line.attributes : {};
-    return { id, attributes, content: new Delta(), length: 1 };
+    return { id, attributes, content, length: 1 };
   }
 
   export function getLineRanges(lines: Line[]) {

@@ -208,10 +208,8 @@ export default class TextDocument {
           const nextIndex = index - otherIter.offset;
           if (nextIndex) line.content.push(otherIter.next(nextIndex));
           const newlineOp = otherIter.next(1);
-          const nextAttributes = line.attributes;
-          line.attributes = newlineOp.attributes || {};
-          addLine(line);
-          line = Line.create(undefined, nextAttributes, this.byId);
+          addLine(Line.create(line.content, newlineOp.attributes));
+          line.content = new Delta();
         }
       } else {
         const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
@@ -260,9 +258,7 @@ export default class TextDocument {
         } else if (typeof otherOp.delete === 'number') {
           if (thisOp.insert === '\n') {
             // Be sure a deleted line is not kept
-            const content = line.content;
-            line = Line.createFrom(thisIter.peekLine());
-            line.content = content;
+            line = Line.createFrom(thisIter.peekLine(), line.content);
           }
           // else ... otherOp should be a delete so we won't add the next thisOp insert
         }
