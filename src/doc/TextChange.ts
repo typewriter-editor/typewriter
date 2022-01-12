@@ -95,9 +95,12 @@ export default class TextChange {
       if (!format) format = this.getFormatAt(at);
       if (insert.includes('\n')) {
         const lines = insert.split('\n');
-        lines.forEach((line, i) => {
-          if (i) this.compose(at, delta => delta.insert('\n', i === 1 ? lineFormat : {}));
-          if (line.length) this.compose(at, delta => delta.insert(line, format))
+        this.compose(at, delta => {
+          lines.forEach((line, i) => {
+            if (i) delta.insert('\n', i === 1 ? lineFormat : {});
+            if (line.length) delta.insert(line, format);
+          });
+          return delta;
         });
         if (lineFormat) {
           this.formatLine(at, { ...lineFormat });
