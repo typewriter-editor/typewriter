@@ -257,7 +257,15 @@ export default class TextDocument {
             lines.push(...thisIter.restLines());
             break;
           }
-        } // else ... otherOp should be a delete so we won't add the next thisOp insert
+        } else if (typeof otherOp.delete === 'number') {
+          if (thisOp.insert === '\n') {
+            // Be sure a deleted line is not kept
+            const content = line.content;
+            line = Line.createFrom(thisIter.peekLine());
+            line.content = content;
+          }
+          // else ... otherOp should be a delete so we won't add the next thisOp insert
+        }
       }
     }
 
