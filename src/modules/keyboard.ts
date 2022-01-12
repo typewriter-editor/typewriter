@@ -3,7 +3,6 @@ import Line from '../doc/Line';
 import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
 import { normalizeRange } from '../doc/EditorRange';
 import { Source } from '../Source';
-import Delta from "../delta/Delta";
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
