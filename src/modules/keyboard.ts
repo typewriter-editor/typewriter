@@ -105,9 +105,10 @@ export function keyboard(editor: Editor) {
       const range = normalizeRange(selection);
       const line = doc.getLineAt(range[0]);
       const type = lines.findByAttributes(line.attributes, true);
-      const outside = (direction === -1 && at === start) || (direction === 1 && at === end - 1);
+      // If the deletion will move outside a line (collapsing 2 lines)
+      const outside = isCollapsed && ((direction === -1 && at === start) || (direction === 1 && at === end - 1));
 
-      if (isCollapsed && outside && !type.contained) {
+      if (outside && !type.contained) {
         // At the beginning of a line
         if (direction === -1 && unindent(doc.getLineAt(at))) return;
 
