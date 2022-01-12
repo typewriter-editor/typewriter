@@ -38,7 +38,13 @@ export function keyboard(editor: Editor) {
       editor.formatLine(EMPTY_OBJ);
     } else {
       if (at === start && to === end && type.frozen) {
-        selection = [ to, to ];
+        options = { dontFixNewline: true };
+        if (at === 0) {
+          // if single selection and line element (hr, image etc) insert new line before
+          selection = [ at, at ];
+        } else {
+          selection = [ to, to ];
+        }
         attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
       } else if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
         attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
@@ -48,7 +54,7 @@ export function keyboard(editor: Editor) {
       }
       editor.insert('\n', attributes, selection, options);
       if (at === start && to === end && type.frozen) {
-        editor.select(to);
+        editor.select(at === 0 ? 0 : to);
       }
     }
   }
