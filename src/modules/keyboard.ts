@@ -38,14 +38,14 @@ export function keyboard(editor: Editor) {
       // Convert a bullet point into a paragraph
       editor.formatLine(EMPTY_OBJ);
     } else {
-      // if single selection and line element (hr, image etc) insert new line before
-      if (at === 0 && type.frozen) {
-        editor.insertContent(new Delta().insert('\n'), [0,0])
-        editor.select(0);
-        return;
-      } else if (at === start && to === end && type.frozen) {
+      if (at === start && to === end && type.frozen) {
         options = { dontFixNewline: true };
-        selection = [ to, to ];
+        if (at === 0) {
+          // if single selection and line element (hr, image etc) insert new line before
+          selection = [ at, at ];
+        } else {
+          selection = [ to, to ];
+        }
         attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
       } else if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
         attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
@@ -55,7 +55,7 @@ export function keyboard(editor: Editor) {
       }
       editor.insert('\n', attributes, selection, options);
       if (at === start && to === end && type.frozen) {
-        editor.select(to);
+        editor.select(at === 0 ? 0 : to);
       }
     }
   }
