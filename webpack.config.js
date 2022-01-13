@@ -1,11 +1,11 @@
-const path = require('path');
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+import path from 'path';
+import BundleAnalyzerPlugin from 'webpack-bundle-analyzer';
 
-module.exports = {
+export default {
   entry: './src/index.ts',
   mode: 'production',
   output: {
-    path: path.resolve(__dirname, 'lib'),
+    path: path.resolve('lib'),
     filename: 'bundle.js',
     library: 'typewriter',
   },

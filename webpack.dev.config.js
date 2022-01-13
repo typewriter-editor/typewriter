@@ -1,10 +1,10 @@
-const path = require('path');
+import path from 'path';
 
-module.exports = {
-  entry: path.resolve(__dirname, 'examples/index.ts'),
+export default {
+  entry: path.resolve('examples/index.ts'),
   mode: 'development',
   output: {
-    path: path.resolve(__dirname, 'examples/public'),
+    path: path.resolve('examples/public'),
     filename: 'bundle.js',
     library: 'typewriter',
   },
@@ -29,12 +29,12 @@ module.exports = {
   resolve: {
     extensions: [ '.ts', '.tsx', '.js' ],
     alias: {
-      'typewriter-editor$': path.resolve(__dirname, 'src/index.ts'),
-      'typewriter-editor/lib': path.resolve(__dirname, 'src'),
+      'typewriter-editor$': path.resolve('src/index.ts'),
+      'typewriter-editor/lib': path.resolve('src'),
     },
   },
   devServer: {
-    contentBase: path.join(__dirname, 'examples/public'),
+    contentBase: path.resolve('examples/public'),
     port: 9000,
     host: '0.0.0.0',
     historyApiFallback: true,
