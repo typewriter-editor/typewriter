@@ -12,9 +12,16 @@ export default {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        use: 'ts-loader',
+        test: /\.js$/,
+        resolve: { fullySpecified: false }
+      },
+      {
+        test: /\.ts$/,
         exclude: /node_modules/,
+        use: [{
+          loader: 'ts-loader',
+          options: { onlyCompileBundledFiles: true }
+        }],
       },
       {
         test: /\.svelte$/,
