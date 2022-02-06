@@ -9,7 +9,7 @@ let className = 'bubble-menu';
 export { className as class };
 export let offset = 0;
 export let padding = 4;
-let forLineType;
+let forLineType = '';
 export { forLineType as for };
 export let placement = 'top';
 

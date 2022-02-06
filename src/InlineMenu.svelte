@@ -5,12 +5,12 @@ import { getLineElementAt } from './rendering/position';
 import { editorStores } from './stores';
 
 export let editor;
-export let atLine; // Whether to display at the line left-most point or the cursor left-most point (this point will be different with indented text)
-export let hover; // Display on empty lines when hovering over them with the mouse vs where the text cursor is at
-export let any; // Show on any empty line, not just a default (paragraph) line
+export let atLine = false; // Whether to display at the line left-most point or the cursor left-most point (this point will be different with indented text)
+export let hover = false; // Display on empty lines when hovering over them with the mouse vs where the text cursor is at
+export let any = false; // Show on any empty line, not just a default (paragraph) line
 let className = 'inline-menu';
 export { className as class };
-export let line;
+export let line = null;
 
 let menu;
 let popper;
