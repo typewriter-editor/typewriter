@@ -11,9 +11,16 @@ export default {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        use: 'ts-loader',
+        test: /\.js$/,
+        resolve: { fullySpecified: false }
+      },
+      {
+        test: /\.ts$/,
         exclude: /node_modules/,
+        use: [{
+          loader: 'ts-loader',
+          options: { onlyCompileBundledFiles: true }
+        }],
       },
       {
         test: /\.svelte$/,
@@ -34,7 +41,7 @@ export default {
     },
   },
   devServer: {
-    contentBase: path.resolve('examples/public'),
+    static: { directory: path.resolve('examples/public') },
     port: 9000,
     host: '0.0.0.0',
     historyApiFallback: true,

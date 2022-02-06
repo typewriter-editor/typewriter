@@ -1,5 +1,5 @@
 import Editor, { EditorChangeEvent } from '../Editor';
-import TextDocument from '../doc/TextDocument';
+import { TextDocument } from 'typewriter-document';
 import { render as renderWhole, renderChanges } from '../rendering/rendering';
 
 

@@ -1,8 +1,6 @@
 import Editor, { EditorChangeEvent } from '../Editor';
-import TextDocument from '../doc/TextDocument';
-import { EditorRange } from '../doc/EditorRange';
+import { TextDocument, EditorRange, isEqual } from 'typewriter-document';
 import { combineLines, Combined, getChangedRanges, HTMLLineElement, renderLine, setLineNodesRanges } from '../rendering/rendering';
-import isEqual from '../util/isEqual';
 import { h, patch, VNode } from '../rendering/vdom';
 import { setSelection } from '../rendering/selection';
 

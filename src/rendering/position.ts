@@ -1,10 +1,9 @@
 import Editor from '../Editor';
 import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from './rendering';
+import { EditorRange, Line } from 'typewriter-document';
 import { isBRPlaceholder } from './html';
 import { createTreeWalker } from './walker';
-import { EditorRange } from '../doc/EditorRange';
 import { Types } from '../typesetting';
-import Line from '../doc/Line';
 
 
 type NodeAndOffset = [Node | null, number];

@@ -1,6 +1,5 @@
 <script>
 import { createPopper } from '@popperjs/core';
-import { text } from 'svelte/internal';
 import { OFFSCREEN_RECT } from './popper';
 import { getLineElementAt } from './rendering/position';
 import { editorStores } from './stores';

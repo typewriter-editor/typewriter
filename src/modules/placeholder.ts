@@ -1,6 +1,5 @@
-import AttributeMap from '../delta/AttributeMap';
+import { AttributeMap, isEqual } from 'typewriter-document';
 import Editor from '../Editor';
-import isEqual from '../util/isEqual';
 import { DecorateEvent, DecorationsModule, Decorations } from './decorations';
 
 interface PlaceholderOptions {

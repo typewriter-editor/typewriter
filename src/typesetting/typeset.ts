@@ -1,5 +1,5 @@
+import { AttributeMap } from 'typewriter-document';
 import { VChild, VNode } from '../rendering/vdom';
-import AttributeMap from '../delta/AttributeMap';
 import Editor, { Shortcuts } from '../Editor';
 const EMPTY_ARR = [];
 

@@ -1,6 +1,4 @@
-import AttributeMap from '../delta/AttributeMap';
-import Delta from '../delta/Delta';
-import Op from '../delta/Op';
+import { AttributeMap, Delta, Op } from 'typewriter-document';
 import Editor, { EditorChangeEvent } from '../Editor';
 
 const straitQuotes = /['"]/g;

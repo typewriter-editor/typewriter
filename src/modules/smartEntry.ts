@@ -1,5 +1,4 @@
-import AttributeMap from '../delta/AttributeMap';
-import Delta from '../delta/Delta';
+import { AttributeMap, Delta } from 'typewriter-document';
 import Editor, { EditorChangeEvent } from '../Editor';
 
 

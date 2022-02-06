@@ -1,4 +1,3 @@
-import AttributeMap from '../delta/AttributeMap';
 import Editor, { EditorChangeEvent } from '../Editor';
 import { h } from '../rendering/vdom';
 import { LineData, LineType } from '../typesetting';

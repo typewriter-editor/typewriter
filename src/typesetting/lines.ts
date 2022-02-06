@@ -1,10 +1,7 @@
+import { AttributeMap, Delta, normalizeRange } from 'typewriter-document';
 import { VNode, h, Props, VChild } from '../rendering/vdom';
-import AttributeMap from '../delta/AttributeMap';
 import { line } from './typeset';
 import { applyDecorations } from '../modules/decorations';
-import { normalizeRange } from '../doc/EditorRange';
-import Delta from '../delta/Delta';
-import Line from '../doc/Line';
 
 
 export const paragraph = line({

@@ -1,7 +1,5 @@
-import TextDocument from '../doc/TextDocument';
-import TextChange from '../doc/TextChange';
+import { TextDocument, TextChange, Delta } from 'typewriter-document';
 import Editor, { EditorChangeEvent } from '../Editor';
-import Delta from '../delta/Delta';
 import { Source } from '../Source';
 
 export interface StackEntry {

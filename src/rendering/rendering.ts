@@ -1,14 +1,8 @@
-import isEqual from '../util/isEqual';
+import { isEqual, TextDocument, AttributeMap, Line, EditorRange, Delta, Op } from 'typewriter-document';
 import { h, patch, VChild, VNode } from './vdom';
-import TextDocument from '../doc/TextDocument';
 import Editor from '../Editor';
-import AttributeMap from '../delta/AttributeMap';
-import Line from '../doc/Line';
 import { LineType } from '../typesetting/typeset';
-import { EditorRange } from '../doc/EditorRange';
-import Delta from '../delta/Delta';
 import { applyDecorations } from '../modules/decorations';
-import Op from '../delta/Op';
 
 const EMPTY_ARR = [];
 const BR = h('br', {});
@@ -20,11 +14,11 @@ const nodeRanges = new WeakMap<HTMLElement, WeakMap<Node, EditorRange>>();
 
 export type CombinedEntry = Line | Line[];
 export type Combined = CombinedEntry[];
-export interface CombinedData {
+interface CombinedData {
   combined: Combined;
   byKey:  Record<string, CombinedEntry>;
 }
-export type LineRanges = [EditorRange, EditorRange];
+type LineRanges = [EditorRange, EditorRange];
 export interface HTMLLineElement extends HTMLElement {
   key: string;
 }

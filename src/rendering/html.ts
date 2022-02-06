@@ -1,13 +1,10 @@
+import { TextDocument, Delta, EditorRange, Line } from 'typewriter-document';
 import { escapeHtml } from './escape-html';
 import { VChild } from './vdom';
-import TextDocument from '../doc/TextDocument';
 import { HTMLLineElement, renderInline } from '../rendering/rendering';
 import { createTreeWalker } from './walker';
-import Delta from '../delta/Delta';
 import { renderDoc } from './rendering';
 import Editor from '../Editor';
-import { EditorRange } from '../doc/EditorRange';
-import Line from '../doc/Line';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 export const BLOCK_ELEMENTS = 'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';

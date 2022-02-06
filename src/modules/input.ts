@@ -1,13 +1,10 @@
-import diff from 'fast-diff';
 import Editor from '../Editor';
-import Delta from '../delta/Delta';
-import TextChange from '../doc/TextChange';
+import { Delta, TextChange, normalizeRange, diff } from 'typewriter-document';
 import { deltaFromDom } from '../rendering/html';
 import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from '../rendering/rendering';
 import { getSelection } from '../rendering/selection';
 import { getIndexFromNode } from '../rendering/position';
 import { cleanText } from '../rendering/html';
-import { normalizeRange } from '../doc/EditorRange';
 import { Source } from '../Source';
 
 const isIPad = navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform);

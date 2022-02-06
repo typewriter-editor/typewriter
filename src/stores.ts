@@ -1,9 +1,6 @@
 import { derived, readable, writable, Readable, get } from 'svelte/store';
-import AttributeMap from './delta/AttributeMap';
-import { EditorRange } from './doc/EditorRange';
-import TextDocument from './doc/TextDocument';
+import { AttributeMap, EditorRange, TextDocument, isEqual } from 'typewriter-document';
 import Editor from './Editor';
-import isEqual from './util/isEqual';
 
 const EMPTY_NOPTIFIER = () => {};
 const EMPTY_ACTIVE = readable({} as AttributeMap, EMPTY_NOPTIFIER);

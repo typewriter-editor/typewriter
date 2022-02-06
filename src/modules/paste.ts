@@ -1,9 +1,6 @@
-import Delta from '../delta/Delta';
+import { Delta, Line, normalizeRange, isEqual } from 'typewriter-document';
 import Editor from '../Editor';
 import { deltaFromHTML } from '../rendering/html';
-import Line from '../doc/Line';
-import { normalizeRange } from '../doc/EditorRange';
-import isEqual from '../util/isEqual';
 import { Source } from '../Source';
 
 const dontFixNewline = { dontFixNewline: true };
