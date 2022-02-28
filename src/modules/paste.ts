@@ -31,18 +31,12 @@ export interface PasteOptions {
 
 export function paste(editor: Editor, options?: PasteOptions) {
 
-  function onPaste(event: ClipboardEvent) {
-    if (!editor.enabled || !editor.doc.selection) return;
-    event.preventDefault();
-    const dataTransfer = event.clipboardData;
+  function paste(text: string, html: string) {
     const { doc } = editor;
     const selection = doc.selection && normalizeRange(doc.selection);
-    if (!dataTransfer || !selection) return;
+    if (!selection) return;
     const [ at, to ] = selection;
-    const html = dataTransfer.getData('text/html');
-    const text = dataTransfer.getData('text/plain');
     let delta: Delta;
-
     if (!html) {
       if (!text) return;
       delta = new Delta().insert(text);
@@ -109,10 +103,24 @@ export function paste(editor: Editor, options?: PasteOptions) {
         editor.delete([ at, to ]);
       }
     }
+  }
 
+  function onPaste(event: ClipboardEvent) {
+    if (!editor.enabled || !editor.doc.selection) return;
+    event.preventDefault();
+    const dataTransfer = event.clipboardData;
+    const { doc } = editor;
+    const selection = doc.selection && normalizeRange(doc.selection);
+    if (!dataTransfer || !selection) return;
+    const html = dataTransfer.getData('text/html');
+    const text = dataTransfer.getData('text/plain');
+    paste(text, html);
   }
 
   return {
+    commands: {
+      paste,
+    },
     init() {
       editor.root.addEventListener('paste', onPaste);
     },
