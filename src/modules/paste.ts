@@ -40,7 +40,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
   function paste({ selection, text, html }: PasteOptions) {
     const { doc } = editor;
     selection = selection || doc.selection;
-    selection = selection && doc.selection && normalizeRange(doc.selection);
+    selection = selection && normalizeRange(selection);
     if (!selection) return;
     const [ at, to ] = selection;
     let delta: Delta;
@@ -117,8 +117,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
     event.preventDefault();
     const dataTransfer = event.clipboardData;
     const { doc } = editor;
-    const selection = doc.selection && normalizeRange(doc.selection);
-    if (!dataTransfer || !selection) return;
+    if (!dataTransfer || !doc.selection) return;
     const html = dataTransfer.getData('text/html');
     const text = dataTransfer.getData('text/plain');
     paste({ text, html });
