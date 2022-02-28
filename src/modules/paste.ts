@@ -1,4 +1,4 @@
-import { Delta, Line, normalizeRange, isEqual } from 'typewriter-document';
+import { Delta, Line, normalizeRange, isEqual, EditorRange } from 'typewriter-document';
 import Editor from '../Editor';
 import { deltaFromHTML } from '../rendering/html';
 import { Source } from '../Source';
@@ -26,14 +26,21 @@ export class PasteEvent extends Event {
 }
 
 export interface PasteOptions {
+  text?: string;
+  html?: string;
+  selection?: EditorRange | null;
+}
+
+export interface PasteOptions {
   htmlParser?: (editor: Editor, html: string) => Delta;
 }
 
 export function paste(editor: Editor, options?: PasteOptions) {
 
-  function paste(text: string, html: string) {
+  function paste({ selection, text, html }: PasteOptions) {
     const { doc } = editor;
-    const selection = doc.selection && normalizeRange(doc.selection);
+    selection = selection || doc.selection;
+    selection = selection && doc.selection && normalizeRange(doc.selection);
     if (!selection) return;
     const [ at, to ] = selection;
     let delta: Delta;
@@ -114,7 +121,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
     if (!dataTransfer || !selection) return;
     const html = dataTransfer.getData('text/html');
     const text = dataTransfer.getData('text/plain');
-    paste(text, html);
+    paste({ text, html });
   }
 
   return {
