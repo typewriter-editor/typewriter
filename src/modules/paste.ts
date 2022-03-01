@@ -1,4 +1,4 @@
-import { Delta, Line, normalizeRange, isEqual } from '@typewriter/document';
+import { Delta, Line, normalizeRange, isEqual, EditorRange } from '@typewriter/document';
 import Editor from '../Editor';
 import { deltaFromHTML } from '../rendering/html';
 import { Source } from '../Source';
@@ -26,23 +26,24 @@ export class PasteEvent extends Event {
 }
 
 export interface PasteOptions {
+  text?: string;
+  html?: string;
+  selection?: EditorRange | null;
+}
+
+export interface PasteOptions {
   htmlParser?: (editor: Editor, html: string) => Delta;
 }
 
 export function paste(editor: Editor, options?: PasteOptions) {
 
-  function onPaste(event: ClipboardEvent) {
-    if (!editor.enabled || !editor.doc.selection) return;
-    event.preventDefault();
-    const dataTransfer = event.clipboardData;
+  function paste({ selection, text, html }: PasteOptions) {
     const { doc } = editor;
-    const selection = doc.selection && normalizeRange(doc.selection);
-    if (!dataTransfer || !selection) return;
+    selection = selection || doc.selection;
+    selection = selection && normalizeRange(selection);
+    if (!selection) return;
     const [ at, to ] = selection;
-    const html = dataTransfer.getData('text/html');
-    const text = dataTransfer.getData('text/plain');
     let delta: Delta;
-
     if (!html) {
       if (!text) return;
       delta = new Delta().insert(text);
@@ -109,10 +110,23 @@ export function paste(editor: Editor, options?: PasteOptions) {
         editor.delete([ at, to ]);
       }
     }
+  }
 
+  function onPaste(event: ClipboardEvent) {
+    if (!editor.enabled || !editor.doc.selection) return;
+    event.preventDefault();
+    const dataTransfer = event.clipboardData;
+    const { doc } = editor;
+    if (!dataTransfer || !doc.selection) return;
+    const html = dataTransfer.getData('text/html');
+    const text = dataTransfer.getData('text/plain');
+    paste({ text, html });
   }
 
   return {
+    commands: {
+      paste,
+    },
     init() {
       editor.root.addEventListener('paste', onPaste);
     },
