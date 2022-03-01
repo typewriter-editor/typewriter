@@ -3,7 +3,7 @@ import { onMount } from 'svelte';
 import { docFromDom } from './rendering/html';
 
 export let editor;
-let className = '';
+let className = undefined;
 export { className as class };
 
 let root;
