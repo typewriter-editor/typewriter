@@ -1,6 +1,6 @@
 import Editor from '../Editor';
 import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
-import { Line, normalizeRange } from 'typewriter-document';
+import { Line, normalizeRange } from '@typewriter/document';
 import { Source } from '../Source';
 
 

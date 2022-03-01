@@ -1,4 +1,4 @@
-import { AttributeMap, Delta, Op } from 'typewriter-document';
+import { AttributeMap, Delta, Op } from '@typewriter/document';
 import Editor, { EditorChangeEvent } from '../Editor';
 
 const straitQuotes = /['"]/g;

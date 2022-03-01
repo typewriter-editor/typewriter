@@ -1,5 +1,5 @@
 import Editor from '../Editor';
-import { Delta, TextChange, normalizeRange, diff } from 'typewriter-document';
+import { Delta, TextChange, normalizeRange, diff } from '@typewriter/document';
 import { deltaFromDom } from '../rendering/html';
 import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from '../rendering/rendering';
 import { getSelection } from '../rendering/selection';

@@ -1,4 +1,4 @@
-import { AttributeMap, Delta } from 'typewriter-document';
+import { AttributeMap, Delta } from '@typewriter/document';
 import Editor, { EditorChangeEvent } from '../Editor';
 
 

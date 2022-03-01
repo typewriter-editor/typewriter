@@ -1,4 +1,4 @@
-import { TextDocument, TextChange, Delta } from 'typewriter-document';
+import { TextDocument, TextChange, Delta } from '@typewriter/document';
 import Editor, { EditorChangeEvent } from '../Editor';
 import { Source } from '../Source';
 

@@ -1,4 +1,4 @@
-import { AttributeMap, isEqual } from 'typewriter-document';
+import { AttributeMap, isEqual } from '@typewriter/document';
 import Editor from '../Editor';
 import { DecorateEvent, DecorationsModule, Decorations } from './decorations';
 

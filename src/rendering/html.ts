@@ -1,4 +1,4 @@
-import { TextDocument, Delta, EditorRange, Line } from 'typewriter-document';
+import { TextDocument, Delta, EditorRange, Line } from '@typewriter/document';
 import { escapeHtml } from './escape-html';
 import { VChild } from './vdom';
 import { HTMLLineElement, renderInline } from '../rendering/rendering';

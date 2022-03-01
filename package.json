@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A rich text editor using the Delta format with decorations and rendered with a tiny virtual dom",
   "keywords": [
     "typewriter",
@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.2",
-    "typewriter-document": "^0.6.50"
+    "@typewriter/document": "^0.7.0"
   },
   "peerDependencies": {
     "svelte": "3.x"

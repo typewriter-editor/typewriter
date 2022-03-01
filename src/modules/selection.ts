@@ -1,4 +1,4 @@
-import { isEqual } from 'typewriter-document';
+import { isEqual } from '@typewriter/document';
 import Editor, { EditorChangeEvent } from '../Editor';
 import { getSelection, setSelection } from '../rendering/selection';
 import { getLineNodeStart } from '../rendering/rendering';

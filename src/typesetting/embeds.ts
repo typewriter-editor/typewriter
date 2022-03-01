@@ -1,6 +1,6 @@
 import { h } from '../rendering/vdom';
 import { embed } from './typeset';
-import { AttributeMap } from 'typewriter-document';
+import { AttributeMap } from '@typewriter/document';
 
 
 export const image = embed({

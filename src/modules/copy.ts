@@ -1,6 +1,6 @@
 import Editor from '../Editor';
 import { docToHTML, inlineToHTML } from '../rendering/html';
-import { TextDocument, normalizeRange } from 'typewriter-document';
+import { TextDocument, normalizeRange } from '@typewriter/document';
 
 const defaultOptions: CopyOptions = {
   copyPlainText: true,

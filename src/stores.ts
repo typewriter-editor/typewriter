@@ -1,5 +1,5 @@
 import { derived, readable, writable, Readable, get } from 'svelte/store';
-import { AttributeMap, EditorRange, TextDocument, isEqual } from 'typewriter-document';
+import { AttributeMap, EditorRange, TextDocument, isEqual } from '@typewriter/document';
 import Editor from './Editor';
 
 const EMPTY_NOPTIFIER = () => {};

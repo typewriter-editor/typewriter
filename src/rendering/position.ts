@@ -1,6 +1,6 @@
 import Editor from '../Editor';
 import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from './rendering';
-import { EditorRange, Line } from 'typewriter-document';
+import { EditorRange, Line } from '@typewriter/document';
 import { isBRPlaceholder } from './html';
 import { createTreeWalker } from './walker';
 import { Types } from '../typesetting';

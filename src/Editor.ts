@@ -1,4 +1,4 @@
-import { TextDocument, TextChange, hasFormat, Delta, AttributeMap, EditorRange, normalizeRange, Line, isEqual } from 'typewriter-document';
+import { TextDocument, TextChange, hasFormat, Delta, AttributeMap, EditorRange, normalizeRange, Line, isEqual } from '@typewriter/document';
 import { Typeset, TypesetTypes, Commands, Types } from './typesetting/typeset';
 import { defaultModules } from './modules/defaults';
 import { defaultTypes } from './typesetting/defaults';

@@ -1,4 +1,4 @@
-export * from 'typewriter-document';
+export * from '@typewriter/document';
 export { default as EventDispatcher } from './util/EventDispatcher';
 
 export * from './rendering/vdom';

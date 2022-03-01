@@ -1,4 +1,4 @@
-import { isEqual, TextDocument, AttributeMap, Line, EditorRange, Delta, Op } from 'typewriter-document';
+import { isEqual, TextDocument, AttributeMap, Line, EditorRange, Delta, Op } from '@typewriter/document';
 import { h, patch, VChild, VNode } from './vdom';
 import Editor from '../Editor';
 import { LineType } from '../typesetting/typeset';

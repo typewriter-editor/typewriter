@@ -1,4 +1,4 @@
-import { Delta, Line, normalizeRange, isEqual } from 'typewriter-document';
+import { Delta, Line, normalizeRange, isEqual } from '@typewriter/document';
 import Editor from '../Editor';
 import { deltaFromHTML } from '../rendering/html';
 import { Source } from '../Source';

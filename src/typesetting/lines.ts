@@ -1,4 +1,4 @@
-import { AttributeMap, Delta, normalizeRange } from 'typewriter-document';
+import { AttributeMap, Delta, normalizeRange } from '@typewriter/document';
 import { VNode, h, Props, VChild } from '../rendering/vdom';
 import { line } from './typeset';
 import { applyDecorations } from '../modules/decorations';
