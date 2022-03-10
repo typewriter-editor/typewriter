@@ -52,6 +52,14 @@ onMount(() => {
     >
       <i class="material-icons">format_italic</i>
     </button>
+
+    <button
+      class="menu-button"
+      class:active={active.link}
+      on:click={commands.link}
+    >
+      <i class="material-icons">link</i>
+    </button>
  </div>
 </BubbleMenu>
 

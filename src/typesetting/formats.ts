@@ -31,7 +31,7 @@ export const link = format({
   name: 'link',
   selector: 'a[href]',
   greedy: false,
-  commands: editor => (link: string) => editor.toggleTextFormat({ link }),
+  commands: editor => (link: string) => editor.toggleTextFormat({ link: typeof link === 'string' ? link : true }),
   fromDom: (node: HTMLAnchorElement) => node.href,
   render: (attributes, children) => h('a', { href: attributes.link, target: '_blank' }, children),
 });

@@ -59,16 +59,17 @@ function update() {
 }
 
 function getActive(mouseDown, menuHasFocus, selection) {
+  let fixedSelection = editor.getActive(selection);
   let lineType;
-  if (selection && selection[0] === selection[1] - 1) {
-    const line = editor.doc.getLineAt(selection[0]);
+  if (fixedSelection && fixedSelection[0] === fixedSelection[1] - 1) {
+    const line = editor.doc.getLineAt(fixedSelection[0]);
     const type = editor.typeset.lines.findByAttributes(line.attributes, true);
     if (type.frozen) {
       lineType = type.name;
     }
   }
-  if (lineType != forLineType) selection = null;
-  return mouseDown || menuHasFocus ? activeSelection : selection;
+  if (lineType != forLineType) fixedSelection = null;
+  return mouseDown || menuHasFocus ? activeSelection : fixedSelection;
 }
 
 function onMouseDown() {
