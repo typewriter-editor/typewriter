@@ -31,7 +31,9 @@ export const link = format({
   name: 'link',
   selector: 'a[href]',
   greedy: false,
-  commands: editor => (link: string) => editor.toggleTextFormat({ link }),
+  // If the link is a string, it is an actual address. Otherwise it is either undefined (empty) or being called from the
+  // testing code (which passes a pointer to the dom object, hence the conversion to a boolean which works with the toggleTextFormat)
+  commands: editor => (link: string) => editor.toggleTextFormat({ link: typeof link === 'string' ? link : !!link }),
   fromDom: (node: HTMLAnchorElement) => node.href,
   render: (attributes, children) => h('a', { href: attributes.link, target: '_blank' }, children),
 });

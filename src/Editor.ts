@@ -35,6 +35,7 @@ export interface Module {
   shortcuts?: Shortcuts;
   commands?: Commands;
   getActive?: () => AttributeMap;
+  trimSelection?: (range:  EditorRange) => EditorRange;
   [name: string]: any;
 }
 
@@ -227,6 +228,29 @@ export default class Editor extends EventDispatcher {
     return this.set(new TextDocument(new Delta().insert(text), selection), source);
   }
 
+  trimSelection(selection:  EditorRange) {
+    if (selection && selection.length > 1) {
+      const fixedSelection: EditorRange = [selection[0], selection[1]];
+      const selectedText = this.getText(fixedSelection);
+      if (selectedText) {
+        const trimmedLeading = selectedText.replace(/^\s+/g, '');
+        const trimmedTrailing = trimmedLeading.trim();
+        const trailingDiff = trimmedLeading.length - trimmedTrailing.length;
+        const leadingDiff = selectedText.length - trimmedLeading.length;
+        if (trimmedTrailing && trailingDiff) {
+          fixedSelection[1] -= trailingDiff;
+        }
+        if (trimmedLeading && leadingDiff) {
+          fixedSelection[0] += leadingDiff;
+        }
+      }
+      return fixedSelection;
+    }
+    else {
+      return EMPTY_ARR as unknown as EditorRange;
+    }
+  }
+  
   getActive() {
     const { selection } = this.doc;
     let active = selection
@@ -283,7 +307,6 @@ export default class Editor extends EventDispatcher {
 
   delete(directionOrSelection?: -1 | 1 | EditorRange, options?: { dontFixNewline?: boolean }): this {
     let range: EditorRange;
-    //  = this.doc.selection;
     if (Array.isArray(directionOrSelection)) {
       range = normalizeRange(directionOrSelection);
     } else {
@@ -294,7 +317,7 @@ export default class Editor extends EventDispatcher {
         else range = [ range[0], range[1] + directionOrSelection ];
       }
     }
-    const formats = getActiveFormats(this, this.doc, range);
+    const formats = getActiveFormats(this, this.doc, [ range[0] + 1, range[0] + 1 ]);
     const change = this.change.delete(range, options).select(range[0]).setActiveFormats(formats);
     return this.update(change);
   }
@@ -421,8 +444,11 @@ export default class Editor extends EventDispatcher {
 
 function changeFormat(editor: Editor, op: string, format: AttributeMap | null, selection: EditorRange | number | null) {
   if (!selection) return;
-  const change = editor.change[op](selection, format);
-  editor.update(change);
+  selection = typeof selection === 'number' ? [selection as number, selection as number] : editor.trimSelection(selection as EditorRange);
+  if (selection as any !== EMPTY_ARR) {
+    const change = editor.change[op](selection, format);
+    editor.update(change);
+  }
 }
 
 function getActiveFormats(editor: Editor, doc: TextDocument, selection = doc.selection): AttributeMap {
@@ -431,12 +457,20 @@ function getActiveFormats(editor: Editor, doc: TextDocument, selection = doc.sel
   const at = normalizeRange(selection)[0];
   // If start of a non-empty line, use the format of the first character, otherwise use the format of the preceeding
   let formatAt = at;
+  let formatTo = at + 1;
   const attributes = doc.getTextFormat(formatAt);
+  const nextAttributes = doc.getTextFormat(formatTo);
   const format: AttributeMap = {};
   // Sort them by the order found in marks and be efficient
   Object.keys(attributes).forEach(name => {
     const type = formats.get(name);
-    if (type && (type.greedy !== false || doc.getTextFormat(at)[name])) {
+    if (type && type.greedy !== false) {
+      format[name] = attributes[name];
+    }
+  });
+  Object.keys(nextAttributes).forEach(name => {
+    const type = formats.get(name);
+    if (type && type.greedy === false) {
       format[name] = attributes[name];
     }
   });
