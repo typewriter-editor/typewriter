@@ -59,7 +59,7 @@ function update() {
 }
 
 function getActive(mouseDown, menuHasFocus, selection) {
-  let fixedSelection = editor.getActive(selection);
+  let fixedSelection = editor.trimSelection(selection);
   let lineType;
   if (fixedSelection && fixedSelection[0] === fixedSelection[1] - 1) {
     const line = editor.doc.getLineAt(fixedSelection[0]);
