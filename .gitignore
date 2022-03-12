@@ -4,4 +4,5 @@ node_modules/
 npm-debug.log
 !.babelrc
 !.travis.yml
+!.mocharc.cjs
 lib
