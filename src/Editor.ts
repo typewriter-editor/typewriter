@@ -228,29 +228,20 @@ export default class Editor extends EventDispatcher {
     return this.set(new TextDocument(new Delta().insert(text), selection), source);
   }
 
-  trimSelection(selection:  EditorRange) {
-    if (selection && selection.length > 1) {
-      const fixedSelection: EditorRange = [selection[0], selection[1]];
-      const selectedText = this.getText(fixedSelection);
-      if (selectedText) {
-        const trimmedLeading = selectedText.replace(/^\s+/g, '');
-        const trimmedTrailing = trimmedLeading.trim();
-        const trailingDiff = trimmedLeading.length - trimmedTrailing.length;
-        const leadingDiff = selectedText.length - trimmedLeading.length;
-        if (trimmedTrailing && trailingDiff) {
-          fixedSelection[1] -= trailingDiff;
-        }
-        if (trimmedLeading && leadingDiff) {
-          fixedSelection[0] += leadingDiff;
-        }
+  trimSelection(selection:  EditorRange): EditorRange {
+    if (!selection) return selection;
+    const selectedText = this.getText(selection);
+    const [ from, to ] = normalizeRange([ ...selection ]);
+    // don't trim if all spaces are selected
+    if (selectedText.trim()) {
+      const [ _, lead, text, tail ] = selectedText.match(/(^ *)((?:.|\n)*?)( *$)/) as RegExpMatchArray;
+      if (text && (lead || tail)) {
+        return [ from + lead.length, to - tail.length ];
       }
-      return fixedSelection;
     }
-    else {
-      return EMPTY_ARR as unknown as EditorRange;
-    }
+    return selection;
   }
-  
+
   getActive() {
     const { selection } = this.doc;
     let active = selection
@@ -444,11 +435,9 @@ export default class Editor extends EventDispatcher {
 
 function changeFormat(editor: Editor, op: string, format: AttributeMap | null, selection: EditorRange | number | null) {
   if (!selection) return;
-  selection = typeof selection === 'number' ? [selection as number, selection as number] : editor.trimSelection(selection as EditorRange);
-  if (selection as any !== EMPTY_ARR) {
-    const change = editor.change[op](selection, format);
-    editor.update(change);
-  }
+  selection = typeof selection === 'number' ? [ selection, selection ] as EditorRange : editor.trimSelection(selection);
+  const change = editor.change[op](selection, format);
+  editor.update(change);
 }
 
 function getActiveFormats(editor: Editor, doc: TextDocument, selection = doc.selection): AttributeMap {
