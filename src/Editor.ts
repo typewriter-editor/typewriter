@@ -435,7 +435,7 @@ export default class Editor extends EventDispatcher {
 
 function changeFormat(editor: Editor, op: string, format: AttributeMap | null, selection: EditorRange | number | null) {
   if (!selection) return;
-  selection = typeof selection === 'number' ? [ selection, selection ] as EditorRange : editor.trimSelection(selection);
+  selection = typeof selection === 'number' ? [ selection, selection ] as EditorRange : editor?.trimSelection(selection);
   const change = editor.change[op](selection, format);
   editor.update(change);
 }
