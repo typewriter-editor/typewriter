@@ -479,8 +479,9 @@ function mergeCommands(editor: Editor, name: string, other: Commands | Function)
 
 function enhanceCommand(editor: Editor, command: Function) {
   return (...args) => {
-    command(...args);
+    const result = command(...args);
     if (editor.doc.selection) editor.root.focus();
+    return result;
   }
 }
 
