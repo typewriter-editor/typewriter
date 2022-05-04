@@ -36,7 +36,7 @@
     "url": "https://github.com/typewriter-editor/typewriter.git"
   },
   "dependencies": {
-    "@popperjs/core": "^2.11.2",
+    "@popperjs/core": "^2.11.5",
     "@typewriter/document": "^0.7.1"
   },
   "peerDependencies": {
@@ -44,25 +44,25 @@
   },
   "devDependencies": {
     "@pyoner/svelte-types": "^3.4.4-2",
-    "@types/chai": "^4.3.0",
+    "@types/chai": "^4.3.1",
     "@types/fast-diff": "^1.2.0",
-    "@types/mocha": "^9.1.0",
+    "@types/mocha": "^9.1.1",
     "chai": "^4.3.6",
     "chai-exclude": "^2.1.0",
     "jsdom": "^19.0.0",
     "jsdom-global": "^3.0.2",
-    "mocha": "^9.2.2",
+    "mocha": "^10.0.0",
     "raw-loader": "^4.0.2",
-    "svelte": "^3.46.4",
+    "svelte": "^3.48.0",
     "svelte-loader": "^3.1.2",
     "svelte-routing": "^1.6.0",
-    "ts-loader": "^9.2.8",
+    "ts-loader": "^9.3.0",
     "ts-node": "^10.7.0",
-    "tsconfig-paths": "^3.13.0",
-    "typescript": "^4.6.2",
-    "webpack": "^5.70.0",
+    "tsconfig-paths": "^4.0.0",
+    "typescript": "^4.6.4",
+    "webpack": "^5.72.0",
     "webpack-bundle-analyzer": "^4.5.0",
     "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.7.4"
+    "webpack-dev-server": "^4.9.0"
   }
 }

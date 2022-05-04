@@ -1,8 +1,7 @@
 import { expect, use } from 'chai';
 import chaiExclude from 'chai-exclude';
 import Editor from '../src/Editor';
-import TextDocument from '../src/doc/TextDocument';
-import Delta from '../src/delta/Delta';
+import { TextDocument, Delta } from '@typewriter/document';
 import { renderDoc } from '../src/rendering/rendering';
 import { deltaFromDom, deltaFromHTML, docToHTML } from '../src/rendering/html';
 

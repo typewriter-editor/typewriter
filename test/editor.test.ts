@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Editor, { EditorChangeEvent } from '../src/Editor';
-import Delta from '../src/delta/Delta';
+import { Delta } from '@typewriter/document';
 
 
 
