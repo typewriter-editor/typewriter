@@ -46,7 +46,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
     let delta: Delta;
     if (!html) {
       if (!text) return;
-      delta = new Delta().insert(text);
+      delta = new Delta().insert(text.replace(/\xA0/g, ' ').replace(/\r\n/g, '\n'));
     } else if (options?.htmlParser) {
       delta = options.htmlParser(editor, html);
     } else {

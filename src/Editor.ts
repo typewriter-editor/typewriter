@@ -234,7 +234,7 @@ export default class Editor extends EventDispatcher {
     const [ from, to ] = normalizeRange([ ...selection ]);
     // don't trim if all spaces are selected
     if (selectedText.trim()) {
-      const [ _, lead, text, tail ] = selectedText.match(/(^ *)((?:.|\n)*?)( *$)/) as RegExpMatchArray;
+      const [ _, lead, text, tail ] = selectedText.match(/(^ *)((?:.|\r|\n)*?)( *$)/) as RegExpMatchArray;
       if (text && (lead || tail)) {
         return [ from + lead.length, to - tail.length ];
       }
