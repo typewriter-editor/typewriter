@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "description": "A rich text editor using the Delta format with decorations and rendered with a tiny virtual dom",
   "keywords": [
     "typewriter",
