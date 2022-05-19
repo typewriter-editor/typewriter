@@ -201,7 +201,7 @@ export function undoStack(): UndoStack {
 }
 
 export function transformHistoryStack(stack: UndoStack, delta: TextChange | Delta) {
-  const change = delta instanceof Delta ? new TextChange(null, delta) : delta;
+  const change = delta.ops ? new TextChange(null, delta) : delta;
 
   stack.undo.forEach(entry => {
     entry.undo = change.transform(entry.undo, true);
