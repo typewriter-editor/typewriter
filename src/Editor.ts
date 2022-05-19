@@ -171,13 +171,11 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  update(change: TextChange, source: SourceString = Source.user): this {
+  update(changeOrDelta: TextChange | Delta, source: SourceString = Source.user): this {
     if (!this.enabled && source !== Source.api) {
       return this;
     }
-    if (change.ops) {
-      change = new TextChange(this.doc, change);
-    }
+    const change = (changeOrDelta as Delta).ops ? new TextChange(this.doc, changeOrDelta as Delta) : changeOrDelta as TextChange;
     const old = this.doc;
     const doc = old.apply(change as TextChange, undefined, this.throwOnError);
     const changedLines = old.lines === doc.lines ? EMPTY_ARR : getChangedLines(old, doc);
@@ -185,11 +183,9 @@ export default class Editor extends EventDispatcher {
     return this;
   }
 
-  set(doc: TextDocument | Delta, source: SourceString = Source.user, change?: TextChange, changedLines?: Line[]): this {
+  set(docOrDelta: TextDocument | Delta, source: SourceString = Source.user, change?: TextChange, changedLines?: Line[]): this {
     const old = this.doc;
-    if (doc.ops) {
-      doc = new TextDocument(doc);
-    }
+    const doc = (docOrDelta as Delta).ops ? new TextDocument(docOrDelta as Delta) : docOrDelta as TextDocument;
     if ((!this.enabled && source !== Source.api) || !doc || old.equals(doc)) {
       return this;
     }
