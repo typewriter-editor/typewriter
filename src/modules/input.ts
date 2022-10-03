@@ -23,13 +23,32 @@ type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
   let gboardEnter = false;
+  
+  // Composition systems want to take full control over browser content while they operate.
+  // Let them, deferring handling all mutation events until after the composition is complete.
+  let isComposing = false
+  let cachedMutations: MutationRecord[] = []
+  
+  function onCompositionStart(event: CompositionEvent) {
+    isComposing = true
+  }
+  
+  function onCompositionEnd(event: CompositionEvent) {
+    isComposing = false
+    if (cachedMutations.length) {
+      onMutate(cachedMutations)
+      cachedMutations = []
+    }
+  }
+  
   // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
+    if (isComposing) return
     const mutations = observer.takeRecords();
     if (mutations.length) onMutate(mutations);
   }
-
+  
   // for Gboard fix -- checks if start of line is an insert br
   function isBr(change: Delta) {
     let isBr = false;
@@ -45,6 +64,10 @@ export function input(editor: Editor) {
 
   // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
   function onMutate(list: MutationRecord[]) {
+    if (isComposing) {
+      cachedMutations.push(...list)
+      return
+    }
     if (!editor.enabled) {
       return editor.render();
     }
@@ -154,6 +177,8 @@ export function input(editor: Editor) {
 
   return {
     init() {
+      editor.root.addEventListener('compositionstart', onCompositionStart)
+      editor.root.addEventListener('compositionend', onCompositionEnd)
       editor.root.addEventListener('input', onInput);
       editor.on('rendering', onRendering);
       editor.on('render', onRender);
@@ -164,6 +189,8 @@ export function input(editor: Editor) {
     destroy() {
       observer.disconnect();
       editor.root.removeEventListener('input', onInput);
+      editor.root.removeEventListener('compositionstart', onCompositionStart)
+      editor.root.removeEventListener('compositionend', onCompositionEnd)
       editor.off('rendering', onRendering);
       editor.off('render', onRender);
       if (isAndroid) {
