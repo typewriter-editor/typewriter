@@ -18,6 +18,11 @@ export interface EditorOptions {
   types?: TypesetTypes;
   doc?: TextDocument;
   modules?: ModuleInitializers;
+  /**
+   * Defaults to true. When true, the `modules` option will be patched on top of the default modules.
+   * Disable this if you are providing all necessary modules in the `modules` option and want full control over module initialization order.
+   */
+  includeDefaultModules?: boolean;
   enabled?: boolean;
   text?: string;
   html?: string;
@@ -132,7 +137,8 @@ export default class Editor extends EventDispatcher {
     }
     this.throwOnError = options.throwOnError || false;
     this._enabled = options.enabled === undefined ? true : options.enabled;
-    this._modules = { ...defaultModules, ...options.modules };
+    const includeDefaultModules = options.includeDefaultModules ?? true
+    this._modules = includeDefaultModules ? { ...defaultModules, ...options.modules } : { ...options.modules };
     if (options.root) this.setRoot(options.root);
   }
 
