@@ -42,7 +42,7 @@ export function copy(editor: Editor, options: CopyOptions = defaultOptions) {
   }
 
   function onCopy(event: ClipboardEvent) {
-    if (!editor.enabled || !editor.doc.selection) return;
+    if (!editor.enabled || !editor.doc.selection || event.defaultPrevented) return;
     event.preventDefault();
     const dataTransfer = event.clipboardData;
     if (!dataTransfer) return;

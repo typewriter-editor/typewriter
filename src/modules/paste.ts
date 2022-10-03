@@ -113,7 +113,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
   }
 
   function onPaste(event: ClipboardEvent) {
-    if (!editor.enabled || !editor.doc.selection) return;
+    if (!editor.enabled || !editor.doc.selection || event.defaultPrevented) return;
     event.preventDefault();
     const dataTransfer = event.clipboardData;
     const { doc } = editor;
