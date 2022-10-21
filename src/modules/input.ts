@@ -23,16 +23,16 @@ type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
 
 export function input(editor: Editor) {
   let gboardEnter = false;
-  
+
   // Composition systems want to take full control over browser content while they operate.
   // Let them, deferring handling all mutation events until after the composition is complete.
   let isComposing = false
   let cachedMutations: MutationRecord[] = []
-  
+
   function onCompositionStart(event: CompositionEvent) {
     isComposing = true
   }
-  
+
   function onCompositionEnd(event: CompositionEvent) {
     isComposing = false
     if (cachedMutations.length) {
@@ -40,7 +40,7 @@ export function input(editor: Editor) {
       cachedMutations = []
     }
   }
-  
+
   // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
@@ -48,12 +48,12 @@ export function input(editor: Editor) {
     const mutations = observer.takeRecords();
     if (mutations.length) onMutate(mutations);
   }
-  
+
   // for Gboard fix -- checks if start of line is an insert br
   function isBr(change: Delta) {
     let isBr = false;
     const lastOp = change.ops[change.ops.length - 1];
-    if (lastOp.insert) {
+    if (lastOp?.insert) {
       const insert = lastOp.insert as any;
       if (insert.br) {
         isBr = true;

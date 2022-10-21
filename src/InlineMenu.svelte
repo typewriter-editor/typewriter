@@ -72,9 +72,10 @@ function getActive(menuHasFocus, selection) {
 function onMouseOver(event) {
   const { root } = editor;
   let node = event.target;
-  while (node !== root && node.parentNode !== root) {
+  while (node && node !== root && node.parentNode !== root) {
     node = node.parentNode;
   }
+  if (!node) return;
   const line = $doc.getLineBy(node.key);
   if (line) {
     at = $doc.getLineRange(line)[0];
