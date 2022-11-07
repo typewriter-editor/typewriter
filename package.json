@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.7.14",
+  "version": "0.7.15",
   "description": "A rich text editor using the Delta format with decorations and rendered with a tiny virtual dom",
   "keywords": [
     "typewriter",
@@ -44,12 +44,12 @@
   },
   "devDependencies": {
     "@pyoner/svelte-types": "^3.4.4-2",
-    "@types/chai": "^4.3.3",
+    "@types/chai": "^4.3.4",
     "@types/fast-diff": "^1.2.0",
     "@types/mocha": "^10.0.0",
-    "chai": "^4.3.6",
+    "chai": "^4.3.7",
     "chai-exclude": "^2.1.0",
-    "jsdom": "^20.0.1",
+    "jsdom": "^20.0.2",
     "jsdom-global": "^3.0.2",
     "mocha": "^10.1.0",
     "raw-loader": "^4.0.2",
@@ -61,7 +61,7 @@
     "tsconfig-paths": "^4.1.0",
     "typescript": "^4.8.4",
     "webpack": "^5.74.0",
-    "webpack-bundle-analyzer": "^4.6.1",
+    "webpack-bundle-analyzer": "^4.7.0",
     "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.11.1"
   }
