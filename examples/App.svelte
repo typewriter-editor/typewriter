@@ -9,6 +9,7 @@ import InlineMenu from './InlineMenu.svelte';
 import Virtualized from './Virtualized.svelte';
 import Placeholder from './Placeholder.svelte';
 import MediumImages from './MediumImages.svelte';
+  import SmartEntry from './SmartEntry.svelte';
 
 let url = globalHistory.location.pathname;
 const fullScreenRoutes = new Set(['/medium-images']);
@@ -35,6 +36,7 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
         <a href="/bubble-menu" class="menu-item" class:current={url === '/bubble-menu'} use:link>Bubble Menu</a>
         <a href="/inline-menu" class="menu-item" class:current={url === '/inline-menu'} use:link>Inline Menu</a>
         <a href="/virtualized" class="menu-item" class:current={url === '/virtualized'} use:link>Virtualized Rendering</a>
+        <a href="/smart-entry" class="menu-item" class:current={url === '/smart-entry'} use:link>Smart Text</a>
         <a href="/placeholder" class="menu-item" class:current={url === '/placeholder'} use:link>Placeholders</a>
         <a href="/medium-images" class="menu-item" class:current={url === '/medium-images'} use:link>Medium-like Images</a>
       </div>
@@ -47,6 +49,7 @@ globalHistory.listen(() => url = globalHistory.location.pathname);
         <Route path="/bubble-menu" component={BubbleMenu}/>
         <Route path="/inline-menu" component={InlineMenu}/>
         <Route path="/virtualized" component={Virtualized}/>
+        <Route path="/smart-entry" component={SmartEntry}/>
         <Route path="/placeholder" component={Placeholder}/>
         <Route path="/medium-images" component={MediumImages}/>
       </div>

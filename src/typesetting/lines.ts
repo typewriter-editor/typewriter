@@ -64,7 +64,7 @@ export const list = line({
     'Mod+Space': 'toggleCheck',
   },
   fromDom(node: HTMLElement) {
-    let indent = -1, parent = node.parentNode;
+    let indent = -1, parent = node.parentNode, type = parent && (parent as Element).getAttribute('type');
     const list = node.hasAttribute('data-checked') ? 'check' : parent && parent.nodeName === 'OL' ? 'ordered' : 'bullet';
     while (parent) {
       if (/^UL|OL$/.test(parent.nodeName)) indent++;
@@ -75,8 +75,9 @@ export const list = line({
       // Support pasting from quilljs content
       indent = parseInt(node.className.replace('ql-indent-', ''));
     }
-    const attr: { list: string, checked?: boolean, indent?: number } = { list };
+    const attr: { list: string, type?: string, checked?: boolean, indent?: number } = { list };
     if (indent) attr.indent = indent;
+    if (type) attr.type = type;
     if (node.getAttribute('data-checked') === 'true') attr.checked = true;
     return attr;
   },
@@ -84,7 +85,7 @@ export const list = line({
     const { start, ...rest } = attributes;
     return rest;
   },
-  shouldCombine: (prev, next) => prev.list === next.list || next.indent,
+  shouldCombine: (prev, next) => (prev.list === next.list && !next.start && prev.type === next.type) || next.indent,
   renderMultiple: (lists, editor, forHTML) => {
     const topLevelChildren: VNode[] = [];
     const levels: VNode[] = [];

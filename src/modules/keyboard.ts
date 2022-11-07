@@ -2,6 +2,7 @@ import Editor from '../Editor';
 import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
 import { Line, normalizeRange } from '@typewriter/document';
 import { Source } from '../Source';
+import { LineType, Types } from '../typesetting';
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
@@ -34,27 +35,27 @@ export function keyboard(editor: Editor) {
 
     if (isEmpty(line) && type !== lines.default && !type.contained && !type.defaultFollows && !type.frozen && isCollapsed) {
       // Convert a bullet point into a paragraph
-      editor.formatLine(EMPTY_OBJ);
-    } else {
-      if (at === start && to === end && type.frozen) {
-        options = { dontFixNewline: true };
-        if (at === 0) {
-          // if single selection and line element (hr, image etc) insert new line before
-          selection = [ at, at ];
-        } else {
-          selection = [ to, to ];
-        }
-        attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
-      } else if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
-        attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
-      } else if (atStart && !atEnd) {
-        if (type.defaultFollows) attributes = EMPTY_OBJ;
-        options = { dontFixNewline: true };
+      if (unindent(lines, doc.getLineAt(at))) return;
+    }
+
+    if (at === start && to === end && type.frozen) {
+      options = { dontFixNewline: true };
+      if (at === 0) {
+        // if single selection and line element (hr, image etc) insert new line before
+        selection = [ at, at ];
+      } else {
+        selection = [ to, to ];
       }
-      editor.insert('\n', attributes, selection, options);
-      if (at === start && to === end && type.frozen) {
-        editor.select(at === 0 ? 0 : to);
-      }
+      attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
+    } else if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
+      attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
+    } else if (atStart && !atEnd) {
+      if (type.defaultFollows) attributes = EMPTY_OBJ;
+      options = { dontFixNewline: true };
+    }
+    editor.insert('\n', attributes, selection, options);
+    if (at === start && to === end && type.frozen) {
+      editor.select(at === 0 ? 0 : to);
     }
   }
 
@@ -99,7 +100,7 @@ export function keyboard(editor: Editor) {
 
     if (direction === -1 && selection[0] + selection[1] === 0) {
       // At the beginning of the document
-      unindent(doc.getLineAt(at), true);
+      unindent(lines, doc.getLineAt(at), true);
     } else {
       const range = normalizeRange(selection);
       const line = doc.getLineAt(range[0]);
@@ -108,9 +109,6 @@ export function keyboard(editor: Editor) {
       const outside = isCollapsed && ((direction === -1 && at === start) || (direction === 1 && at === end - 1));
 
       if (outside && !type.contained) {
-        // At the beginning of a line
-        if (direction === -1 && unindent(doc.getLineAt(at))) return;
-
         // Delete the next line if it is empty
         const mergingLine = doc.lines[doc.lines.indexOf(line) + direction];
         const [ first, second ] = direction === 1 ? [ line, mergingLine] : [ mergingLine, line ];
@@ -124,20 +122,20 @@ export function keyboard(editor: Editor) {
 
       editor.delete(direction, { dontFixNewline: type.frozen });
     }
+  }
 
 
-    function unindent(line: Line, force?: boolean) {
-      if (!line) return;
-      const type = lines.findByAttributes(line.attributes, true);
-      if (!type) return;
-      if (type.indentable && line.attributes.indent) {
-        editor.outdent();
-        return true;
-      }
-      if (force || type !== lines.default && !type.defaultFollows) {
-        editor.formatLine(EMPTY_OBJ);
-        return true;
-      }
+  function unindent(lines: Types<LineType>, line: Line, force?: boolean) {
+    if (!line) return;
+    const type = lines.findByAttributes(line.attributes, true);
+    if (!type) return;
+    if (type.indentable && line.attributes.indent) {
+      editor.outdent();
+      return true;
+    }
+    if (force || type !== lines.default && !type.defaultFollows) {
+      editor.formatLine(EMPTY_OBJ);
+      return true;
     }
   }
 

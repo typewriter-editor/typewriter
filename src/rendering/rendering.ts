@@ -150,7 +150,7 @@ export function combineLines(editor: Editor, lines: Line[]): CombinedData {
     if (type.shouldCombine) {
       collect.push(line);
       const next = lines[i + 1];
-      if (!next || getLineType(editor, next) !== type || !type.shouldCombine(line.attributes, next.attributes)) {
+      if (!next || getLineType(editor, next) !== type || !type.shouldCombine(collect[0].attributes, next.attributes)) {
         // By keeping the last array reference we can optimize updates
         const last = linesMultiples.get(collect[0]);
         if (last && last.length === collect.length && collect.every((v, i) => last[i] === v)) {
