@@ -31,11 +31,14 @@ export interface PasteOptions {
   selection?: EditorRange | null;
 }
 
-export interface PasteOptions {
+export interface PasteModuleOptions {
   htmlParser?: (editor: Editor, html: string) => Delta;
+  allowHTMLPaste?: boolean;
 }
 
-export function paste(editor: Editor, options?: PasteOptions) {
+export function paste(editor: Editor, options?: PasteModuleOptions) {
+
+  const allowHTMLPaste = options?.allowHTMLPaste ?? true;
 
   function paste({ selection, text, html }: PasteOptions) {
     const { doc } = editor;
@@ -118,7 +121,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
     const dataTransfer = event.clipboardData;
     const { doc } = editor;
     if (!dataTransfer || !doc.selection) return;
-    const html = dataTransfer.getData('text/html');
+    const html = allowHTMLPaste ? dataTransfer.getData('text/html') : undefined;
     const text = dataTransfer.getData('text/plain');
     paste({ text, html });
   }
