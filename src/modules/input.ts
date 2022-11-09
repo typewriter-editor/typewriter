@@ -41,6 +41,16 @@ export function input(editor: Editor) {
     }
   }
 
+  function setCompositionEnabled(enabled = true) {
+    if (enabled) {
+      editor.root.addEventListener('compositionstart', onCompositionStart);
+      editor.root.addEventListener('compositionend', onCompositionEnd);
+    } else {
+      editor.root.removeEventListener('compositionstart', onCompositionStart);
+      editor.root.removeEventListener('compositionend', onCompositionEnd);
+    }
+  }
+
   // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
@@ -175,19 +185,12 @@ export function input(editor: Editor) {
   }
 
   return {
-    allowComposition(value = true) {
-      if (value) {
-        editor.root.addEventListener('compositionstart', onCompositionStart);
-        editor.root.addEventListener('compositionend', onCompositionEnd);
-      } else {
-        editor.root.removeEventListener('compositionstart', onCompositionStart);
-        editor.root.removeEventListener('compositionend', onCompositionEnd);
-      }
-    },
+    allowComposition: setCompositionEnabled,
     init() {
       editor.root.addEventListener('input', onInput);
       editor.on('rendering', onRendering);
       editor.on('render', onRender);
+      setCompositionEnabled(true)
       if (isAndroid) {
         editor.root.addEventListener('beforeinput', onBeforeInput); // needed for Gboard fix
       }
