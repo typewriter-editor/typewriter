@@ -1,11 +1,7 @@
-import { expect, use } from 'chai';
-import chaiExclude from 'chai-exclude';
 import Editor from '../src/Editor';
 import { TextDocument, Delta } from '@typewriter/document';
 import { renderDoc } from '../src/rendering/rendering';
 import { deltaFromDom, deltaFromHTML, docToHTML } from '../src/rendering/html';
-
-use(chaiExclude);
 
 // Doesn't get altered, so we can mock the view once
 const editor = new Editor({
@@ -25,7 +21,8 @@ describe('======== dom ========', () => {
 
       const vdom = renderDoc(editor, doc);
 
-      expect(vdom).excludingEvery('key').to.deep.equal([
+      // TODO `toMatchObject()` is less specific than excludingEvery('key')
+      expect(vdom).toMatchObject([
         { type: 'p', props: {}, children: ['There‘s too many kids in this tub.'] },
         { type: 'p', props: {}, children: ['There‘s too many elbows to scrub.'] },
         { type: 'p', props: {}, children: ['I just washed a behind that I‘m sure wasn‘t mine.'] },
@@ -49,7 +46,8 @@ describe('======== dom ========', () => {
 
       const vdom = renderDoc(editor, doc);
 
-      expect(vdom).excludingEvery('key').to.deep.equal([
+      // TODO `toMatchObject()` is less specific than excludingEvery('key')
+      expect(vdom).toMatchObject([
         {
           type: 'h1',
           props: {},
@@ -119,7 +117,7 @@ describe('======== dom ========', () => {
 
       const delta = deltaFromDom(editor, { root });
 
-      expect(delta.ops).to.deep.equal([
+      expect(delta.ops).toEqual([
         { insert: 'There‘s too many kids in this tub.\nThere‘s too many elbows to scrub.\nI just washed a behind that ' +
           'I‘m sure wasn‘t mine.\nThere‘s too many kids in this tub.\n' }
       ]);
@@ -141,7 +139,7 @@ describe('======== dom ========', () => {
 
       const delta = deltaFromDom(editor, { root });
 
-      expect(delta.ops).to.deep.equal([
+      expect(delta.ops).toEqual([
         { insert: 'Quotes:' },
         { insert: '\n', attributes: { header: 1 } },
         { insert: { image: 'https://www.example.com/images/bertrand-russle.png' }},
@@ -174,7 +172,7 @@ describe('======== dom ========', () => {
 
       const html = docToHTML(editor, doc);
 
-      expect(html).to.equal(`<h1>&lt;Quotes&gt;</h1>` +
+      expect(html).toEqual(`<h1>&lt;Quotes&gt;</h1>` +
         `<p><img src="https://www.example.com/images/bertrand-russle.png"></p>` +
         `<blockquote>` +
           `<p>` +
@@ -206,7 +204,7 @@ describe('======== dom ========', () => {
 
       const delta = deltaFromHTML(editor, html);
 
-      expect(delta.ops).to.deep.equal([
+      expect(delta.ops).toEqual([
         { insert: '<Quotes>' },
         { insert: '\n', attributes: { header: 1 } },
         { insert: { image: 'https://www.example.com/images/bertrand-russle.png' }},

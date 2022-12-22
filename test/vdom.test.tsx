@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { h, React } from '../src/rendering/vdom';
 
 
@@ -6,7 +5,7 @@ describe('======== vdom ========', () => {
   describe('h', () => {
 
     it('should create a node for an element', () => {
-      expect(h('div', { foo: 'bar' }, 'test')).to.deep.equal({
+      expect(h('div', { foo: 'bar' }, 'test')).toEqual({
         type: 'div',
         key: undefined,
         props: { foo: 'bar' },
@@ -21,7 +20,7 @@ describe('======== vdom ========', () => {
         {str}
       </div>;
 
-      expect(node).to.deep.equal({
+      expect(node).toEqual({
         type: 'div',
         key: undefined,
         props: { foo: 'bar' },
@@ -38,7 +37,7 @@ describe('======== vdom ========', () => {
         </div>;
       }
 
-      expect(<Test disabled>test</Test>).to.deep.equal({
+      expect(<Test disabled>test</Test>).toEqual({
         type: 'div',
         key: undefined,
         props: { foo: 'bar', disabled: true },
@@ -55,7 +54,7 @@ describe('======== vdom ========', () => {
         </ul>
       </div>;
 
-      expect(node).to.deep.equal({
+      expect(node).toEqual({
         type: 'div',
         key: undefined,
         props: {
