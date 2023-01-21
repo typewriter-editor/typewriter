@@ -105,12 +105,13 @@ export function rootStore(editor: Editor) {
 
 // Can be create in a component on init and set to another store async, allowing for $mystore use
 export function proxy<T>(defaultValueOrStore: T | Readable<T>) {
-  const defaultValue = 'subscribe' in defaultValueOrStore ? get(defaultValueOrStore) : defaultValueOrStore;
+  const isReadable = typeof (defaultValueOrStore as Readable<T>).subscribe === 'function';
+  const defaultValue = isReadable ? get(defaultValueOrStore as Readable<T>) : defaultValueOrStore as T;
   const { set: write, subscribe } = writable<T>(defaultValue);
   let unsub: Function;
 
-  if ('subscribe' in defaultValueOrStore) {
-    set(defaultValueOrStore);
+  if (isReadable) {
+    set(defaultValueOrStore as Readable<T>);
   }
 
   function set(store: Readable<T>) {
