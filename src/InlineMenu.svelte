@@ -16,6 +16,7 @@ let menu;
 let popper;
 let oldRoot;
 let menuHasFocus = false;
+let isMouseDown = false;
 const { active, doc, selection, focus, root, updateEditor } = editorStores(editor);
 
 $: updateEditor(editor);
@@ -26,8 +27,7 @@ $: line = at || at === 0 ? $doc.getLineAt(at) : null;
 $: lineElement = line && getLineElementAt(editor, at);
 $: show = canShow(line);
 $: update(menu, lineElement);
-$: listen(hover && $root);
-
+$: listen(hover, $root);
 
 function update() {
   if (menu) {
@@ -48,6 +48,7 @@ function update() {
       popper = createPopper(element, menu, {
         placement: 'right',
       });
+      if (isMouseDown) menu.style.pointerEvents = 'none';
       requestAnimationFrame(() => menu && menu.classList.add('active'))
     }
   } else {
@@ -89,14 +90,30 @@ function onMouseLeave(event) {
   at = null;
 }
 
-function listen(root) {
+function onRootMouseDown() {
+  if (!$root) return;
+  isMouseDown = true;
+  $root.ownerDocument.addEventListener('mouseup', onDocumentMouseUp);
+}
+
+function onDocumentMouseUp(event) {
+  isMouseDown = false;
+  if (menu?.style.pointerEvents) menu.style.pointerEvents = '';
+  event.target.removeEventListener('mouseup', onDocumentMouseUp);
+}
+
+function listen(hover, root) {
   if (oldRoot) {
+    oldRoot.removeEventListener('mousedown', onRootMouseDown);
     oldRoot.removeEventListener('mouseover', onMouseOver);
     oldRoot.removeEventListener('mouseleave', onMouseLeave);
   }
   if (root) {
-    root.addEventListener('mouseover', onMouseOver);
-    root.addEventListener('mouseleave', onMouseLeave);
+    root.addEventListener('mousedown', onRootMouseDown);
+    if (hover) {
+      root.addEventListener('mouseover', onMouseOver);
+      root.addEventListener('mouseleave', onMouseLeave);
+    }
   }
   oldRoot = root;
 }
