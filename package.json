@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.6",
-    "@typewriter/document": "^0.7.7"
+    "@typewriter/document": "^0.7.11"
   },
   "peerDependencies": {
     "svelte": "3.x"

@@ -13,15 +13,26 @@ export function selection(editor: Editor) {
   function onSelectionChange() {
     if (!editor.enabled) return;
     const selection = getSelection(editor);
+    const originalSelection = selection?.slice() || null;
     if (!selection && paused) return;
     if (paused) paused = false;
-    if (selection && selection[0] === selection[1] && editor.doc.selection && editor.doc.selection[0] === selection[0] && editor.doc.selection[1] === selection[0] + 1) {
-      // Allow a frozen line (e.g. hr) to move the cursor left with a left arrow key
-      const line = editor.doc.getLineAt(selection[0]);
-      const type = editor.typeset.lines.findByAttributes(line.attributes, true);
-      if (type.frozen) {
+    if (selection) {
+      if (selection[0] === selection[1] && selection[0] === editor.doc.length) {
         selection[0]--;
-        selection[1]--;
+      }
+      let line = editor.doc.getLineAt(selection[0]);
+      let type = editor.typeset.lines.findByAttributes(line.attributes, true);
+      if (selection && selection[0] === selection[1] && editor.doc.selection && editor.doc.selection[0] === selection[0] && editor.doc.selection[1] === selection[0] + 1) {
+        // Allow a frozen line (e.g. hr) to move the cursor left with a left arrow key
+        if (type.frozen) {
+          selection[0]--;
+          selection[1]--;
+        }
+        line = editor.doc.getLineAt(selection[0]);
+        type = editor.typeset.lines.findByAttributes(line.attributes, true);
+      }
+      if (type.frozen && selection[0] === selection[1]) {
+        selection[1]++;
       }
     }
     const { doc } = editor;
@@ -30,6 +41,8 @@ export function selection(editor: Editor) {
         return; // Assuming this is a text composition at the end of the document, allow the entry
       }
       editor.select(selection);
+    } else if (!isEqual(originalSelection, selection)) {
+      setSelection(editor, selection);
     }
   }
 

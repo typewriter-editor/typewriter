@@ -300,18 +300,26 @@ export default class Editor extends EventDispatcher {
 
   delete(directionOrSelection?: -1 | 1 | EditorRange, options?: { dontFixNewline?: boolean }): this {
     let range: EditorRange;
+    let selectOffset = 0;
+    const { typeset: { lines }, doc } = this;
     if (Array.isArray(directionOrSelection)) {
       range = normalizeRange(directionOrSelection);
     } else {
       if (!this.doc.selection) return this;
       range = normalizeRange(this.doc.selection);
-      if (directionOrSelection && range[0] === range[1]) {
-        if (directionOrSelection < 0) range = [ range[0] + directionOrSelection, range[1] ];
-        else range = [ range[0], range[1] + directionOrSelection ];
+      if (directionOrSelection) {
+        if (range[0] === range[1]) {
+          if (directionOrSelection < 0) range = [ range[0] + directionOrSelection, range[1] ];
+          else range = [ range[0], Math.min(range[1] + directionOrSelection, this.doc.length - 1) ];
+        } else if (directionOrSelection < 0 && lines.findByAttributes(doc.getLineAt(range[0]).attributes, true).frozen) {
+          selectOffset = -1;
+        }
       }
     }
     const formats = getActiveFormats(this, this.doc, [ range[0] + 1, range[0] + 1 ]);
-    const change = this.change.delete(range, options).select(range[0]).setActiveFormats(formats);
+    const docLength = this.doc.length - (range[1] - range[0]);
+    let select = Math.max(0, Math.min(docLength - 1, range[0] + selectOffset));
+    const change = this.change.delete(range, options).select(select).setActiveFormats(formats);
     return this.update(change);
   }
 

@@ -39,11 +39,14 @@ export function keyboard(editor: Editor) {
     }
 
     if (at === start && to === end && type.frozen) {
-      options = { dontFixNewline: true };
       if (at === 0) {
         // if single selection and line element (hr, image etc) insert new line before
+        options = { dontFixNewline: true };
         selection = [ at, at ];
+      } else if (to === doc.length) {
+        selection = [ to - 1, to - 1 ];
       } else {
+        options = { dontFixNewline: true };
         selection = [ to, to ];
       }
       attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
