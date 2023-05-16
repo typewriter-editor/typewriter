@@ -49,6 +49,7 @@ export const linkReplacements: Replacement[] = [
  */
 export const textReplacements: TextReplacement[] = [
   [ /--$/, () => '—' ],
+  [ /(\S - \S)$/, (_) => _.replace('-', '–') ],
   [ /\.\.\.$/, () => '…' ],
 ];
 
