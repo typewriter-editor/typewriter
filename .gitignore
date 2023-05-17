@@ -6,3 +6,4 @@ npm-debug.log
 !.travis.yml
 !.mocharc.cjs
 lib
+cjs

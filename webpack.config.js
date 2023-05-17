@@ -3,7 +3,7 @@ import BundleAnalyzerPlugin from 'webpack-bundle-analyzer';
 
 export default {
   entry: './src/index.ts',
-  mode: 'production',
+  mode: 'development',
   output: {
     path: path.resolve('lib'),
     filename: 'bundle.js',
