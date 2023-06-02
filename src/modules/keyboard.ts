@@ -180,9 +180,7 @@ export function keyboard(editor: Editor) {
       case 'Enter': return onEnter(event);
       case 'Shift+Enter': return onShiftEnter(event);
       case 'Tab':
-      case 'Shift+Tab':
-      case 'Mod+]':
-      case 'Mod+[': return onTab(event);
+      case 'Shift+Tab': return onTab(event);
     }
 
     switch (event.modShortcut?.split('+').pop()) {
