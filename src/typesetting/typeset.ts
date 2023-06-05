@@ -86,6 +86,10 @@ export interface LineType extends BasicType {
   // Whether this line can be indented/unindented with the tab key
   indentable?: boolean;
 
+  // A child line of another line useing the tab character instead of the newline character (\t instead of \n). Supports
+  // child blocks like cells for a table (tr = newline, td = tab)
+  child?: boolean;
+
   // Whether the next line after this should be the default line or the same type
   defaultFollows?: boolean;
 
@@ -94,6 +98,12 @@ export interface LineType extends BasicType {
 
   // If Enter and Delete on an empty line will remain contained within this line rather than converting it to a paragraph
   contained?: boolean;
+
+  // Special override handling for the enter key within this line type
+  onEnter?: (editor: Editor) => void;
+
+  // Special override handling for the tab key within this line type, handles both tab and shift+tab
+  onTab?: (editor: Editor, shiftKey: boolean) => void;
 
   // When the Enter key is pressed within this line, what the next line's attributes should be
   nextLineAttributes?: (attributes: AttributeMap) => AttributeMap;

@@ -111,6 +111,7 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
   var walker = createTreeWalker(root, node => !SKIP_ELEMENTS[node.nodeName]);
   const delta = new Delta();
   let currentLine: any, firstLineSeen = false, unknownLine = false, empty = true, node: Node | null;
+  let currentChildLine: any;
 
   if (options.startNode) {
     walker.currentNode = options.startNode;
@@ -191,23 +192,35 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
         while (walker.lastChild());
       }
 
-      if (firstLineSeen) {
-        if (!currentLine || !currentLine.unknownLine || !empty) {
-          delta.insert('\n', !currentLine || currentLine.unknownLine ? {} : currentLine);
-          empty = true;
+      if (currentChildLine) {
+        delta.insert('\t', currentChildLine);
+        currentChildLine = null;
+      }
+
+      if (!line.child) {
+        if (firstLineSeen) {
+          if (!currentLine || !currentLine.unknownLine || !empty) {
+            delta.insert('\n', !currentLine || currentLine.unknownLine ? {} : currentLine);
+            empty = true;
+          }
+        } else {
+          firstLineSeen = true;
         }
-      } else {
-        firstLineSeen = true;
       }
 
       if (unknownLine) {
         currentLine = { unknownLine };
       } else if (line && line !== lines.default) {
-        currentLine = line.fromDom ? line.fromDom(node) : { [line.name]: true };
+        const attrs = line.fromDom ? line.fromDom(node) : { [line.name]: true };
+        if (line.child) {
+          currentChildLine = attrs;
+        } else {
+          currentLine = attrs;
+        }
       } else {
         currentLine = {};
       }
-      if (options.includeIds && (node as HTMLLineElement).key) {
+      if (!line.child && options.includeIds && (node as HTMLLineElement).key) {
         currentLine.id = (node as HTMLLineElement).key;
       }
     }

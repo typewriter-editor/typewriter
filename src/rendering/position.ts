@@ -132,7 +132,7 @@ export function getIndexFromNode(editor: Editor, startNode: Node): number {
     } else if (node.nodeType === Node.TEXT_NODE) index += textNodeLength(lines, node);
     else if ((node as HTMLElement).classList?.contains('decoration')) index;
     else if (embeds.matches(node) && !isBRPlaceholder(editor, node as HTMLElement)) index++;
-    else if (lines.matches(node) && editor.doc.lines[0].id !== (node as any).key) index++;
+    else if (lines.matches(node) && !node.contains(startNode)) index++;
   }
   return index;
 }
@@ -141,8 +141,8 @@ export function getIndexFromNode(editor: Editor, startNode: Node): number {
 export function getLineElementAt(editor: Editor, index: number) {
   const { root } = editor;
   if (!root.ownerDocument) return;
-  const childNodes = Array.from(root.childNodes);
-  return childNodes.find((line: HTMLLineElement) =>
+  const lineNodes = Array.from(root.querySelectorAll(editor.typeset.lines.selector));
+  return lineNodes.find((line: HTMLLineElement) =>
     getLineNodeStart(root, line) <= index && getLineNodeEnd(root, line) > index
   ) as HTMLLineElement;
 }

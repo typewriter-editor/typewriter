@@ -15,6 +15,18 @@ export function keyboard(editor: Editor) {
 
   function onEnter(event: KeyboardEvent) {
     if (event.defaultPrevented) return;
+    if (editor.doc.selection) {
+      const { lines } = editor.typeset;
+      const selected = editor.doc.getLinesAt(editor.doc.selection);
+      if (selected.length) {
+        const format = lines.findByAttributes(selected[0].attributes);
+        if (format?.onEnter && selected.every(line => format === lines.findByAttributes(line.attributes))) {
+          event.preventDefault();
+          format.onEnter(editor);
+          return;
+        }
+      }
+    }
 
     const { typeset: { lines }, doc } = editor;
     let { selection } = doc;
@@ -145,6 +157,18 @@ export function keyboard(editor: Editor) {
 
   function onTab(event: KeyboardEventWithShortcut) {
     if (event.defaultPrevented) return;
+    if (editor.doc.selection) {
+      const { lines } = editor.typeset;
+      const selected = editor.doc.getLinesAt(editor.doc.selection);
+      if (selected.length) {
+        const format = lines.findByAttributes(selected[0].attributes);
+        if (format?.onTab && selected.every(line => format === lines.findByAttributes(line.attributes))) {
+          event.preventDefault();
+          format.onTab(editor, event.shiftKey);
+          return;
+        }
+      }
+    }
     event.preventDefault();
     const shortcut = event.modShortcut;
     if (shortcut === 'Tab' || shortcut === 'Mod+]') editor.indent();

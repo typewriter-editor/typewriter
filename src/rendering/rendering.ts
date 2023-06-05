@@ -197,12 +197,24 @@ export function getChangedRanges(oldC: Combined, newC: Combined): LineRanges {
 
 
 export function renderInline(editor: Editor, delta: Delta, forHTML?: boolean) {
-  const { formats, embeds } = editor.typeset;
+  const { lines, formats, embeds } = editor.typeset;
   let inlineChildren: VChild[] = [];
+  let tabbedChildren: VChild[] = [];
   let trailingBreak = true;
+  let tabLine: LineType | undefined;
 
   delta.ops.forEach((op, i, array) => {
     let children: VChild[] = [];
+    if (op.insert === '\t' && op.attributes && (tabLine = lines.findByAttributes(op.attributes)) && tabLine.child) {
+      if (tabLine.render) {
+        inlineChildren = mergeChildren(inlineChildren);
+        if (trailingBreak) inlineChildren.push(BR);
+        tabbedChildren.push(tabLine.render(op.attributes, inlineChildren, editor, forHTML));
+        inlineChildren = [];
+      }
+      return;
+    }
+
     if (typeof op.insert === 'string') {
       const prev = array[i - 1];
       const next = array[i + 1];
@@ -241,7 +253,7 @@ export function renderInline(editor: Editor, delta: Delta, forHTML?: boolean) {
   inlineChildren = mergeChildren(inlineChildren);
   if (trailingBreak) inlineChildren.push(BR);
 
-  return inlineChildren;
+  return tabbedChildren.length ? tabbedChildren : inlineChildren;
 }
 
 
