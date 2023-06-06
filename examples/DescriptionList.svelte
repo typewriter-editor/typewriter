@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from 'svelte';
 import { Editor, h } from 'typewriter-editor';
 import Root from 'typewriter-editor/lib/Root.svelte';
 
@@ -55,9 +54,9 @@ editor.typeset.lines.add({
 </script>
 
 <div class="description">
-  <h1>Tabbed Lists</h1>
+  <h1>Description Lists</h1>
   <p>
-    Work with tabbed lists
+    Work with description lists
   </p>
 </div>
 
