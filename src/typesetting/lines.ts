@@ -219,3 +219,50 @@ export const hr = line({
   },
   render: () => h('hr'),
 });
+
+export const dl = line({
+  name: 'dl',
+  selector: 'dl dt, dl dd',
+  fromDom(node) {
+    return { dl: node.nodeName.toLowerCase() };
+  },
+  onTab: (editor, shiftKey) => {
+    const { doc } = editor;
+    const { selection } = doc;
+    if (!selection) return;
+    const at = shiftKey
+      ? (selection[0] === selection[1] || selection[0] > selection[1] ? selection[1] : selection[1] - 1)
+      : (selection[0] === selection[1] || selection[1] > selection[0] ? selection[0] : selection[0] - 1);
+    const line = doc.getLineAt(at);
+
+    const index = doc.lines.indexOf(line);
+    const next = doc.lines[index + (shiftKey ? -1 : 1)];
+    if ((next?.attributes.dl === line.attributes.dl || !next?.attributes.dl) && !shiftKey) {
+      if (line.length === 1 && line.attributes.dl === 'dt') {
+        editor.formatLine({}, doc.getLineRange(line));
+      } else {
+        const at = doc.getLineRange(line)[1] - 1;
+        editor.insert('\n', { dl: line.attributes.dl === 'dt' ? 'dd' : 'dt' }, [ at, at ]);
+      }
+    } else if (next) {
+      let nextRange = doc.getLineRange(next);
+      nextRange = [ nextRange[0], nextRange[1] - 1 ];
+      if (shiftKey && !next.attributes.dl) nextRange = [ nextRange[1], nextRange[1] ];
+      editor.select(nextRange);
+    }
+  },
+  shouldCombine: () => true,
+  nextLineAttributes: (attrs) => ({ dl: attrs.dl === 'dt' ? 'dd' : 'dt' }),
+  renderMultiple: (lines) => {
+    const children: VNode[] = [];
+    let last = '';
+    for (const [ attrs, chdlrn, key ] of lines) {
+      if (!last || (last !== attrs.dl && attrs.dl === 'dt')) {
+        children.push(h('div', {}, []));
+      }
+      children[children.length - 1].children.push(h(attrs.dl, { key }, chdlrn));
+      last = attrs.dl;
+    }
+    return h('dl', {}, children);
+  }
+});
