@@ -251,13 +251,14 @@ export const dl = line({
       editor.select(nextRange);
     }
   },
+  commands: editor => () => editor.toggleLineFormat({ dl: 'dt' }),
   shouldCombine: () => true,
   nextLineAttributes: (attrs) => ({ dl: attrs.dl === 'dt' ? 'dd' : 'dt' }),
   renderMultiple: (lines) => {
     const children: VNode[] = [];
     let last = '';
     for (const [ attrs, chdlrn, key ] of lines) {
-      if (!last || (last !== attrs.dl && attrs.dl === 'dt')) {
+      if (!last || attrs.dl === 'dt') {
         children.push(h('div', {}, []));
       }
       children[children.length - 1].children.push(h(attrs.dl, { key }, chdlrn));

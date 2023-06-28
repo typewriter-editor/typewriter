@@ -5,6 +5,7 @@ import Root from 'typewriter-editor/lib/Root.svelte';
 const editor = window.editor = new Editor({
   types: {
     lines: [ 'paragraph', 'header', 'list', 'blockquote', 'code-block', 'hr', 'dl' ],
+    embeds: ['br']
   },
 });
 
@@ -34,13 +35,12 @@ const editor = window.editor = new Editor({
     tab-size: 20;
   }
   :global(dl > div) {
-    display: flex;
-    align-items: start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
   :global(dl dt) {
     display: flex;
-    flex: 1 1 50%;
-    max-width: 50%;
+    grid-column: 1 / 2;
     font-weight: bold;
     margin-right: 4px;
   }
@@ -57,7 +57,7 @@ const editor = window.editor = new Editor({
     pointer-events: none;
   }
   :global(dl dd) {
-    flex: 1 1 50%;
+    grid-column: 2 / 3;
     margin: 0;
   }
 </style>
