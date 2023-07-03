@@ -1,4 +1,4 @@
-import { AttributeMap } from '@typewriter/document';
+import { AttributeMap, Line } from '@typewriter/document';
 import { VChild, VNode } from '../rendering/vdom';
 import Editor, { Shortcuts } from '../Editor';
 const EMPTY_ARR = [];
@@ -107,6 +107,10 @@ export interface LineType extends BasicType {
 
   // When the Enter key is pressed within this line, what the next line's attributes should be
   nextLineAttributes?: (attributes: AttributeMap) => AttributeMap;
+
+  // Explicit behavior when pressing Enter on the current line when it is empty. True converts line to paragraph. False
+  // allows the next line to be created. You can use nextLineAttributes or defaultFollows to control it.
+  onEmptyEnter?: (editor: Editor, line: Line) => boolean;
 
   // Renders the attributes from the delta line, format, or embed into a virtual dom representation
   render?: Renderer;

@@ -45,9 +45,17 @@ export function keyboard(editor: Editor) {
     const atStart = to === start;
     const atEnd = to === end - 1;
 
-    if (isEmpty(line) && type !== lines.default && !type.contained && !type.defaultFollows && !type.frozen && isCollapsed) {
-      // Convert a bullet point into a paragraph
-      if (unindent(lines, doc.getLineAt(at))) return;
+    if (isCollapsed && isEmpty(line)) {
+      const explicitUnindent = type.onEmptyEnter && type.onEmptyEnter(editor, line);
+      const nativeUnindent = !type.onEmptyEnter
+        && type !== lines.default
+        && !type.contained
+        && !type.defaultFollows
+        && !type.frozen;
+      if (explicitUnindent || nativeUnindent) {
+        // Convert a bullet point into a paragraph
+        if (unindent(lines, doc.getLineAt(at))) return;
+      }
     }
 
     if (at === start && to === end && type.frozen) {
