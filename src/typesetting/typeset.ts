@@ -108,8 +108,8 @@ export interface LineType extends BasicType {
   // When the Enter key is pressed within this line, what the next line's attributes should be
   nextLineAttributes?: (attributes: AttributeMap) => AttributeMap;
 
-  // Explicit behavior when pressing Enter on the current line when it is empty. True converts line to paragraph. False
-  // allows the next line to be created. You can use nextLineAttributes or defaultFollows to control it.
+  // Explicit behavior when pressing Enter on the current line when it is empty. `true` will unindent or format line as
+  // paragraph. `false` allows the next line to be created. Use `nextLineAttributes` or `defaultFollows` to control it.
   onEmptyEnter?: (editor: Editor, line: Line) => boolean;
 
   // Renders the attributes from the delta line, format, or embed into a virtual dom representation
