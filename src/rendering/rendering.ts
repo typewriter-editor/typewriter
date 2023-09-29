@@ -107,7 +107,7 @@ export function renderChanges(editor: Editor, oldDoc: TextDocument, newDoc: Text
 }
 
 export function renderDoc(editor: Editor, doc: TextDocument, forHTML?: boolean) {
-  return renderCombined(editor, combineLines(editor, doc.lines).combined, forHTML);
+  return renderCombined(editor, combineLines(editor, doc?.lines || []).combined, forHTML);
 }
 
 export function renderCombined(editor: Editor, combined: Combined, forHTML?: boolean) {
