@@ -1,6 +1,6 @@
 <script>
-import { onDestroy } from 'svelte';
 import { createPopper } from '@popperjs/core';
+import { onDestroy } from 'svelte';
 import { OFFSCREEN_RECT } from './popper';
 import { editorStores } from './stores';
 
@@ -13,6 +13,7 @@ let forLineType = undefined;
 export { forLineType as for };
 export let placement = 'top';
 
+let frame;
 let menu;
 let popper;
 let oldRoot;
@@ -24,21 +25,45 @@ const { active, doc, selection, focus, root, updateEditor } = editorStores(edito
 
 $: updateEditor(editor);
 $: activeSelection = getActive(mouseDown, menuHasFocus, $selection);
-$: update(menu, $doc);
+$: update(frame, $doc);
 $: updateRoot($root);
 
 
 function update() {
   if (mouseDown) return;
-  if (menu) {
+  if (frame) {
     if (popper) {
+      frame.style.width = menu.offsetWidth + 'px';
+      frame.style.height = menu.offsetHeight + 'px';
       popper.update();
     } else {
+      const doc = frame.contentDocument;
+      const head = doc.head;
+      const body = doc.body;
+      const styleElement = doc.createElement('style');
+      styleElement.innerHTML = `html,body {
+        background: none;
+        margin: 0;
+        padding:0;
+        overflow: visible;
+      }
+      body {
+        position: absolute;
+      }`;
+      Array.from(frame.ownerDocument.querySelectorAll('style, link[rel="stylesheet"]')).forEach(node =>
+        head.appendChild(node.cloneNode(true))
+      );
+      head.appendChild(styleElement);
+      menu.style.position = 'absolute';
+      frame.style.width = menu.offsetWidth + 'px';
+      frame.style.height = menu.offsetHeight + 'px';
+      body.appendChild(menu);
+
       const element = {
         getBoundingClientRect: () => editor.getBounds(activeSelection) || OFFSCREEN_RECT,
         contextElement: editor.root,
       };
-      popper = createPopper(element, menu, {
+      popper = createPopper(element, frame, {
         placement,
         modifiers: [
           { name: 'arrow', options: { element: '[data-arrow]' }},
@@ -96,13 +121,16 @@ function updateRoot(root) {
 
 function onGainFocus(event) {
   if (menuHasFocus || event.target.nodeName === 'BUTTON') return;
-  editor.modules.selection.pause();
+  // editor.modules.selection.pause();
   menuHasFocus = true;
 }
 
 function onLoseFocus() {
   if (!menuHasFocus) return;
-  editor.modules.selection.resume();
+  // editor.modules.selection.resume();
+  setTimeout(() => {
+    window.focus();
+  });
   menuHasFocus = false;
 }
 
@@ -114,7 +142,17 @@ onDestroy(() => {
 </script>
 
 {#if activeSelection && activeSelection[0] !== activeSelection[1]}
+<iframe title="bubble-menu" bind:this={frame} class="empty"></iframe>
 <div class={className} on:focusin={onGainFocus} on:focusout={onLoseFocus} bind:this={menu}>
   <slot commands={editor.commands} active={$active} selection={activeSelection} focus={$focus} placement={actualPlacement}></slot>
 </div>
 {/if}
+
+<style>
+  iframe {
+    display: block;
+    border: none;
+    width: 0px;
+    height: 0px;
+  }
+</style>
