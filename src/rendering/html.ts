@@ -1,10 +1,10 @@
-import { TextDocument, Delta, EditorRange, Line } from '@typewriter/document';
-import { escapeHtml } from './escape-html';
-import { VChild } from './vdom';
-import { HTMLLineElement, renderInline } from '../rendering/rendering';
-import { createTreeWalker } from './walker';
-import { renderDoc } from './rendering';
+import { Delta, EditorRange, Line, TextDocument } from '@typewriter/document';
 import Editor from '../Editor';
+import { HTMLLineElement, renderInline } from '../rendering/rendering';
+import { escapeHtml } from './escape-html';
+import { renderDoc } from './rendering';
+import { VChild } from './vdom';
+import { createTreeWalker } from './walker';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 export const BLOCK_ELEMENTS = 'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
@@ -94,10 +94,11 @@ export function fromNode(editor: Editor, dom: HTMLElement) {
 
 
 export function cleanText(delta: Delta) {
-  delta.forEach(op => {
+  delta.ops = delta.filter(op => {
     if (typeof op.insert === 'string') {
       op.insert = op.insert.replace(BAD_CHARS, '');
     }
+    return !!op.insert;
   });
 }
 
