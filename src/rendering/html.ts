@@ -98,7 +98,7 @@ export function cleanText(delta: Delta) {
     if (typeof op.insert === 'string') {
       op.insert = op.insert.replace(BAD_CHARS, '');
     }
-    return !!op.insert;
+    return !!op.insert || !!op.retain || !!op.delete;
   });
 }
 
