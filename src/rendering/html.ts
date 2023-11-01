@@ -1,9 +1,8 @@
 import { Delta, EditorRange, Line, TextDocument } from '@typewriter/document';
 import Editor from '../Editor';
 import { HTMLLineElement, renderInline } from '../rendering/rendering';
-import { escapeHtml } from './escape-html';
 import { renderDoc } from './rendering';
-import { VChild } from './vdom';
+import { VNode, patch } from './vdom';
 import { createTreeWalker } from './walker';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
@@ -52,12 +51,12 @@ function isLastNode(editor: Editor, node: Node) {
 
 
 export function docToHTML(editor: Editor, doc: TextDocument) {
-  return childrenToHTML(renderDoc(editor, doc, true));
+  return (patch(document.createElement('div'), renderDoc(editor, doc, true)) as HTMLElement).innerHTML;
 }
 
 
 export function inlineToHTML(editor: Editor, delta: Delta) {
-  return childrenToHTML(renderInline(editor, delta, true));
+  return (patch(document.createElement('div'), renderInline(editor, delta, true) as VNode[]) as HTMLElement).innerHTML;
 }
 
 
@@ -236,32 +235,6 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
 
   return delta;
 }
-
-
-// vdom children to HTML string
-function childrenToHTML(children: VChild[]): string {
-  if (!children || !children.length) return '';
-  return (children as any).reduce((html: string, child: VChild) => html + (typeof child !== 'string' ? nodeToHTML(child) : escapeHtml(child).replace(/\xA0/g, '&nbsp;')), '');
-}
-
-// vdom node to HTML string
-function nodeToHTML(node: VChild): string {
-  if (typeof node === 'string') {
-    textsNode.textContent = node;
-    const html = textsNode.innerHTML;
-    textsNode.textContent = '';
-    return html;
-  }
-  const attr = Object.keys(node.props)
-    .reduce((attr, name) =>
-      name === 'key' || node.props[name] == null
-      ? attr
-      : `${attr} ${escapeHtml(name)}="${escapeHtml(node.props[name])}"`, '');
-  const children = childrenToHTML(node.children);
-  const closingTag = children || !VOID_ELEMENTS[node.type] ? `</${node.type}>` : '';
-  return `<${node.type}${attr}>${children}${closingTag}`;
-}
-
 
 // Walk up the DOM to the closest parent, finding formats
 function gatherFormats(parent: Element, root: Element, editor: Editor) {
