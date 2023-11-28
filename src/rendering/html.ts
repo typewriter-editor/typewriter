@@ -130,9 +130,7 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
       delta.insert('\n', !currentLine || currentLine.unknownLine ? {} : currentLine);
     } else if (node.nodeType === Node.TEXT_NODE) {
       let parent = node.parentNode as Element;
-
-      // If all newlines, we can ignore
-      if (node.nodeValue == null || node.nodeValue.replace(/\n+/g, '') === '') continue;
+      if (node.nodeValue == null) continue;
 
       // If blank text between lines, ignore
       if (!node.nodeValue.replace(/\s+/g, '')) {
