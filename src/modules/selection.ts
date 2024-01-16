@@ -1,7 +1,7 @@
 import { isEqual } from '@typewriter/document';
 import Editor, { EditorChangeEvent } from '../Editor';
-import { getSelection, setSelection } from '../rendering/selection';
 import { getLineNodeStart } from '../rendering/rendering';
+import { getSelection, setSelection } from '../rendering/selection';
 import { DecorationsModule } from './decorations';
 
 
@@ -92,6 +92,7 @@ export function selection(editor: Editor) {
   function pause() {
     paused = true;
     const { selection } = editor.doc;
+    rootDocument.getSelection()?.empty();
     const { decorations } = editor.modules as {decorations: DecorationsModule}
     if (selection && selection[0] !== selection[1] && decorations) {
       const decorator = decorations.getDecorator('pausedSelection');
