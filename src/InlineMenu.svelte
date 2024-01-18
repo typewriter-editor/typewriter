@@ -138,7 +138,7 @@ function onMouseDown() {
 </script>
 
 {#if show}
-<div class={className} on:focusin={onGainFocus} on:focusout={onLoseFocus} on:mousedown={onMouseDown} bind:this={menu}>
+<div class={className} role="presentation" on:focusin={onGainFocus} on:focusout={onLoseFocus} on:mousedown={onMouseDown} bind:this={menu}>
   <slot commands={editor.commands} active={$active} selection={$selection} focus={$focus}></slot>
 </div>
 {/if}
