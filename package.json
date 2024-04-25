@@ -1,6 +1,6 @@
 {
   "name": "typewriter-editor",
-  "version": "0.8.9",
+  "version": "0.8.10",
   "description": "A rich text editor using the Delta format with decorations and rendered with a tiny virtual dom",
   "keywords": [
     "typewriter",
@@ -55,7 +55,6 @@
     "svelte": ">=3.43.0 <5"
   },
   "devDependencies": {
-    "@pyoner/svelte-types": "^3.4.4-2",
     "@types/chai": "^4.3.14",
     "@types/fast-diff": "^1.2.0",
     "@types/mocha": "^10.0.6",
