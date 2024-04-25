@@ -5,11 +5,15 @@ const onceListeners = new WeakMap<EventDispatcher, OnceEvents>();
 
 export default class EventDispatcher<T extends Record<string, any> = Record<string, Event>> {
 
-  on(type: string, listener: EventListener, options?: AddEventListenerOptions) {
+  on<K extends keyof T>(type: K, listener: (event: T[K]) => any, options?: AddEventListenerOptions): void;
+  on(type: string, listener: (event: Event) => any, options?: AddEventListenerOptions): void;
+  on(type: string, listener: (event: any) => any, options?: AddEventListenerOptions) {
     this.addEventListener(type, listener, options);
   }
 
-  off(type: string, listener: EventListener, options?: AddEventListenerOptions) {
+  off<K extends keyof T>(type: K, listener: (event: T[K]) => any, options?: AddEventListenerOptions): void;
+  off(type: string, listener: (event: Event) => any, options?: AddEventListenerOptions): void;
+  off(type: string, listener: (event: any) => any, options?: AddEventListenerOptions) {
     this.removeEventListener(type, listener, options);
   }
 
