@@ -3,7 +3,7 @@ type OnceEvents = {[type: string]: Map<EventListener,EventListener>};
 const dispatcherEvents = new WeakMap<EventDispatcher, Events>();
 const onceListeners = new WeakMap<EventDispatcher, OnceEvents>();
 
-export default class EventDispatcher {
+export default class EventDispatcher<T extends Record<string, any> = Record<string, Event>> {
 
   on(type: string, listener: EventListener, options?: AddEventListenerOptions) {
     this.addEventListener(type, listener, options);
@@ -13,12 +13,16 @@ export default class EventDispatcher {
     this.removeEventListener(type, listener, options);
   }
 
-  addEventListener(type: string, listener: EventListener, options?: AddEventListenerOptions) {
+  addEventListener<K extends keyof T>(type: K, listener: (event: T[K]) => any, options?: AddEventListenerOptions): void;
+  addEventListener(type: string, listener: (event: Event) => any, options?: AddEventListenerOptions): void;
+  addEventListener(type: string, listener: (event: any) => any, options?: AddEventListenerOptions): void {
     if (options?.once) listener = getOnceListener(this, type, listener, true);
     getEventListeners(this, type, true).add(listener);
   }
 
-  removeEventListener(type: string, listener: EventListener, options?: AddEventListenerOptions) {
+  removeEventListener<K extends keyof T>(type: K, listener: (event: T[K]) => any, options?: AddEventListenerOptions): void;
+  removeEventListener(type: string, listener: (event: Event) => any, options?: AddEventListenerOptions): void;
+  removeEventListener(type: string, listener: (event: any) => any, options?: AddEventListenerOptions) {
     if (options?.once) listener = getOnceListener(this, type, listener) as EventListener;
     if (!listener) return;
     const events = getEventListeners(this, type);
@@ -26,6 +30,10 @@ export default class EventDispatcher {
   }
 
   dispatchEvent(event: Event, catchErrors?: boolean) {
+    let stopped = false;
+    if (event.bubbles) {
+      event.stopImmediatePropagation = event.stopPropagation = () => stopped = true;
+    }
     const events = getEventListeners(this, event.type);
     if (!events) return;
     for (let listener of events) {
@@ -40,7 +48,7 @@ export default class EventDispatcher {
       } else {
         listener.call(this, event);
       }
-      if (event.cancelBubble) break;
+      if (stopped) break;
     }
   }
 }

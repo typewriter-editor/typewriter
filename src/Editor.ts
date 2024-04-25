@@ -1,11 +1,11 @@
-import { TextDocument, TextChange, hasFormat, Delta, AttributeMap, EditorRange, normalizeRange, Line, isEqual } from '@typewriter/document';
-import { Typeset, TypesetTypes, Commands, Types } from './typesetting/typeset';
+import { AttributeMap, Delta, EditorRange, Line, TextChange, TextDocument, hasFormat, isEqual, normalizeRange } from '@typewriter/document';
+import { Source, SourceString } from './Source';
 import { defaultModules } from './modules/defaults';
-import { defaultTypes } from './typesetting/defaults';
 import { docFromHTML, docToHTML } from './rendering/html';
-import EventDispatcher from './util/EventDispatcher';
 import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position';
-import { SourceString, Source } from './Source';
+import { defaultTypes } from './typesetting/defaults';
+import { Commands, Types, Typeset, TypesetTypes } from './typesetting/typeset';
+import EventDispatcher from './util/EventDispatcher';
 
 const EMPTY_OBJ = {};
 const EMPTY_ARR = [];
@@ -97,6 +97,21 @@ export interface EditorFormatEventInit extends EventInit {
   formats: AttributeMap;
 }
 
+export interface EditorEventMap {
+  enabledchange: Event;
+  root: Event;
+  changing: EditorChangeEvent;
+  change: EditorChangeEvent;
+  changed: EditorChangeEvent;
+  format: EditorFormatEvent;
+  focus: FocusEvent,
+  blur: FocusEvent,
+  keydown: KeyboardEvent,
+  mousedown: MouseEvent,
+  mouseup: MouseEvent,
+  click: MouseEvent,
+}
+
 export class EditorFormatEvent extends Event {
   formats: AttributeMap;
 
@@ -106,8 +121,7 @@ export class EditorFormatEvent extends Event {
   }
 }
 
-
-export default class Editor extends EventDispatcher {
+export default class Editor extends EventDispatcher<EditorEventMap> {
   identifier: any;
   typeset: Typeset;
   doc: TextDocument;
@@ -137,7 +151,7 @@ export default class Editor extends EventDispatcher {
     }
     this.throwOnError = options.throwOnError || false;
     this._enabled = options.enabled === undefined ? true : options.enabled;
-    const includeDefaultModules = options.includeDefaultModules ?? true
+    const includeDefaultModules = options.includeDefaultModules ?? true;
     this._modules = includeDefaultModules ? { ...defaultModules, ...options.modules } : { ...options.modules };
     if (options.root) this.setRoot(options.root);
   }
