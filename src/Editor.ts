@@ -121,6 +121,10 @@ export class EditorFormatEvent extends Event {
   }
 }
 
+export interface EditorTextChange extends TextChange {
+  apply(source?: SourceString): Editor;
+}
+
 export default class Editor extends EventDispatcher<EditorEventMap> {
   identifier: any;
   typeset: Typeset;
@@ -176,8 +180,8 @@ export default class Editor extends EventDispatcher<EditorEventMap> {
     if (changed) this.dispatchEvent(new Event('enabledchange'));
   }
 
-  get change() {
-    const change = new TextChange(this.doc);
+  get change(): EditorTextChange {
+    const change = new TextChange(this.doc) as EditorTextChange;
     change.apply = (source: SourceString = Source.user) => this.update(change, source);
     return change;
   }
@@ -225,7 +229,7 @@ export default class Editor extends EventDispatcher<EditorEventMap> {
   }
 
   setHTML(html: string, selection: EditorRange | null = this.doc.selection, source?: SourceString): this {
-    return this.set(docFromHTML(this, html, selection));
+    return this.set(docFromHTML(this, html, selection), source);
   }
 
   getDelta(): Delta {
