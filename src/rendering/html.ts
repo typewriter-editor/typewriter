@@ -56,7 +56,7 @@ export function docToHTML(editor: Editor, doc: TextDocument) {
 
 
 export function inlineToHTML(editor: Editor, delta: Delta) {
-  return (patch(document.createElement('div'), renderInline(editor, delta, true) as VNode[]) as HTMLElement).innerHTML;
+  return (patch(document.createElement('div'), renderInline(editor, Line.create(delta), true) as VNode[]) as HTMLElement).innerHTML;
 }
 
 

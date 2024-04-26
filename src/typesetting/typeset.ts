@@ -1,6 +1,6 @@
 import { AttributeMap, Line } from '@typewriter/document';
-import { VChild, VNode } from '../rendering/vdom';
 import Editor, { Shortcuts } from '../Editor';
+import { VChild, VNode } from '../rendering/vdom';
 const EMPTY_ARR = [];
 
 const lineTypes: Record<string, LineType> = {};
@@ -43,7 +43,7 @@ export function embed(type: EmbedType) {
 
 export type FromDom = (node: Node) => any;
 export type LineData = [attributes: AttributeMap, children: VChild[], id:string];
-export type Renderer = (attributes: AttributeMap, children: VChild[], editor: Editor, forHTML?: boolean) => VNode;
+export type Renderer = (attributes: AttributeMap, children: VChild[], line: Line, editor: Editor, forHTML?: boolean) => VNode;
 export type MultiLineRenderer = (lines: LineData[], editor: Editor, forHTML?: boolean) => VNode;
 export type ShouldCombine = (prev: AttributeMap, next: AttributeMap) => boolean;
 export interface Commands {

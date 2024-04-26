@@ -1,4 +1,4 @@
-import { AttributeMap, Delta, EditorRange, Line, Op, TextDocument, isEqual } from '@typewriter/document';
+import { AttributeMap, EditorRange, Line, Op, TextDocument, isEqual } from '@typewriter/document';
 import Editor from '../Editor';
 import { applyDecorations } from '../modules/decorations';
 import { LineType } from '../typesetting/typeset';
@@ -121,7 +121,7 @@ export function renderLine(editor: Editor, line: CombinedEntry, forHTML?: boolea
 export function renderSingleLine(editor: Editor, line: Line, forHTML?: boolean) {
   const type = getLineType(editor, line);
   if (!type.render) throw new Error('No render method defined for line');
-  const node = type.render(line.attributes as AttributeMap, renderInline(editor, line.content), editor, forHTML);
+  const node = type.render(line.attributes as AttributeMap, renderInline(editor, line), line, editor, forHTML);
   applyDecorations(node, line.attributes);
   node.key = line.id;
   return node;
@@ -130,7 +130,7 @@ export function renderSingleLine(editor: Editor, line: Line, forHTML?: boolean) 
 export function renderMultiLine(editor: Editor, lines: Line[], forHTML?: boolean) {
   const type = getLineType(editor, lines[0]);
   if (!type.renderMultiple) throw new Error('No render method defined for line');
-  const node = type.renderMultiple(lines.map(line => [ line.attributes, renderInline(editor, line.content), line.id ]), editor, forHTML);
+  const node = type.renderMultiple(lines.map(line => [ line.attributes, renderInline(editor, line), line.id ]), editor, forHTML);
   node.key = lines[0].id;
   return node;
 }
@@ -196,20 +196,20 @@ export function getChangedRanges(oldC: Combined, newC: Combined): LineRanges {
 }
 
 
-export function renderInline(editor: Editor, delta: Delta, forHTML?: boolean) {
+export function renderInline(editor: Editor, line: Line, forHTML?: boolean) {
   const { lines, formats, embeds } = editor.typeset;
   let inlineChildren: VChild[] = [];
   let tabbedChildren: VChild[] = [];
   let trailingBreak = true;
   let tabLine: LineType | undefined;
 
-  delta.ops.forEach((op, i, array) => {
+  line.content.ops.forEach((op, i, array) => {
     let children: VChild[] = [];
     if (op.insert === '\t' && op.attributes && (tabLine = lines.findByAttributes(op.attributes)) && tabLine.child) {
       if (tabLine.render) {
         inlineChildren = mergeChildren(inlineChildren);
         if (trailingBreak) inlineChildren.push(BR);
-        tabbedChildren.push(tabLine.render(op.attributes, inlineChildren, editor, forHTML));
+        tabbedChildren.push(tabLine.render(op.attributes, inlineChildren, line, editor, forHTML));
         inlineChildren = [];
       }
       return;
@@ -226,7 +226,7 @@ export function renderInline(editor: Editor, delta: Delta, forHTML?: boolean) {
     } else if (op.insert) {
       const embed = embeds.findByAttributes(op.insert);
       if (embed?.render) {
-        children.push(embed.render(op.insert, EMPTY_ARR, editor, forHTML));
+        children.push(embed.render(op.insert, EMPTY_ARR, line, editor, forHTML));
         if (embed.name === 'br') trailingBreak = true;
         else if (!embed.noFill) trailingBreak = false;
       }
@@ -237,7 +237,7 @@ export function renderInline(editor: Editor, delta: Delta, forHTML?: boolean) {
       Object.keys(op.attributes).sort((a, b) => formats.priority(b) - formats.priority(a)).forEach(name => {
         const type = formats.get(name);
         if (type?.render) {
-          const node = type.render(op.attributes as AttributeMap, children, editor, forHTML);
+          const node = type.render(op.attributes as AttributeMap, children, line, editor, forHTML);
           if (node) {
             nodeFormatType.set(node, type); // Store for merging
             children = [ node ];
