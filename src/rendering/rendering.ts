@@ -1,8 +1,8 @@
-import { isEqual, TextDocument, AttributeMap, Line, EditorRange, Delta, Op } from '@typewriter/document';
-import { h, patch, VChild, VNode } from './vdom';
+import { AttributeMap, Delta, EditorRange, Line, Op, TextDocument, isEqual } from '@typewriter/document';
 import Editor from '../Editor';
-import { LineType } from '../typesetting/typeset';
 import { applyDecorations } from '../modules/decorations';
+import { LineType } from '../typesetting/typeset';
+import { Props, VChild, VNode, h, patch } from './vdom';
 
 const EMPTY_ARR = [];
 const BR = h('br', {});
@@ -277,7 +277,7 @@ function getLineType(editor: Editor, line: Line): LineType {
 
 
 
-// Joins adjacent mark nodes
+// Joins adjacent format nodes
 function mergeChildren(oldChildren: VChild[]) {
   const children: VChild[] = [];
   oldChildren.forEach((next, i) => {
@@ -285,7 +285,7 @@ function mergeChildren(oldChildren: VChild[]) {
     const prev = children[index];
 
     if (prev && typeof prev !== 'string' && typeof next !== 'string' && nodeFormatType.has(prev) &&
-      nodeFormatType.get(prev) === nodeFormatType.get(next) && isEqual(prev.props, next.props))
+      nodeFormatType.get(prev) === nodeFormatType.get(next) && isSameFormat(prev.props, next.props))
     {
       prev.children = prev.children.concat(next.children);
     } else if (prev && typeof prev === 'string' && typeof next === 'string') {
@@ -304,6 +304,10 @@ function mergeChildren(oldChildren: VChild[]) {
     }
   }
   return children;
+}
+
+function isSameFormat(a: Props, b: Props) {
+  return Object.keys({ ...a, ...b }).every(key => key.slice(0, 2) === 'on' || a[key] === b[key]);
 }
 
 function startsWithSpace(op: Op) {
