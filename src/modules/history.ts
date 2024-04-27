@@ -1,6 +1,6 @@
-import { TextDocument, TextChange, Delta } from '@typewriter/document';
+import { Delta, TextChange, TextDocument } from '@typewriter/document';
 import Editor, { EditorChangeEvent } from '../Editor';
-import { Source } from '../Source';
+import { Source, SourceString } from '../Source';
 
 export interface StackEntry {
   redo: TextChange;
@@ -15,6 +15,7 @@ export interface UndoStack {
 export interface Options {
   delay: number;
   maxStack: number;
+  unrecordedSources: Set<SourceString>;
 }
 
 // Default history module
@@ -56,7 +57,7 @@ export function initHistory(initOptions: Partial<Options> = {}) {
     let lastAction = '';
     let ignoreChange = false;
     let stack = undoStack();
-    const options: Options = { maxStack: 500, delay: 0, ...initOptions };
+    const options: Options = { maxStack: 500, delay: 0, unrecordedSources: new Set(), ...initOptions };
 
     function onBeforeInput(event: InputEvent) {
       if (event.inputType === 'historyUndo') {
@@ -140,7 +141,7 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       if (!change) return clearHistory();
       if (ignoreChange) return;
       if (!change.contentChanged) return cutoffHistory();
-      if (source !== Source.api) {
+      if (source !== Source.api && !options.unrecordedSources.has(source)) {
         record(change, old);
       } else {
         transformHistoryStack(stack, change);
