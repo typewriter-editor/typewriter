@@ -66,6 +66,7 @@
     "raw-loader": "^4.0.2",
     "svelte": "^4.2.15",
     "svelte-loader": "^3.2.0",
+    "svelte-routing": "^1.6.0",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

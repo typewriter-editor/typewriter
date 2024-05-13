@@ -24,7 +24,17 @@ export default {
       },
       {
         test: /\.svelte$/,
-        use: 'svelte-loader'
+        use: {
+          loader: 'svelte-loader',
+          options: {
+            onwarn: (warning, handleWarning) => {
+              if (warning.code.startsWith('a11y-') || warning.code.includes('noreferrer')) return;
+              if (warning.code === 'a11y-no-onchange' || warning.code === 'a11y-label-has-associated-control') return;
+              // handleWarning(warning);
+            },
+            immutable: true,
+          },
+        },
       },
       {
         test: /\.txt$/,
