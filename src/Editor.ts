@@ -524,7 +524,7 @@ function indentLines(editor: Editor, direction: 1 | -1 = 1) {
     if (!type.indentable) return;
     const range = doc.getLineRange(line);
     let indent = (line.attributes.indent || 0) + direction;
-    if (indent <= 0) indent = null;
+    if (indent === 0) indent = null;
     change.formatLine(range[0], indent < 0 ? EMPTY_OBJ : { ...line.attributes, indent });
   });
 
