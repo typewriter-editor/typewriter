@@ -8,9 +8,11 @@ import { Commands, Types, Typeset, TypesetTypes } from './typesetting/typeset';
 import EventDispatcher from './util/EventDispatcher';
 
 const EMPTY_OBJ = {};
-const EMPTY_ARR = [];
+const EMPTY_ARR: any[] = [];
 const PROXIED_EVENTS = [ 'focus', 'blur', 'keydown', 'mousedown', 'mouseup', 'click' ];
 const eventProxies = new WeakMap<Editor, EventListener>();
+
+type FormatMethods = 'formatText' | 'toggleTextFormat' | 'formatLine' |'toggleLineFormat' | 'removeFormat';
 
 export interface EditorOptions {
   identifier?: any;
@@ -461,10 +463,11 @@ export default class Editor extends EventDispatcher<EditorEventMap> {
   }
 }
 
-function changeFormat(editor: Editor, op: string, format: AttributeMap | null, selection: EditorRange | number | null) {
+function changeFormat(editor: Editor, op: FormatMethods, format: AttributeMap | null, selection: EditorRange | number | null) {
   if (!selection) return;
   selection = typeof selection === 'number' ? [ selection, selection ] as EditorRange : editor?.trimSelection(selection);
-  const change = editor.change[op](selection, format);
+  if (!(op in editor.change)) throw new Error('Invalid operation: ' + op);
+  const change = editor.change[op](selection, format as AttributeMap);
   editor.update(change);
 }
 
@@ -506,7 +509,7 @@ function mergeCommands(editor: Editor, name: string, other: Commands | Function)
 }
 
 function enhanceCommand(editor: Editor, command: Function) {
-  return (...args) => {
+  return (...args: any[]) => {
     const result = command(...args);
     if (editor.doc.selection) editor.root.focus();
     return result;

@@ -20,7 +20,7 @@ export const options = {
 type Node = Element | Text;
 
 
-const EMPTY_ARR = []
+const EMPTY_ARR: any[] = []
 const SVG_NS = 'http://www.w3.org/2000/svg'
 const KEY_ATTR = 'data-key';
 const domProps = new Set([ 'value', 'selected', 'checked', 'contentEditable' ])
@@ -51,7 +51,7 @@ const patchProp = (dom: Element, key: string, oldVal: any, newVal: any, isSvg?: 
   } else if (newVal == null) {
     dom.removeAttribute(key)
   } else if (!isSvg && key !== 'list' && key !== 'form' && key in dom) {
-    dom[key] = newVal == null ? '' : newVal
+    (dom[key as keyof Element] as any) = newVal == null ? '' : newVal
   } else {
     dom.setAttribute(key, newVal)
   }
@@ -80,7 +80,7 @@ const getDomProps = (dom: Element, isSvg?: boolean): Props => {
   for (let i = 0; i < dom.attributes.length; i++) {
     const { name, value } = dom.attributes[i]
     if (name in dom && name !== 'list' && !isSvg) {
-      props[name] = dom[name]
+      props[name] = dom[name as keyof Element]
     } else if (!options.renderKeys || name !== KEY_ATTR) {
       props[name] = value === '' ? true : value
     }
@@ -115,7 +115,7 @@ const patchDom = (parent: Node, dom: Node, oldDom: Node | null, newVdom: VChild,
     for (var i in { ...oldProps, ...newProps }) {
       if (
         (domProps.has(i)
-          ? dom[i]
+          ? dom[i as keyof Node]
           : oldProps[i]) !== newProps[i]
       ) {
         patchProp(dom as Element, i, oldProps[i], newProps[i], isSvg)

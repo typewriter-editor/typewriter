@@ -55,7 +55,7 @@ export function addShortcutsToEvent(event: KeyboardEventWithShortcut) {
  * Shift+F1
  * Space
  */
-export function shortcutFromEvent(event) {
+export function shortcutFromEvent(event: KeyboardEvent) {
   const shortcutArray: string[] = [];
   let key = event.key;
   if (!key) return '';
@@ -66,7 +66,7 @@ export function shortcutFromEvent(event) {
   if (event.altKey) shortcutArray.push('Alt');
   if (event.shiftKey) shortcutArray.push('Shift');
 
-  if (!modifierKeys[key]) {
+  if (!modifierKeys[key as keyof typeof modifierKeys]) {
     if (isMac && event.altKey && event.code && event.code.startsWith('Key')) {
       // The altKey on mac can change the key value (e.g. Cmd+Alt+R will show up as Cmd+Alt+® if we don't do this)
       key = event.code.replace('Key', '');

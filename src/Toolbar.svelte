@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import { editorStores } from './stores';
 export let editor;
 const { active, doc, selection, focus, updateEditor } = editorStores(editor);

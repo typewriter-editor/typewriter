@@ -1,7 +1,7 @@
 import { AttributeMap, Line } from '@typewriter/document';
 import Editor, { Shortcuts } from '../Editor';
 import { VChild, VNode } from '../rendering/vdom';
-const EMPTY_ARR = [];
+const EMPTY_ARR: any[] = [];
 
 const lineTypes: Record<string, LineType> = {};
 const formatTypes: Record<string, FormatType> = {};
@@ -158,8 +158,8 @@ export class Types<T extends BasicType = BasicType> {
 
   init() {
     this.selector = this.list.map(type => type.selector || '').filter(Boolean).join(', ');
-    this.types = this.list.reduce((types, type) => {types[type.name] = type; return types}, {});
-    this.priorities = this.list.reduce((priorities, type, i) => {priorities[type.name] = i; return priorities}, {});
+    this.types = this.list.reduce((types, type) => {types[type.name] = type; return types}, {} as TypeMap<T>);
+    this.priorities = this.list.reduce((priorities, type, i) => {priorities[type.name] = i; return priorities}, {} as {[name: string]: number});
   }
 
   add(type: T) {

@@ -1,11 +1,10 @@
-import { expect, use } from 'chai';
-import chaiExclude from 'chai-exclude';
+/**
+ * @jest-environment jsdom
+ */
+import { Delta, TextDocument } from '@typewriter/document';
 import Editor from '../src/Editor';
-import { TextDocument, Delta } from '@typewriter/document';
-import { renderDoc } from '../src/rendering/rendering';
 import { deltaFromDom, deltaFromHTML, docToHTML } from '../src/rendering/html';
-
-use(chaiExclude);
+import { renderDoc } from '../src/rendering/rendering';
 
 // Doesn't get altered, so we can mock the view once
 const editor = new Editor({
@@ -25,11 +24,11 @@ describe('======== dom ========', () => {
 
       const vdom = renderDoc(editor, doc);
 
-      expect(vdom).excludingEvery('key').to.deep.equal([
-        { type: 'p', props: {}, children: ['There‘s too many kids in this tub.'] },
-        { type: 'p', props: {}, children: ['There‘s too many elbows to scrub.'] },
-        { type: 'p', props: {}, children: ['I just washed a behind that I‘m sure wasn‘t mine.'] },
-        { type: 'p', props: {}, children: ['There‘s too many kids in this tub.'] },
+      expect(vdom).toEqual([
+        { key: expect.any(String), type: 'p', props: {}, children: ['There‘s too many kids in this tub.'] },
+        { key: expect.any(String), type: 'p', props: {}, children: ['There‘s too many elbows to scrub.'] },
+        { key: expect.any(String), type: 'p', props: {}, children: ['I just washed a behind that I‘m sure wasn‘t mine.'] },
+        { key: expect.any(String), type: 'p', props: {}, children: ['There‘s too many kids in this tub.'] },
       ])
     })
 
@@ -49,8 +48,9 @@ describe('======== dom ========', () => {
 
       const vdom = renderDoc(editor, doc);
 
-      expect(vdom).excludingEvery('key').to.deep.equal([
+      expect(vdom).toEqual([
         {
+          key: expect.any(String),
           type: 'h1',
           props: {},
           children: [
@@ -58,10 +58,12 @@ describe('======== dom ========', () => {
           ]
         },
         {
+          key: expect.any(String),
           type: 'p',
           props: {},
           children: [
             {
+              key: undefined,
               type: 'img',
               props: { src: 'https://www.example.com/images/bertrand-russle.png' },
               children: []
@@ -69,14 +71,19 @@ describe('======== dom ========', () => {
           ]
         },
         {
+          key: expect.any(String),
           type: 'blockquote',
           props: {},
           children: [
             {
+              key: expect.any(String),
               type: 'p',
-              props: {},
+              props: {
+                key: expect.any(String),
+              },
               children: [
                 {
+                  key: undefined,
                   type: 'em',
                   props: {},
                   children: [
@@ -85,6 +92,7 @@ describe('======== dom ========', () => {
                 },
                 ' is that fools and fanatics are always so certain of themselves, and ',
                 {
+                  key: undefined,
                   type: 'strong',
                   props: {},
                   children: [
@@ -96,6 +104,7 @@ describe('======== dom ========', () => {
           ]
         },
         {
+          key: expect.any(String),
           type: 'p',
           props: {},
           children: [
@@ -119,7 +128,7 @@ describe('======== dom ========', () => {
 
       const delta = deltaFromDom(editor, { root });
 
-      expect(delta.ops).to.deep.equal([
+      expect(delta.ops).toEqual([
         { insert: 'There‘s too many kids in this tub.\nThere‘s too many elbows to scrub.\nI just washed a behind that ' +
           'I‘m sure wasn‘t mine.\nThere‘s too many kids in this tub.\n' }
       ]);
@@ -141,7 +150,7 @@ describe('======== dom ========', () => {
 
       const delta = deltaFromDom(editor, { root });
 
-      expect(delta.ops).to.deep.equal([
+      expect(delta.ops).toEqual([
         { insert: 'Quotes:' },
         { insert: '\n', attributes: { header: 1 } },
         { insert: { image: 'https://www.example.com/images/bertrand-russle.png' }},
@@ -174,7 +183,7 @@ describe('======== dom ========', () => {
 
       const html = docToHTML(editor, doc);
 
-      expect(html).to.equal(`<h1>&lt;Quotes&gt;</h1>` +
+      expect(html).toEqual(`<h1>&lt;Quotes&gt;</h1>` +
         `<p><img src="https://www.example.com/images/bertrand-russle.png"></p>` +
         `<blockquote>` +
           `<p>` +
@@ -206,7 +215,7 @@ describe('======== dom ========', () => {
 
       const delta = deltaFromHTML(editor, html);
 
-      expect(delta.ops).to.deep.equal([
+      expect(delta.ops).toEqual([
         { insert: '<Quotes>' },
         { insert: '\n', attributes: { header: 1 } },
         { insert: { image: 'https://www.example.com/images/bertrand-russle.png' }},

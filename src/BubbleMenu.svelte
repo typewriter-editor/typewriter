@@ -1,22 +1,24 @@
-<script>
+<script type="ts">
+import { createPopper, Placement, Instance as Popper } from '@popperjs/core';
+import { EditorRange, TextDocument } from '@typewriter/document';
 import { onDestroy } from 'svelte';
-import { createPopper } from '@popperjs/core';
+import Editor from './Editor';
 import { OFFSCREEN_RECT } from './popper';
 import { editorStores } from './stores';
 
-export let editor;
+export let editor: Editor;
 let className = 'bubble-menu';
 export { className as class };
 export let offset = 0;
 export let padding = 4;
-let forLineType = undefined;
+let forLineType: string | undefined = undefined;
 export { forLineType as for };
-export let placement = 'top';
+export let placement: Placement = 'top';
 
-let menu;
-let popper;
-let oldRoot;
-let oldDoc;
+let menu: HTMLElement;
+let popper: Popper | null = null;
+let oldRoot: HTMLElement | undefined;
+let oldDoc: Document | undefined;
 let mouseDown = false;
 let menuHasFocus = false;
 let actualPlacement = placement;
@@ -28,14 +30,14 @@ $: update(menu, $doc);
 $: updateRoot($root);
 
 
-function update() {
+function update(menu: HTMLElement, doc: TextDocument) {
   if (mouseDown) return;
   if (menu) {
     if (popper) {
       popper.update();
     } else {
       const element = {
-        getBoundingClientRect: () => editor.getBounds(activeSelection) || OFFSCREEN_RECT,
+        getBoundingClientRect: () => activeSelection && editor.getBounds(activeSelection) || OFFSCREEN_RECT,
         contextElement: editor.root,
       };
       popper = createPopper(element, menu, {
@@ -45,7 +47,7 @@ function update() {
           { name: 'computeStyles', options: { adaptive: false }},
           { name: 'offset', options: { offset: [0, offset] }},
           { name: 'preventOverflow', options: { padding }},
-          { name: 'dataOutput', enabled: true, phase: 'write', fn({ state }) { actualPlacement = state.placement.split('-')[0] }}
+          { name: 'dataOutput', enabled: true, phase: 'write', fn({ state }) { actualPlacement = state.placement.split('-')[0] as Placement }}
         ],
       });
       requestAnimationFrame(() => menu && menu.classList.add('active'))
@@ -58,8 +60,8 @@ function update() {
   }
 }
 
-function getActive(mouseDown, menuHasFocus, selection) {
-  let fixedSelection = editor?.trimSelection(selection);
+function getActive(mouseDown: boolean, menuHasFocus: boolean, selection: EditorRange | null): EditorRange | null {
+  let fixedSelection = selection && editor?.trimSelection(selection);
   let lineType;
   if (fixedSelection && fixedSelection[0] === fixedSelection[1] - 1) {
     const line = editor.doc.getLineAt(fixedSelection[0]);
@@ -78,10 +80,10 @@ function onMouseDown() {
 
 function onMouseUp() {
   mouseDown = false;
-  update();
+  update(menu, $doc);
 }
 
-function updateRoot(root) {
+function updateRoot(root?: HTMLElement) {
   if (oldRoot) {
     oldRoot.removeEventListener('mousedown', onMouseDown);
     (oldDoc || oldRoot).removeEventListener('mouseup', onMouseUp);
@@ -94,8 +96,8 @@ function updateRoot(root) {
   }
 }
 
-function onGainFocus(event) {
-  if (menuHasFocus || event.target.nodeName === 'BUTTON') return;
+function onGainFocus(event: FocusEvent) {
+  if (menuHasFocus || (event.target as HTMLElement).nodeName === 'BUTTON') return;
   editor.modules.selection.pause();
   menuHasFocus = true;
 }

@@ -4,7 +4,7 @@ import { applyDecorations } from '../modules/decorations';
 import { LineType } from '../typesetting/typeset';
 import { Props, VChild, VNode, h, patch } from './vdom';
 
-const EMPTY_ARR = [];
+const EMPTY_ARR: any[] = [];
 const BR = h('br', {});
 const nodeFormatType = new WeakMap();
 const linesType = new WeakMap<AttributeMap, LineType>();

@@ -69,7 +69,7 @@ function getOnceListener(obj: EventDispatcher, type: string, listener: EventList
   if (!events && autocreate) dispatcherEvents.set(obj, events = Object.create(null));
   const map = events && events[type] || autocreate && (events[type] = new Map());
   if (!map.has(listener) && autocreate) {
-    const wrapper = event => {
+    const wrapper = (event: Event) => {
       const events = getEventListeners(obj, type);
       events && events.delete(listener);
       listener.call(obj, event);

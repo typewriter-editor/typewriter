@@ -10,38 +10,15 @@
     "delta"
   ],
   "scripts": {
-    "build": "tsc --module CommonJS --outDir cjs && cp src/*.svelte cjs/ && tsc && cp src/*.svelte lib/ && webpack",
+    "build": "tsc && cp src/*.svelte",
     "start": "webpack serve --config webpack.dev.config.js",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build",
-    "test": "TS_NODE_PROJECT=test/tsconfig.json mocha",
-    "tdd": "TS_NODE_PROJECT=test/tsconfig.json mocha -w --reporter progress"
+    "test": "jest"
   },
   "license": "MIT",
-  "type": "module",
-  "main": "./lib/bundle.js",
-  "module": "./lib/index.js",
-  "types": "./lib/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./lib/index.js",
-      "require": "./cjs/index.js"
-    },
-    "./lib/": {
-      "import": "./lib/",
-      "require": "./cjs/"
-    }
-  },
-  "directories": {
-    "lib": "lib",
-    "src": "src",
-    "doc": "docs",
-    "example": "examples",
-    "test": "test"
-  },
   "files": [
-    "lib",
-    "src"
+    "lib"
   ],
   "repository": {
     "type": "git",
@@ -49,29 +26,34 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
-    "@typewriter/document": "^0.7.11"
+    "@typewriter/document": "^0.8.0"
   },
   "peerDependencies": {
     "svelte": ">=3.43.0 <5"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.14",
+    "@babel/core": "^7.24.7",
+    "@babel/preset-env": "^7.24.7",
+    "@babel/preset-react": "^7.24.7",
+    "@babel/preset-typescript": "^7.24.7",
+    "@tsconfig/svelte": "^5.0.4",
     "@types/fast-diff": "^1.2.0",
-    "@types/mocha": "^10.0.6",
-    "chai": "^4.4.1",
-    "chai-exclude": "^2.1.0",
-    "jsdom": "^24.0.0",
+    "@types/jest": "^29.5.12",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^24.1.0",
     "jsdom-global": "^3.0.2",
-    "mocha": "^10.4.0",
     "raw-loader": "^4.0.2",
-    "svelte": "^4.2.15",
-    "svelte-loader": "^3.2.0",
-    "svelte-routing": "^1.6.0",
+    "svelte": "^4.2.18",
+    "svelte-loader": "^3.2.3",
+    "svelte-preprocess": "^6.0.1",
+    "svelte-routing": "^1.11.0",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.4.5",
-    "webpack": "^5.91.0",
+    "typescript": "^5.5.2",
+    "webpack": "^5.92.1",
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.4"

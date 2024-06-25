@@ -1,8 +1,8 @@
-import Editor from '../Editor';
-import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
 import { Line, normalizeRange } from '@typewriter/document';
+import Editor from '../Editor';
 import { Source } from '../Source';
 import { LineType, Types } from '../typesetting';
+import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
 
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
@@ -190,8 +190,8 @@ export function keyboard(editor: Editor) {
 
     addShortcutsToEvent(event);
 
-    const checkShortcut = shortcut => {
-      const command = editor.shortcuts[shortcut];
+    const checkShortcut = (shortcut: string | undefined) => {
+      const command = shortcut && editor.shortcuts[shortcut];
       if (command && editor.commands[command]) {
         event.preventDefault();
         return editor.commands[command]() !== false;

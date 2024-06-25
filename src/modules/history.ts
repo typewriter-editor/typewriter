@@ -93,17 +93,13 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       stack = undoStack();
     }
 
-    function action(source: string, dest: string) {
+    function action(source: 'undo' | 'redo', dest: 'undo' | 'redo') {
       if (stack[source].length === 0) return;
-      const entry = stack[source].pop();
+      const entry = stack[source].pop()!;
       stack[dest].push(entry);
       cutoffHistory();
       ignoreChange = true;
-      if (typeof entry[source] === 'function') {
-        entry[source]();
-      } else {
-        editor.update(entry[source], Source.history);
-      }
+      editor.update(entry[source], Source.history);
       ignoreChange = false;
     }
 

@@ -1,4 +1,4 @@
-import { Delta, EditorRange, Line, TextDocument } from '@typewriter/document';
+import { AttributeMap, Delta, EditorRange, Line, TextDocument } from '@typewriter/document';
 import Editor from '../Editor';
 import { HTMLLineElement, renderInline } from '../rendering/rendering';
 import { renderDoc } from './rendering';
@@ -108,7 +108,7 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
 
   const collapseWhitespace = options.collapseWhitespace != undefined ? options.collapseWhitespace : true
 
-  var walker = createTreeWalker(root, node => !SKIP_ELEMENTS[node.nodeName]);
+  var walker = createTreeWalker(root, node => !SKIP_ELEMENTS[node.nodeName as keyof typeof SKIP_ELEMENTS]);
   const delta = new Delta();
   let currentLine: any, firstLineSeen = false, unknownLine = false, empty = true, node: Node | null;
   let currentChildLine: any;
@@ -237,7 +237,7 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
 // Walk up the DOM to the closest parent, finding formats
 function gatherFormats(parent: Element, root: Element, editor: Editor) {
   const { lines, formats } = editor.typeset;
-  const attributes = {};
+  const attributes: AttributeMap = {};
 
   while (parent && !lines.matches(parent) && parent !== root) {
     if (formats.matches(parent)) {

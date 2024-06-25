@@ -1,6 +1,6 @@
+import { AttributeMap } from '@typewriter/document';
 import { h } from '../rendering/vdom';
 import { embed } from './typeset';
-import { AttributeMap } from '@typewriter/document';
 
 
 export const image = embed({
@@ -8,7 +8,7 @@ export const image = embed({
   selector: 'img',
   commands: editor => (image: string, props?: object) => editor.insert({ image, ...props }),
   fromDom: (node: HTMLImageElement) => {
-    const image = {};
+    const image: AttributeMap = {};
     ['src', 'alt', 'width', 'height'].forEach(name => {
       if (!node.hasAttribute(name)) return;
       const value = node.getAttribute(name);

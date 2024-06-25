@@ -1,6 +1,6 @@
-import path from 'path';
+const path = require('path');
 
-export default {
+module.exports = {
   entry: path.resolve('examples/index.ts'),
   mode: 'development',
   output: {
@@ -33,6 +33,7 @@ export default {
               // handleWarning(warning);
             },
             immutable: true,
+            preprocess: require('svelte-preprocess')({}),
           },
         },
       },
@@ -44,6 +45,7 @@ export default {
   },
   devtool: 'source-map',
   resolve: {
+    conditionNames: ['svelte'],
     extensions: [ '.ts', '.tsx', '.js' ],
     alias: {
       'typewriter-editor$': path.resolve('src/index.ts'),
