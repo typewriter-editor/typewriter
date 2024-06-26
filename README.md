@@ -30,15 +30,15 @@ For an overview of the Typerwriter concepts and how it works, see the [Typewrite
 
 Typewriter is influenced by Quill.js, being built on the same data model. Here are some notable differences:
 
-* Typewriter uses tuples of indexes to describe ranges and selection (i.e. `select([ startIndex, endIndes ])` rather than `setSelection(index, length)`).
-* Typewriter’s rendering to the DOM is just a module. It can be left out or replaced with custom rendering (e.g. for virtualized rendering).
-* Typewriter provides a TextChange interface to roll up multiple change operations into one atomic change in the editor.
-* Typewriter’s single `insert` replaces Quill's `insertText` and `insertEmbed` methods and allows overwriting selected content in one operation. With Quill you need call `deleteText` first to do the same, creating 2 operations.
-* Typewriter provides a module for decorations. A decorator can alter the contents of the editor by adding classes, styles, and other HTML attributes to lines, spans of text, or a embeds, and those changes will be applied on top of the underlying editor contents before being displayed.
-* Typewriter has _no_ stylesheet requirements. This is something that several of the other editors require (including Quill and ProseMirror) and causes confusion for newcomers and restricts full customization of the view.
-* Typewriter renders lists correctly as HTML lists should be (UL > LI > UL > LI). Quill uses CSS to fake list indentation.
-* Typewriter allows paragraphs to be paragraphs! Without a required stylesheet which removes paragraph margins, you can have your paragraphs be styled the way you need them to be, and Typewriter allows `<br>` tags to be inserted when `Shift+Enter` is pressed when your instance allows.
-* Typewriter's History module works the same way your OS undo works, combining simliar actions (inserts, deletes) and breaking correctly when selection changes. You may still use a time delay like Quill, in addition to the action combines to keep them from getting too long if you wish.
+- Typewriter uses tuples of indexes to describe ranges and selection (i.e. `select([ startIndex, endIndes ])` rather than `setSelection(index, length)`).
+- Typewriter’s rendering to the DOM is just a module. It can be left out or replaced with custom rendering (e.g. for virtualized rendering).
+- Typewriter provides a TextChange interface to roll up multiple change operations into one atomic change in the editor.
+- Typewriter’s single `insert` replaces Quill's `insertText` and `insertEmbed` methods and allows overwriting selected content in one operation. With Quill you need call `deleteText` first to do the same, creating 2 operations.
+- Typewriter provides a module for decorations. A decorator can alter the contents of the editor by adding classes, styles, and other HTML attributes to lines, spans of text, or a embeds, and those changes will be applied on top of the underlying editor contents before being displayed.
+- Typewriter has _no_ stylesheet requirements. This is something that several of the other editors require (including Quill and ProseMirror) and causes confusion for newcomers and restricts full customization of the view.
+- Typewriter renders lists correctly as HTML lists should be (UL > LI > UL > LI). Quill uses CSS to fake list indentation.
+- Typewriter allows paragraphs to be paragraphs! Without a required stylesheet which removes paragraph margins, you can have your paragraphs be styled the way you need them to be, and Typewriter allows `<br>` tags to be inserted when `Shift+Enter` is pressed when your instance allows.
+- Typewriter's History module works the same way your OS undo works, combining simliar actions (inserts, deletes) and breaking correctly when selection changes. You may still use a time delay like Quill, in addition to the action combines to keep them from getting too long if you wish.
 
 ## The Current State of Typewriter
 
@@ -49,12 +49,13 @@ Virtualized rendering is buggy and not ready for production.
 ## Contributing
 
 If you are interested in being a part of something new:
-* read through the [Typewriter Guide](docs/guide.md)
-* join the discussions on [Github Discussions](https://github.com/typewriter-editor/typewriter/discussions)
-* read through the code
-* write tests
-* write docs
-* contribute modules and features
+
+- read through the [Typewriter Guide](docs/guide.md)
+- join the discussions on [Github Discussions](https://github.com/typewriter-editor/typewriter/discussions)
+- read through the code
+- write tests
+- write docs
+- contribute modules and features
 
 ## Getting Started
 
@@ -99,7 +100,7 @@ npm test
 
 ## Examples
 
-![Examples screenshot](https://raw.githubusercontent.com/typewriter-editor/typewriter/master/examples/screenshot.png)
+![Examples screenshot](https://raw.githubusercontent.com/typewriter-editor/typewriter/master/screenshot.png)
 
 There are some examples of use in the examples folder. You can run this locally after cloning Typewriter to your machine by running:
 
@@ -112,11 +113,11 @@ Then opening your browser to localhost:9000.
 
 ### TODO
 
-* More testing
-* More modules
-* Table support
-* More UI tools for image handling, etc.
-* Benchmarking
+- More testing
+- More modules
+- Table support
+- More UI tools for image handling, etc.
+- Benchmarking
 
 ## Contributing
 

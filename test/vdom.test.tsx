@@ -1,68 +1,65 @@
-/**
- * @jsx h
- * @jest-environment jsdom
- */
-import { h, Props, VNode } from '../src/rendering/vdom';
-
+/** @jsx h */
+/** @vitest-environment jsdom */
+import { describe, expect, it } from 'vitest';
+import { Props, VNode, h } from '../src/lib/rendering/vdom';
 
 describe('======== vdom ========', () => {
   describe('h', () => {
-
     it('should create a node for an element', () => {
       expect(h('div', { foo: 'bar' }, 'test')).toEqual({
         type: 'div',
         key: undefined,
         props: { foo: 'bar' },
-        children: [ 'test' ]
-      })
-    })
-
+        children: ['test'],
+      });
+    });
 
     it('should work with JSX', () => {
       const str = 'test';
-      const node = <div foo="bar">
-        {str}
-      </div>;
+      const node = <div foo="bar">{str}</div>;
 
       expect(node).toEqual({
         type: 'div',
         key: undefined,
         props: { foo: 'bar' },
-        children: [ 'test' ]
-      })
-
-    })
-
+        children: ['test'],
+      });
+    });
 
     it('should work with functions', () => {
       function Test(attr: Props, children: VNode[]) {
-        return <div foo="bar" {...attr}>
-          {children}
-        </div>;
+        return (
+          <div foo="bar" {...attr}>
+            {children}
+          </div>
+        );
       }
 
       expect(<Test disabled>test</Test>).toEqual({
         type: 'div',
         key: undefined,
         props: { foo: 'bar', disabled: true },
-        children: [ 'test' ]
-      })
-    })
-
+        children: ['test'],
+      });
+    });
 
     it('should work with children', () => {
-      const items = [ 'red', 'green', 'blue' ];
-      const node = <div foo="bar">
-        <ul>
-          {items.map(item => <li>{item}</li>)}
-        </ul>
-      </div>;
+      const items = ['red', 'green', 'blue'];
+      const node = (
+        <div foo="bar">
+          <ul>
+            {items.map(item => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
+      );
 
       expect(node).toEqual({
         type: 'div',
         key: undefined,
         props: {
-          foo: 'bar'
+          foo: 'bar',
         },
         children: [
           {
@@ -70,15 +67,13 @@ describe('======== vdom ========', () => {
             key: undefined,
             props: {},
             children: [
-              { type: 'li', key: undefined, props: {}, children: [ 'red' ]},
-              { type: 'li', key: undefined, props: {}, children: [ 'green' ]},
-              { type: 'li', key: undefined, props: {}, children: [ 'blue' ]},
-            ]
-          }
-        ]
-      })
-    })
-
-  })
-
-})
+              { type: 'li', key: undefined, props: {}, children: ['red'] },
+              { type: 'li', key: undefined, props: {}, children: ['green'] },
+              { type: 'li', key: undefined, props: {}, children: ['blue'] },
+            ],
+          },
+        ],
+      });
+    });
+  });
+});

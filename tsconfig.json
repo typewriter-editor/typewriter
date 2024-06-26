@@ -1,19 +1,16 @@
 {
+  "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node",
-    "declaration": true,
-    "strictFunctionTypes": false,
+    "allowJs": true,
+    "checkJs": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
     "sourceMap": true,
-    "module": "commonjs",
-    "target": "es2021",
-    "jsx": "react",
     "strict": true,
-    "lib": ["es2021", "dom"],
-    "types": ["jest"],
-    "outDir": "lib"
-  },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+    "module": "ESNext",
+    "verbatimModuleSyntax": false,
+    "moduleResolution": "bundler"
+  }
 }
