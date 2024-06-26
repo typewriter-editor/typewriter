@@ -1,9 +1,8 @@
 import { Line, normalizeRange } from '@typewriter/document';
-import Editor from '../Editor';
+import { Editor } from '../Editor';
 import { Source } from '../Source';
-import { LineType, Types } from '../typesetting';
-import { addShortcutsToEvent, KeyboardEventWithShortcut, ShortcutEvent } from './shortcutFromEvent';
-
+import { Types, type LineType } from '../typesetting';
+import { ShortcutEvent, addShortcutsToEvent, type KeyboardEventWithShortcut } from './shortcutFromEvent';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 const EMPTY_OBJ = {};
@@ -11,8 +10,6 @@ const IS_CHROME = (window as any).chrome && typeof (window as any).chrome === 'o
 
 // Basic keyboard module.
 export function keyboard(editor: Editor) {
-
-
   function onEnter(event: KeyboardEvent) {
     if (event.defaultPrevented) return;
     if (editor.doc.selection) {
@@ -28,16 +25,19 @@ export function keyboard(editor: Editor) {
       }
     }
 
-    const { typeset: { lines }, doc } = editor;
+    const {
+      typeset: { lines },
+      doc,
+    } = editor;
     let { selection } = doc;
 
     if (!selection) return;
     event.preventDefault();
-    const [ at, to ] = selection;
+    const [at, to] = selection;
     const isCollapsed = at === to;
 
     const line = doc.getLineAt(selection[0]);
-    const [ start, end ] = doc.getLineRange(selection[0]);
+    const [start, end] = doc.getLineRange(selection[0]);
 
     let { id, ...attributes } = line.attributes;
     let options: { dontFixNewline?: boolean } | undefined;
@@ -47,11 +47,8 @@ export function keyboard(editor: Editor) {
 
     if (isCollapsed && isEmpty(line)) {
       const explicitUnindent = type.onEmptyEnter && type.onEmptyEnter(editor, line);
-      const nativeUnindent = !type.onEmptyEnter
-        && type !== lines.default
-        && !type.contained
-        && !type.defaultFollows
-        && !type.frozen;
+      const nativeUnindent =
+        !type.onEmptyEnter && type !== lines.default && !type.contained && !type.defaultFollows && !type.frozen;
       if (explicitUnindent || nativeUnindent) {
         // Convert a bullet point into a paragraph
         if (unindent(lines, doc.getLineAt(at))) return;
@@ -62,12 +59,12 @@ export function keyboard(editor: Editor) {
       if (at === 0) {
         // if single selection and line element (hr, image etc) insert new line before
         options = { dontFixNewline: true };
-        selection = [ at, at ];
+        selection = [at, at];
       } else if (to === doc.length) {
-        selection = [ to - 1, to - 1 ];
+        selection = [to - 1, to - 1];
       } else {
         options = { dontFixNewline: true };
-        selection = [ to, to ];
+        selection = [to, to];
       }
       attributes = type.nextLineAttributes ? type.nextLineAttributes(attributes) : EMPTY_OBJ;
     } else if (atEnd && (type.nextLineAttributes || type.defaultFollows || type.frozen)) {
@@ -82,7 +79,6 @@ export function keyboard(editor: Editor) {
     }
   }
 
-
   function onShiftEnter(event: KeyboardEvent) {
     if (event.defaultPrevented) return;
     const { typeset, doc } = editor;
@@ -92,25 +88,25 @@ export function keyboard(editor: Editor) {
     editor.insert({ br: true });
   }
 
-
   function onBackspace(event: KeyboardEvent) {
     handleDelete(event, -1);
   }
-
 
   function onDelete(event: KeyboardEvent) {
     handleDelete(event, 1);
   }
 
-
   function handleDelete(event: KeyboardEvent, direction: 1 | -1) {
     if (event.defaultPrevented) return;
-    const { typeset: { lines }, doc } = editor;
+    const {
+      typeset: { lines },
+      doc,
+    } = editor;
     const { selection } = doc;
     if (!selection) return;
-    const [ at, to ] = selection;
+    const [at, to] = selection;
     const isCollapsed = at === to;
-    const [ start, end ] = doc.getLineRange(at);
+    const [start, end] = doc.getLineRange(at);
 
     // Allow the system to handle non-line-collapsing deletes
     // (Bug in Chrome where backspace at the end of a span can delete an entire paragraph)
@@ -134,10 +130,10 @@ export function keyboard(editor: Editor) {
       if (outside && !type.contained) {
         // Delete the next line if it is empty
         const mergingLine = doc.lines[doc.lines.indexOf(line) + direction];
-        const [ first, second ] = direction === 1 ? [ line, mergingLine] : [ mergingLine, line ];
+        const [first, second] = direction === 1 ? [line, mergingLine] : [mergingLine, line];
         if (first && isEmpty(first) && second && !isEmpty(second)) {
           return editor.update(
-            editor.change.delete([ range[0] + direction, range[0] ], { dontFixNewline: true }),
+            editor.change.delete([range[0] + direction, range[0]], { dontFixNewline: true }),
             Source.input
           );
         }
@@ -147,7 +143,6 @@ export function keyboard(editor: Editor) {
     }
   }
 
-
   function unindent(lines: Types<LineType>, line: Line, force?: boolean) {
     if (!line) return;
     const type = lines.findByAttributes(line.attributes, true);
@@ -156,12 +151,11 @@ export function keyboard(editor: Editor) {
       editor.outdent();
       return true;
     }
-    if (force || type !== lines.default && !type.defaultFollows) {
+    if (force || (type !== lines.default && !type.defaultFollows)) {
       editor.formatLine(EMPTY_OBJ);
       return true;
     }
   }
-
 
   function onTab(event: KeyboardEventWithShortcut) {
     if (event.defaultPrevented) return;
@@ -183,8 +177,6 @@ export function keyboard(editor: Editor) {
     else editor.outdent();
   }
 
-
-
   function onKeyDown(event: KeyboardEventWithShortcut) {
     if (event.isComposing) return;
 
@@ -196,29 +188,35 @@ export function keyboard(editor: Editor) {
         event.preventDefault();
         return editor.commands[command]() !== false;
       }
-    }
+    };
 
     if (
-      !editor.root.dispatchEvent(ShortcutEvent.fromKeyboardEvent(event))
-      || checkShortcut(event.shortcut)
-      || checkShortcut(event.osShortcut)
-      || checkShortcut(event.modShortcut)
+      !editor.root.dispatchEvent(ShortcutEvent.fromKeyboardEvent(event)) ||
+      checkShortcut(event.shortcut) ||
+      checkShortcut(event.osShortcut) ||
+      checkShortcut(event.modShortcut)
     ) {
       event.preventDefault();
       return;
     }
 
     switch (event.modShortcut) {
-      case 'Enter': return onEnter(event);
-      case 'Shift+Enter': return onShiftEnter(event);
+      case 'Enter':
+        return onEnter(event);
+      case 'Shift+Enter':
+        return onShiftEnter(event);
       case 'Tab':
-      case 'Shift+Tab': return onTab(event);
+      case 'Shift+Tab':
+        return onTab(event);
     }
 
     switch (event.modShortcut?.split('+').pop()) {
-      case 'Backspace': return onBackspace(event);
-      case 'Delete': return onDelete(event);
-      default: return;
+      case 'Backspace':
+        return onBackspace(event);
+      case 'Delete':
+        return onDelete(event);
+      default:
+        return;
     }
   }
 
@@ -232,6 +230,6 @@ export function keyboard(editor: Editor) {
     },
     destroy() {
       editor.root.removeEventListener('keydown', onKeyDown);
-    }
-  }
+    },
+  };
 }

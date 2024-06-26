@@ -1,12 +1,12 @@
 import { AttributeMap, Delta, Op } from '@typewriter/document';
-import Editor, { EditorChangeEvent } from '../Editor';
+import { Editor, EditorChangeEvent } from '../Editor';
 
 const straitQuotes = /['"]/g;
 const nonchar = /[\s\{\[\(\<'"\u2018\u201C]/;
 const conversions = {
   '"': { left: '“', right: '”' },
   "'": { left: '‘', right: '’' },
-}
+};
 
 /**
  * Replaces regular quotes with smart quotes as they are typed. Also affects pasted content.
@@ -15,7 +15,6 @@ const conversions = {
  * entry conversions do.
  */
 export function smartQuotes(editor: Editor) {
-
   function onTextChange(event: EditorChangeEvent) {
     const { change, source, doc, old } = event;
     if (source === 'api' || !old.selection || !change) return;
@@ -28,10 +27,13 @@ export function smartQuotes(editor: Editor) {
     let pos = 0;
 
     for (let i = 0; i < indices.length; i++) {
-      const [ index, attributes ] = indices[i];
+      const [index, attributes] = indices[i];
       const quote = text[index] as '"' | "'";
       const converted = !index || nonchar.test(text[index - 1]) ? conversions[quote].left : conversions[quote].right;
-      convert.retain(index - pos).delete(1).insert(converted, attributes);
+      convert
+        .retain(index - pos)
+        .delete(1)
+        .insert(converted, attributes);
       pos = index + 1;
     }
     event.modify(convert);
@@ -42,8 +44,8 @@ export function smartQuotes(editor: Editor) {
   return {
     destroy() {
       editor.off('changing', onTextChange);
-    }
-  }
+    },
+  };
 }
 
 function getQuoteIndices(ops: Op[]) {
@@ -54,7 +56,7 @@ function getQuoteIndices(ops: Op[]) {
     else if (typeof op.insert === 'string') {
       let result: RegExpExecArray | null;
       while ((result = straitQuotes.exec(op.insert))) {
-        indices.push([ pos + result.index, op.attributes ]);
+        indices.push([pos + result.index, op.attributes]);
       }
       pos += op.insert.length;
     } else if (op.insert) {

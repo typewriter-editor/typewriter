@@ -58,7 +58,5 @@ export function escapeHtml(string: string): string {
     html += escape;
   }
 
-  return lastIndex !== index
-    ? html + str.substring(lastIndex, index)
-    : html;
+  return lastIndex !== index ? html + str.substring(lastIndex, index) : html;
 }

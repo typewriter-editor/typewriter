@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Editor from '$lib/Editor.js';
   import Root from '$lib/Root.svelte';
+  import Editor from '{ Editor }ditor.js';
 
   const editor = (globalThis.editor = new Editor());
 </script>

@@ -1,8 +1,7 @@
 <script lang="ts">
   import { createPopper, type Placement, type Instance as Popper } from '@popperjs/core';
-  import { EditorRange, TextDocument } from '@typewriter/document';
+  import type { EditorRange, TextDocument } from '@typewriter/document';
   import { onDestroy } from 'svelte';
-  import Editor from './Editor';
   import { OFFSCREEN_RECT } from './popper';
   import { editorStores } from './stores';
 

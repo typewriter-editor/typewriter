@@ -1,8 +1,6 @@
-import Editor, { EditorChangeEvent } from '../Editor';
+import { Editor, EditorChangeEvent } from '../Editor';
 import { h } from '../rendering/vdom';
-import { LineData, LineType } from '../typesetting';
-
-
+import type { LineData, LineType } from '../typesetting';
 
 const TableType: LineType = {
   name: 'table',
@@ -10,10 +8,10 @@ const TableType: LineType = {
   renderMultiple(lines: LineData[]) {
     const first = lines[0][0].table;
     let row = h(first.startsWith('th-') ? 'th' : 'tr', { key: first });
-    const table = h('table', null, [ row ]);
+    const table = h('table', null, [row]);
 
     for (let i = 0; i < lines.length; i++) {
-      const [ attributes, children, id ] = lines[i];
+      const [attributes, children, id] = lines[i];
       if (row.key !== attributes.table) {
         row = h(attributes.table.startsWith('th-') ? 'th' : 'tr', { key: attributes.table });
         table.children.push(row);
@@ -25,9 +23,7 @@ const TableType: LineType = {
   },
 };
 
-
 export function table(editor: Editor) {
-
   editor.typeset.lines.add(TableType);
 
   function onChanging(event: EditorChangeEvent) {
@@ -36,29 +32,17 @@ export function table(editor: Editor) {
     // i.e. always ensure a table has all the cells needed to keep it correct
   }
 
-  function insertTable(rows: number, columns: number) {
+  function insertTable(rows: number, columns: number) {}
 
-  }
+  function addColumn(direction: -1 | 1) {}
 
-  function addColumn(direction: -1 | 1) {
+  function addRow(direction: -1 | 1) {}
 
-  }
+  function deleteTable() {}
 
-  function addRow(direction: -1 | 1) {
+  function deleteColumn() {}
 
-  }
-
-  function deleteTable() {
-
-  }
-
-  function deleteColumn() {
-
-  }
-
-  function deleteRow() {
-
-  }
+  function deleteRow() {}
 
   const addColumnLeft = () => addColumn(-1);
   const addColumnRight = () => addColumn(1);
@@ -78,5 +62,5 @@ export function table(editor: Editor) {
       addRowAbove,
       addRowBelow,
     },
-  }
+  };
 }

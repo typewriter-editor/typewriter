@@ -1,7 +1,7 @@
-import './embeds.js';
-import './formats.js';
-import './lines.js';
-import { TypesetTypes } from './typeset.js';
+import './embeds';
+import './formats';
+import './lines';
+import type { TypesetTypes } from './typeset';
 
 export const defaultTypes: TypesetTypes = {
   lines: ['paragraph', 'header', 'list', 'blockquote', 'code-block', 'hr'],

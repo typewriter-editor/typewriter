@@ -1,7 +1,7 @@
 import { AttributeMap, Delta, normalizeRange } from '@typewriter/document';
-import { applyDecorations } from '../modules/decorations.js';
-import { Props, VChild, VNode, h } from '../rendering/vdom.js';
-import { line } from './typeset.js';
+import { applyDecorations } from '../modules/decorations';
+import { h, type Props, type VChild, type VNode } from '../rendering/vdom';
+import { line } from './typeset';
 
 export const paragraph = line({
   name: 'paragraph',
@@ -170,7 +170,7 @@ export const blockquote = line({
       if (typeof blockquote !== 'string') blockquote = true;
       editor.toggleLineFormat({ blockquote });
     },
-  fromDom(node: HTMLParagraphElement) {
+  fromDom(node) {
     const { className } = node.parentNode as HTMLElement;
     const match = className.match(/quote-(\S+)/);
     const blockquote = (match && match[1] !== 'true' && match[1]) || true;

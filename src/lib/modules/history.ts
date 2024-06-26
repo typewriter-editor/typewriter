@@ -1,6 +1,6 @@
 import { Delta, TextChange, TextDocument } from '@typewriter/document';
-import Editor, { EditorChangeEvent } from '../Editor';
-import { Source, SourceString } from '../Source';
+import { Editor, EditorChangeEvent } from '../Editor';
+import { Source, type SourceString } from '../Source';
 
 export interface StackEntry {
   redo: TextChange;
@@ -8,8 +8,8 @@ export interface StackEntry {
 }
 
 export interface UndoStack {
-  undo: StackEntry[],
-  redo: StackEntry[],
+  undo: StackEntry[];
+  redo: StackEntry[];
 }
 
 export interface Options {
@@ -51,8 +51,7 @@ export interface HistoryModule {
  * ```
  */
 export function initHistory(initOptions: Partial<Options> = {}) {
-
-  return function(editor: Editor) {
+  return function (editor: Editor) {
     let lastRecorded = 0;
     let lastAction = '';
     let ignoreChange = false;
@@ -103,7 +102,6 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       ignoreChange = false;
     }
 
-
     function record(change: TextChange, oldDoc: TextDocument) {
       const timestamp = Date.now();
       const action = getAction(change);
@@ -132,7 +130,6 @@ export function initHistory(initOptions: Partial<Options> = {}) {
       }
     }
 
-
     function onChange({ change, old, source }: EditorChangeEvent) {
       if (!change) return clearHistory();
       if (ignoreChange) return;
@@ -153,7 +150,6 @@ export function initHistory(initOptions: Partial<Options> = {}) {
     function getStack() {
       return stack;
     }
-
 
     return {
       options,
@@ -179,15 +175,15 @@ export function initHistory(initOptions: Partial<Options> = {}) {
         'mac:Cmd+Shift+Z': 'redo',
       },
       init() {
-      editor.on('change', onChange);
-      editor.root.addEventListener('beforeinput', onBeforeInput);
+        editor.on('change', onChange);
+        editor.root.addEventListener('beforeinput', onBeforeInput);
       },
       destroy() {
         editor.off('change', onChange);
         editor.root.removeEventListener('beforeinput', onBeforeInput);
-      }
-    }
-  }
+      },
+    };
+  };
 }
 
 export function undoStack(): UndoStack {
@@ -198,7 +194,7 @@ export function undoStack(): UndoStack {
 }
 
 export function transformHistoryStack(stack: UndoStack, delta: TextChange | Delta) {
-  const change = (delta as Delta).ops ? new TextChange(null, delta as Delta) : delta as TextChange;
+  const change = (delta as Delta).ops ? new TextChange(null, delta as Delta) : (delta as TextChange);
 
   stack.undo.forEach(entry => {
     entry.undo = change.transform(entry.undo, true);
@@ -212,8 +208,9 @@ export function transformHistoryStack(stack: UndoStack, delta: TextChange | Delt
 
 function getAction(change: TextChange) {
   const { ops } = change.delta;
-  let head = 0, tail = ops.length - 1;
-  if (ops[head].retain && !ops[head].attributes) head++
+  let head = 0,
+    tail = ops.length - 1;
+  if (ops[head].retain && !ops[head].attributes) head++;
   if (ops[tail].retain === 1 && ops[tail].attributes?.id) tail--;
   if (head === tail) {
     const changeOp = ops[head];

@@ -1,5 +1,5 @@
-import { h } from '../rendering/vdom.js';
-import { format } from './typeset.js';
+import { h } from '../rendering/vdom';
+import { format } from './typeset';
 
 export const bold = format({
   name: 'bold',
@@ -33,6 +33,6 @@ export const link = format({
   // If the link is a string, it is an actual address. Otherwise it is either undefined (empty) or being called from the
   // testing code (which passes a pointer to the dom object, hence the conversion to a boolean which works with the toggleTextFormat)
   commands: editor => (link: string) => editor.toggleTextFormat({ link: typeof link === 'string' ? link : !!link }),
-  fromDom: (node: HTMLAnchorElement) => node.href,
+  fromDom: node => (node as HTMLAnchorElement).href,
   render: (attributes, children) => h('a', { href: attributes.link, target: '_blank' }, children),
 });

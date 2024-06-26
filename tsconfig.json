@@ -10,7 +10,6 @@
     "sourceMap": true,
     "strict": true,
     "module": "ESNext",
-    "verbatimModuleSyntax": false,
     "moduleResolution": "bundler"
   }
 }

@@ -1,22 +1,20 @@
-import Editor from '../Editor';
-import { Delta, TextChange, normalizeRange, diff } from '@typewriter/document';
-import { deltaFromDom } from '../rendering/html';
-import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from '../rendering/rendering';
-import { getSelection } from '../rendering/selection';
-import { getIndexFromNode } from '../rendering/position';
-import { cleanText } from '../rendering/html';
+import { Delta, TextChange, diff, normalizeRange } from '@typewriter/document';
+import { Editor } from '../Editor';
 import { Source } from '../Source';
+import { cleanText, deltaFromDom } from '../rendering/html';
+import { getIndexFromNode } from '../rendering/position';
+import { getLineNodeEnd, getLineNodeStart, type HTMLLineElement } from '../rendering/rendering';
+import { getSelection } from '../rendering/selection';
 
 const isIPad = navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform);
-const isIOS = isIPad || /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+const isIOS = isIPad || (/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream);
 const isAndroid = !isIOS && /Mobi|Android/.test(navigator.userAgent) && !(window as any).MSStream;
-
 
 const MUTATION_OPTIONS = {
   characterData: true,
   characterDataOldValue: true,
   subtree: true,
-  childList: true
+  childList: true,
 };
 
 type HTMLLineRange = [HTMLLineElement, HTMLLineElement];
@@ -26,25 +24,25 @@ export function input(editor: Editor) {
 
   // Composition systems want to take full control over browser content while they operate.
   // Let them, deferring handling all mutation events until after the composition is complete.
-  let isComposing = false
-  let cachedMutations: MutationRecord[] = []
+  let isComposing = false;
+  let cachedMutations: MutationRecord[] = [];
 
   function onCompositionStart(event: CompositionEvent) {
-    isComposing = true
+    isComposing = true;
   }
 
   function onCompositionEnd(event: CompositionEvent) {
-    isComposing = false
+    isComposing = false;
     if (cachedMutations.length) {
-      onMutate(cachedMutations)
-      cachedMutations = []
+      onMutate(cachedMutations);
+      cachedMutations = [];
     }
   }
 
   // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
-    if (isComposing) return
+    if (isComposing) return;
     const mutations = observer.takeRecords();
     if (mutations.length) onMutate(mutations);
   }
@@ -65,8 +63,8 @@ export function input(editor: Editor) {
   // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
   function onMutate(list: MutationRecord[]) {
     if (isComposing) {
-      cachedMutations.push(...list)
-      return
+      cachedMutations.push(...list);
+      return;
     }
     if (!editor.enabled) {
       return editor.render();
@@ -125,8 +123,12 @@ export function input(editor: Editor) {
       }
     }
 
-    const diffs = diff(mutation.oldValue.replace(/\xA0/g, ' '), mutation.target.nodeValue.replace(/\xA0/g, ' '), relativeEditLocation);
-    diffs.forEach(([ action, string ]) => {
+    const diffs = diff(
+      mutation.oldValue.replace(/\xA0/g, ' '),
+      mutation.target.nodeValue.replace(/\xA0/g, ' '),
+      relativeEditLocation
+    );
+    diffs.forEach(([action, string]) => {
       if (action === diff.EQUAL) change.retain(string.length);
       else if (action === diff.DELETE) change.delete(string.length);
       else if (action === diff.INSERT) {
@@ -141,10 +143,14 @@ export function input(editor: Editor) {
   function getChangeFromRange(range?: HTMLLineRange) {
     const { doc } = editor;
     if (range) {
-      const [ startNode, endNode ] = range;
+      const [startNode, endNode] = range;
       const start = getLineNodeStart(editor.root, startNode);
       const end = getLineNodeEnd(editor.root, endNode);
-      const delta = deltaFromDom(editor, { startNode, endNode: endNode.nextElementSibling || undefined, collapseWhitespace: false });
+      const delta = deltaFromDom(editor, {
+        startNode,
+        endNode: endNode.nextElementSibling || undefined,
+        collapseWhitespace: false,
+      });
       let change = doc.toDelta().slice(start, end).diff(delta);
       if (change.ops.length && start) change = new Delta().retain(start).concat(change);
       return change;
@@ -153,7 +159,6 @@ export function input(editor: Editor) {
       return doc.toDelta().diff(delta);
     }
   }
-
 
   const observer = new window.MutationObserver(onMutate);
 
@@ -202,8 +207,8 @@ export function input(editor: Editor) {
       if (isAndroid) {
         editor.root.removeEventListener('beforeinput', onBeforeInput); // gboard fix
       }
-    }
-  }
+    },
+  };
 }
 
 function getTextChangeMutation(list: MutationRecord[]) {
@@ -222,15 +227,16 @@ function getTextChangeMutation(list: MutationRecord[]) {
   if (!text) return null;
   const textAdd = list.find(record => record.addedNodes.length === 1 && record.addedNodes[0].nodeName === '#text');
   const brAddRemove = list.find(record => {
-    return (record.addedNodes.length === 1 && record.addedNodes[0].nodeName === 'BR') ||
-           (record.removedNodes.length === 1 && record.removedNodes[0].nodeName === 'BR');
+    return (
+      (record.addedNodes.length === 1 && record.addedNodes[0].nodeName === 'BR') ||
+      (record.removedNodes.length === 1 && record.removedNodes[0].nodeName === 'BR')
+    );
   });
   const count = 1 + (textAdd ? 1 : 0) + (brAddRemove ? 1 : 0);
   if (count < list.length) return null;
   if (textAdd && textAdd.addedNodes[0] !== text.target) return null;
   return text;
 }
-
 
 function getChangedLineRange(root: HTMLElement, records: MutationRecord[]): HTMLLineRange | undefined {
   let start: HTMLLineElement | undefined, end: HTMLLineElement | undefined;
@@ -249,7 +255,7 @@ function getChangedLineRange(root: HTMLElement, records: MutationRecord[]): HTML
     }
   }
 
-  if (start && end) return [ start, end ];
+  if (start && end) return [start, end];
 }
 
 function getTopLine(root: HTMLElement, node: any) {

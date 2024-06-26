@@ -1,8 +1,8 @@
-import { AttributeMap, EditorRange, Line, Op, TextDocument, isEqual } from '@typewriter/document';
-import Editor from '../Editor';
+import { AttributeMap, Line, Op, TextDocument, isEqual, type EditorRange } from '@typewriter/document';
+import { Editor } from '../Editor';
 import { applyDecorations } from '../modules/decorations';
-import { LineType } from '../typesetting/typeset';
-import { Props, VChild, VNode, h, patch } from './vdom';
+import type { LineType } from '../typesetting/typeset';
+import { h, patch, type Props, type VChild, type VNode } from './vdom';
 
 const EMPTY_ARR: any[] = [];
 const BR = h('br', {});
@@ -16,7 +16,7 @@ export type CombinedEntry = Line | Line[];
 export type Combined = CombinedEntry[];
 interface CombinedData {
   combined: Combined;
-  byKey:  Record<string, CombinedEntry>;
+  byKey: Record<string, CombinedEntry>;
 }
 type LineRanges = [EditorRange, EditorRange];
 export interface HTMLLineElement extends HTMLElement {
@@ -42,7 +42,7 @@ export function setLineNodesRanges(editor: Editor) {
     if (!entry) continue;
     if (Array.isArray(entry)) {
       // set the range for the entire combined section
-      ranges.set(child, [ doc.getLineRange(entry[0])[0], doc.getLineRange(entry[entry.length - 1])[1] ]);
+      ranges.set(child, [doc.getLineRange(entry[0])[0], doc.getLineRange(entry[entry.length - 1])[1]]);
 
       // set the ranges for each line inside
       const lineElements = child.querySelectorAll(editor.typeset.lines.selector) as any as HTMLLineElement[];
@@ -66,7 +66,6 @@ export function setLineNodesRanges(editor: Editor) {
   nodeRanges.set(root, ranges);
 }
 
-
 export function render(editor: Editor, doc: TextDocument) {
   const { root } = editor;
   editor.dispatchEvent(new Event('rendering'));
@@ -76,13 +75,12 @@ export function render(editor: Editor, doc: TextDocument) {
   editor.dispatchEvent(new Event('rendered'));
 }
 
-
 export function renderChanges(editor: Editor, oldDoc: TextDocument, newDoc: TextDocument) {
   const { root } = editor;
   // Ranges of line indexes, not document indexes
   const oldCombined = combineLines(editor, oldDoc.lines).combined;
   const newCombined = combineLines(editor, newDoc.lines).combined;
-  const [ oldRange, newRange ] = getChangedRanges(oldCombined, newCombined);
+  const [oldRange, newRange] = getChangedRanges(oldCombined, newCombined);
 
   // If the changes include added or deleted lines, expand ranges by 1 on each side to ensure the vdom can rerender
   if (!isEqual(oldRange, newRange)) {
@@ -130,7 +128,11 @@ export function renderSingleLine(editor: Editor, line: Line, forHTML?: boolean) 
 export function renderMultiLine(editor: Editor, lines: Line[], forHTML?: boolean) {
   const type = getLineType(editor, lines[0]);
   if (!type.renderMultiple) throw new Error('No render method defined for line');
-  const node = type.renderMultiple(lines.map(line => [ line.attributes, renderInline(editor, line), line.id ]), editor, forHTML);
+  const node = type.renderMultiple(
+    lines.map(line => [line.attributes, renderInline(editor, line), line.id]),
+    editor,
+    forHTML
+  );
   node.key = lines[0].id;
   return node;
 }
@@ -178,7 +180,10 @@ export function getChangedRanges(oldC: Combined, newC: Combined): LineRanges {
   const oldLength = oldC.length;
   const newLength = newC.length;
   const minLength = Math.min(oldLength, newLength);
-  let oldStart = 0, oldEnd = 0, newStart = 0, newEnd = 0;
+  let oldStart = 0,
+    oldEnd = 0,
+    newStart = 0,
+    newEnd = 0;
   for (let i = 0; i < minLength; i++) {
     if (!isSame(oldC[i], newC[i])) {
       oldStart = newStart = i;
@@ -192,9 +197,11 @@ export function getChangedRanges(oldC: Combined, newC: Combined): LineRanges {
       break;
     }
   }
-  return [[ oldStart, oldEnd ], [ newStart, newEnd ]];
+  return [
+    [oldStart, oldEnd],
+    [newStart, newEnd],
+  ];
 }
-
 
 export function renderInline(editor: Editor, line: Line, forHTML?: boolean) {
   const { lines, formats, embeds } = editor.typeset;
@@ -234,16 +241,18 @@ export function renderInline(editor: Editor, line: Line, forHTML?: boolean) {
 
     if (op.attributes) {
       // Sort them by the order found in formats
-      Object.keys(op.attributes).sort((a, b) => formats.priority(b) - formats.priority(a)).forEach(name => {
-        const type = formats.get(name);
-        if (type?.render) {
-          const node = type.render(op.attributes as AttributeMap, children, line, editor, forHTML);
-          if (node) {
-            nodeFormatType.set(node, type); // Store for merging
-            children = [ node ];
+      Object.keys(op.attributes)
+        .sort((a, b) => formats.priority(b) - formats.priority(a))
+        .forEach(name => {
+          const type = formats.get(name);
+          if (type?.render) {
+            const node = type.render(op.attributes as AttributeMap, children, line, editor, forHTML);
+            if (node) {
+              nodeFormatType.set(node, type); // Store for merging
+              children = [node];
+            }
           }
-        }
-      });
+        });
     }
 
     inlineChildren.push.apply(inlineChildren, children);
@@ -256,15 +265,15 @@ export function renderInline(editor: Editor, line: Line, forHTML?: boolean) {
   return tabbedChildren.length ? tabbedChildren : inlineChildren;
 }
 
-
 function isSame(oldEntry: CombinedEntry, newEntry: CombinedEntry): boolean {
   if (oldEntry === newEntry) return true;
-  return Array.isArray(oldEntry)
-    && Array.isArray(newEntry)
-    && oldEntry.length === newEntry.length
-    && oldEntry.every((b, i) => b === newEntry[i]);
+  return (
+    Array.isArray(oldEntry) &&
+    Array.isArray(newEntry) &&
+    oldEntry.length === newEntry.length &&
+    oldEntry.every((b, i) => b === newEntry[i])
+  );
 }
-
 
 function getLineType(editor: Editor, line: Line): LineType {
   let type = linesType.get(line.attributes);
@@ -275,8 +284,6 @@ function getLineType(editor: Editor, line: Line): LineType {
   return type;
 }
 
-
-
 // Joins adjacent format nodes
 function mergeChildren(oldChildren: VChild[]) {
   const children: VChild[] = [];
@@ -284,9 +291,14 @@ function mergeChildren(oldChildren: VChild[]) {
     const index = children.length - 1;
     const prev = children[index];
 
-    if (prev && typeof prev !== 'string' && typeof next !== 'string' && nodeFormatType.has(prev) &&
-      nodeFormatType.get(prev) === nodeFormatType.get(next) && isSameFormat(prev.props, next.props))
-    {
+    if (
+      prev &&
+      typeof prev !== 'string' &&
+      typeof next !== 'string' &&
+      nodeFormatType.has(prev) &&
+      nodeFormatType.get(prev) === nodeFormatType.get(next) &&
+      isSameFormat(prev.props, next.props)
+    ) {
       prev.children = prev.children.concat(next.children);
     } else if (prev && typeof prev === 'string' && typeof next === 'string') {
       children[index] += next; // combine adjacent text nodes

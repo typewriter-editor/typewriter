@@ -1,5 +1,5 @@
 import { TextDocument } from '@typewriter/document';
-import Editor, { EditorChangeEvent } from '../Editor';
+import { Editor, EditorChangeEvent } from '../Editor';
 import { renderChanges, render as renderWhole } from '../rendering/rendering';
 
 export interface RenderWhat {

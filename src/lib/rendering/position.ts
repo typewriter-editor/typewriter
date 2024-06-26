@@ -1,16 +1,14 @@
-import Editor from '../Editor';
-import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from './rendering';
-import { EditorRange, Line } from '@typewriter/document';
-import { isBRPlaceholder } from './html';
-import { createTreeWalker } from './walker';
+import { Line, type EditorRange } from '@typewriter/document';
+import { Editor } from '../Editor';
 import { Types } from '../typesetting';
-
+import { isBRPlaceholder } from './html';
+import { getLineNodeEnd, getLineNodeStart, type HTMLLineElement } from './rendering';
+import { createTreeWalker } from './walker';
 
 type NodeAndOffset = [Node | null, number];
 type NodeOffsetAndFrozen = [Node | null, number, boolean?];
 
-const EMPTY_NODE_OFFSET: NodeAndOffset = [ null, 0 ];
-
+const EMPTY_NODE_OFFSET: NodeAndOffset = [null, 0];
 
 export interface LineInfo {
   line: Line;
@@ -19,9 +17,8 @@ export interface LineInfo {
   belowMid: boolean;
 }
 
-
 export function getIndexFromPoint(editor: Editor, x: number, y: number) {
-  const document = editor.root.ownerDocument
+  const document = editor.root.ownerDocument;
   if ('caretPositionFromPoint' in document) {
     try {
       const pos = (document as any).caretPositionFromPoint(x, y);
@@ -45,23 +42,23 @@ export function getIndexFromPoint(editor: Editor, x: number, y: number) {
 export function getLineInfoFromPoint(editor: Editor, y: number): LineInfo | undefined {
   const { root } = editor;
   if (!root.ownerDocument) return;
-  const lineElements = Array.from(root.querySelectorAll(editor.typeset.lines.selector))
-    .filter(elem => (elem as any).key) as HTMLLineElement[];
+  const lineElements = Array.from(root.querySelectorAll(editor.typeset.lines.selector)).filter(
+    elem => (elem as any).key
+  ) as HTMLLineElement[];
   const last = lineElements[lineElements.length - 1];
   for (const element of lineElements) {
     const rect = element.getBoundingClientRect();
     if (rect.bottom >= y || element === last) {
       const line = editor.doc.getLineBy(element.key);
-      return { line, element, rect, belowMid: y > rect.top + rect.height/2 };
+      return { line, element, rect, belowMid: y > rect.top + rect.height / 2 };
     }
   }
 }
 
-
 // Get a browser range object for the given editor range tuple
 export function getBrowserRange(editor: Editor, range: EditorRange) {
-  if (range[0] > range[1]) range = [ range[1], range[0] ];
-  const [ anchorNode, anchorOffset, focusNode, focusOffset ] = getNodesForRange(editor, range);
+  if (range[0] > range[1]) range = [range[1], range[0]];
+  const [anchorNode, anchorOffset, focusNode, focusOffset] = getNodesForRange(editor, range);
   const browserRange = editor.root.ownerDocument.createRange();
   if (anchorNode && focusNode) {
     browserRange.setStart(anchorNode, anchorOffset);
@@ -70,17 +67,15 @@ export function getBrowserRange(editor: Editor, range: EditorRange) {
   return browserRange;
 }
 
-
 export function getBoudingBrowserRange(editor: Editor, range: EditorRange): Range {
   const browserRange = getBrowserRange(editor, range);
   if (browserRange?.endContainer.nodeType === Node.ELEMENT_NODE) {
     try {
       browserRange.setEnd(browserRange.endContainer, browserRange.endOffset + 1);
-    } catch(e) {}
+    } catch (e) {}
   }
   return browserRange;
 }
-
 
 export function getIndexFromNodeAndOffset(editor: Editor, node: Node, offset: number, current?: number | null): number {
   const { root } = editor;
@@ -112,7 +107,6 @@ export function getIndexFromNodeAndOffset(editor: Editor, node: Node, offset: nu
   return getIndexFromNode(editor, node) + offset;
 }
 
-
 // Get the index the node starts at in the content
 export function getIndexFromNode(editor: Editor, startNode: Node): number {
   const { root } = editor;
@@ -137,16 +131,14 @@ export function getIndexFromNode(editor: Editor, startNode: Node): number {
   return index;
 }
 
-
 export function getLineElementAt(editor: Editor, index: number) {
   const { root } = editor;
   if (!root.ownerDocument) return;
   const lineNodes = Array.from(root.querySelectorAll(editor.typeset.lines.selector));
-  return lineNodes.find((line: HTMLLineElement) =>
-    getLineNodeStart(root, line) <= index && getLineNodeEnd(root, line) > index
+  return lineNodes.find(
+    (line: Element) => getLineNodeStart(root, line) <= index && getLineNodeEnd(root, line) > index
   ) as HTMLLineElement;
 }
-
 
 export function getNodeLength(editor: Editor, parentNode: Node): number {
   const { lines, embeds } = editor.typeset;
@@ -157,8 +149,9 @@ export function getNodeLength(editor: Editor, parentNode: Node): number {
   if (parentNode.nodeType === Node.TEXT_NODE) return textNodeLength(lines, parentNode);
 
   const walker = createTreeWalker(parentNode);
-  let length = lines.findByNode(parentNode) ? 1 : 0, node: Node | null;
-  while (node = walker.nextNode()) {
+  let length = lines.findByNode(parentNode) ? 1 : 0,
+    node: Node | null;
+  while ((node = walker.nextNode())) {
     if (node.nodeType === Node.TEXT_NODE) length += textNodeLength(lines, node);
     else if ((node as HTMLElement).classList?.contains('decoration')) length;
     else if (embeds.matches(node) && !isBRPlaceholder(editor, node as HTMLElement)) length++;
@@ -167,26 +160,25 @@ export function getNodeLength(editor: Editor, parentNode: Node): number {
   return length;
 }
 
-
 // Get the browser nodes and offsets for the range (a tuple of indexes) of this view
 export function getNodesForRange(editor: Editor, range: EditorRange): [Node | null, number, Node | null, number] {
   if (range == null) {
-    return [ null, 0, null, 0 ];
+    return [null, 0, null, 0];
   } else {
     const anchorFirst = range[0] <= range[1];
     const direction = anchorFirst ? 1 : -1;
     const isCollapsed = range[0] === range[1];
-    const [ anchorNode, anchorOffset, frozen ] = getNodeAndOffset(editor, range[0], anchorFirst ? 0 : 1);
-    const [ focusNode, focusOffset ] = isCollapsed && !frozen
-      ? [ anchorNode, anchorOffset ]
-      : frozen && (isCollapsed || range[1] - range[0] === direction * editor.doc.getLineAt(range[0]).length)
-      ? [ anchorNode, anchorOffset + (anchorFirst ? 1 : -1) ]
-      : getNodeAndOffset(editor, range[1], anchorFirst ? 1 : 0);
+    const [anchorNode, anchorOffset, frozen] = getNodeAndOffset(editor, range[0], anchorFirst ? 0 : 1);
+    const [focusNode, focusOffset] =
+      isCollapsed && !frozen
+        ? [anchorNode, anchorOffset]
+        : frozen && (isCollapsed || range[1] - range[0] === direction * editor.doc.getLineAt(range[0]).length)
+          ? [anchorNode, anchorOffset + (anchorFirst ? 1 : -1)]
+          : getNodeAndOffset(editor, range[1], anchorFirst ? 1 : 0);
 
-    return [ anchorNode, anchorOffset, focusNode, focusOffset ];
+    return [anchorNode, anchorOffset, focusNode, focusOffset];
   }
 }
-
 
 export function getNodeAndOffset(editor: Editor, index: number, direction: 0 | 1): NodeOffsetAndFrozen {
   const { root } = editor;
@@ -199,7 +191,7 @@ export function getNodeAndOffset(editor: Editor, index: number, direction: 0 | 1
 
   const type = lines.findByNode(line, true);
   if (type.frozen) {
-    return [ line.parentNode, childNodes.indexOf(line) + direction, true ]
+    return [line.parentNode, childNodes.indexOf(line) + direction, true];
   }
 
   index -= getLineNodeStart(root, line);
@@ -207,11 +199,12 @@ export function getNodeAndOffset(editor: Editor, index: number, direction: 0 | 1
 
   const walker = createTreeWalker(line);
 
-  let node: Node | null, firstLineSeen = false;
+  let node: Node | null,
+    firstLineSeen = false;
   while ((node = walker.nextNode())) {
     if (node.nodeType === Node.TEXT_NODE) {
       const size = textNodeLength(lines, node);
-      if (index <= size) return [ node, index ];
+      if (index <= size) return [node, index];
       index -= size;
     } else if ((node as HTMLElement).classList?.contains('decoration')) {
     } else if (embeds.matches(node) && !isBRPlaceholder(editor, node as HTMLElement)) {
@@ -223,7 +216,7 @@ export function getNodeAndOffset(editor: Editor, index: number, direction: 0 | 1
       // If the selection lands after this embed, and the next node isn't a text node, place the selection
       if (index <= 0) {
         const children = Array.from((node.parentNode as HTMLElement).childNodes) as Node[];
-        return [ node.parentNode, children.indexOf(node) + 1 + index ];
+        return [node.parentNode, children.indexOf(node) + 1 + index];
       }
     } else if (lines.matches(node)) {
       if (firstLineSeen) index -= 1;
@@ -233,19 +226,18 @@ export function getNodeAndOffset(editor: Editor, index: number, direction: 0 | 1
       if (index === 0) {
         const first = walker.firstChild();
         if (first && first.nodeType === Node.TEXT_NODE) {
-          return [ first, 0 ];
+          return [first, 0];
         } else if (first) {
           const children = Array.from(node.childNodes) as Node[];
-          return [ node, children.indexOf(first) ];
+          return [node, children.indexOf(first)];
         } else {
-          return [ node, 0 ];
+          return [node, 0];
         }
       }
     }
   }
-  return atStart ? [ line, 0 ] : EMPTY_NODE_OFFSET;
+  return atStart ? [line, 0] : EMPTY_NODE_OFFSET;
 }
-
 
 export function textNodeLength(lines: Types, node: Node) {
   const value = node.nodeValue || '';

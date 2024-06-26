@@ -1,9 +1,15 @@
-import Editor, { EditorChangeEvent } from '../Editor';
-import { TextDocument, EditorRange, isEqual } from '@typewriter/document';
-import { combineLines, Combined, getChangedRanges, HTMLLineElement, renderLine, setLineNodesRanges } from '../rendering/rendering';
-import { h, patch, VNode } from '../rendering/vdom';
+import { TextDocument, isEqual, type EditorRange } from '@typewriter/document';
+import { Editor, EditorChangeEvent } from '../Editor';
+import {
+  combineLines,
+  getChangedRanges,
+  renderLine,
+  setLineNodesRanges,
+  type Combined,
+  type HTMLLineElement,
+} from '../rendering/rendering';
 import { setSelection } from '../rendering/selection';
-
+import { h, patch, type VNode } from '../rendering/vdom';
 
 export interface VirtualRenderWhat {
   old?: TextDocument;
@@ -12,7 +18,6 @@ export interface VirtualRenderWhat {
 }
 
 type HeightInfo = [marginTop: number, height: number, marginBottom: number];
-
 
 export function virtualRendering(editor: Editor) {
   let start = 0;
@@ -31,7 +36,6 @@ export function virtualRendering(editor: Editor) {
   let hasChanged = false;
   let updateQueued = true;
 
-
   viewport.addEventListener('scroll', onScroll, { passive: true });
   editor.on('change', onChange);
   const offResize = onResize(viewport, (width, height, changed) => {
@@ -40,11 +44,9 @@ export function virtualRendering(editor: Editor) {
     update();
   });
 
-
-
   function render(what?: VirtualRenderWhat) {
     if (!what || !items) {
-      const { doc } = editor.modules.decorations as { doc: TextDocument } || editor;
+      const { doc } = (editor.modules.decorations as { doc: TextDocument }) || editor;
       items = combineLines(editor, doc.lines).combined;
       itemsDoc = doc;
       hasChanged = true;
@@ -62,13 +64,14 @@ export function virtualRendering(editor: Editor) {
 
       if (old && doc) {
         const newItems = combineLines(editor, doc.lines).combined;
-        const [ oldRange, newRange ] = getChangedRanges(items, newItems);
+        const [oldRange, newRange] = getChangedRanges(items, newItems);
         if (oldRange[0] + oldRange[1] + newRange[0] + newRange[1] > 0) {
           hasChanged = true;
-          const oldLength = oldRange[1] - oldRange[0], newLength = newRange[1] - newRange[0];
+          const oldLength = oldRange[1] - oldRange[0],
+            newLength = newRange[1] - newRange[0];
           if (oldLength < newLength) {
             // lines were added, add empty spots into the heightMap
-            const empty = new Array(newLength - oldLength).fill(undefined)
+            const empty = new Array(newLength - oldLength).fill(undefined);
             heightMap.splice(oldRange[1], 0, ...empty);
           } else if (oldLength > newLength) {
             heightMap.splice(oldRange[0], oldLength - newLength);
@@ -87,7 +90,6 @@ export function virtualRendering(editor: Editor) {
       if (hasChanged) update();
     }
   }
-
 
   // Determine start and end of visible range
   function update() {
@@ -130,11 +132,10 @@ export function virtualRendering(editor: Editor) {
     }
   }
 
-
   function shouldUpdate() {
     const { scrollTop } = viewport;
 
-    const renderSet = new Set([ 0, items.length - 1, ...(lineSelection || []) ]);
+    const renderSet = new Set([0, items.length - 1, ...(lineSelection || [])]);
 
     let i = 0;
     let y = offsetTop;
@@ -173,7 +174,6 @@ export function virtualRendering(editor: Editor) {
     return hasChanged;
   }
 
-
   function renderToDom() {
     const nodes: VNode[] = [];
 
@@ -190,7 +190,12 @@ export function virtualRendering(editor: Editor) {
         if (space) {
           spacerMarginBottom = getMarginBetween(i, -1);
           space -= spacerMarginTop;
-          const spacer = h('div', { class: '-spacer-', ['data-key']: spacerKey, style: `height:${space}px;margin-top:${spacerMarginTop}px;margin-bottom:${spacerMarginBottom}px;`, key: spacerKey  });
+          const spacer = h('div', {
+            class: '-spacer-',
+            ['data-key']: spacerKey,
+            style: `height:${space}px;margin-top:${spacerMarginTop}px;margin-bottom:${spacerMarginBottom}px;`,
+            key: spacerKey,
+          });
           spacerKey = '';
           nodes.push(spacer);
         }
@@ -216,7 +221,6 @@ export function virtualRendering(editor: Editor) {
     editor.dispatchEvent(new Event('rendered'));
   }
 
-
   function updateHeights() {
     children = Array.from(editor.root.children).filter(child => child.className !== '-spacer-') as HTMLLineElement[];
     for (let i = 0; i < children.length; i++) {
@@ -226,28 +230,26 @@ export function virtualRendering(editor: Editor) {
     if (!children.length) return;
     const heights = heightMap.filter(Boolean);
     averageHeight = Math.round(
-      getMarginBetween(0, -1, heights) +
-      heights.reduce((a, b, i, arr) => a + getHeightFor(i, arr), 0) / heights.length
+      getMarginBetween(0, -1, heights) + heights.reduce((a, b, i, arr) => a + getHeightFor(i, arr), 0) / heights.length
     );
   }
-
 
   function getOffsetTop() {
     const { scrollTop } = viewport;
     const { root } = editor;
     if (viewport === root) return parseInt(getComputedStyle(root).paddingTop);
-    return root.getBoundingClientRect().top
-      + parseInt(getComputedStyle(root).paddingTop)
-      + scrollTop
-      - viewport.getBoundingClientRect().top;
+    return (
+      root.getBoundingClientRect().top +
+      parseInt(getComputedStyle(root).paddingTop) +
+      scrollTop -
+      viewport.getBoundingClientRect().top
+    );
   }
-
 
   function getHeightInfo(node: HTMLLineElement): HeightInfo {
     const styles = getComputedStyle(node);
-    return [ parseInt(styles.marginTop), node.offsetHeight, parseInt(styles.marginBottom) ];
+    return [parseInt(styles.marginTop), node.offsetHeight, parseInt(styles.marginBottom)];
   }
-
 
   function getHeightFor(i: number, array = heightMap) {
     if (!array[i]) return averageHeight;
@@ -255,17 +257,15 @@ export function virtualRendering(editor: Editor) {
   }
 
   function getMarginBetween(i: number, direction: -1 | 1, array = heightMap) {
-    return Math.max(array[i] && array[i][2] || 0, array[i + direction] && array[i + direction][0] || 0)
+    return Math.max((array[i] && array[i][2]) || 0, (array[i + direction] && array[i + direction][0]) || 0);
   }
-
 
   function withinRender(range: EditorRange | null, inclusive?: boolean) {
     if (!range) return false;
-    let [ from, to ] = range;
+    let [from, to] = range;
     if (inclusive) to++;
     return toRender.some(i => i >= from && i < to);
   }
-
 
   function onScroll() {
     if (updateQueued) return;
@@ -273,13 +273,11 @@ export function virtualRendering(editor: Editor) {
     updateQueued = true;
   }
 
-
   function onChange(event: EditorChangeEvent) {
-    const { old, doc } = editor.modules.decorations as { old: TextDocument, doc: TextDocument } || event;
+    const { old, doc } = (editor.modules.decorations as { old: TextDocument; doc: TextDocument }) || event;
     const selection = event.doc.selection;
     render({ old, doc, selection });
   }
-
 
   return {
     render,
@@ -293,10 +291,9 @@ export function virtualRendering(editor: Editor) {
       offResize();
       viewport.removeEventListener('scroll', onScroll);
       editor.off('change', onChange);
-    }
-  }
+    },
+  };
 }
-
 
 const scrollable = /auto|scroll/;
 
@@ -338,8 +335,9 @@ function onResize(node: HTMLElement, callback: (width: number, height: number, c
   }
 }
 
-function selectedLineIndexes([ from, to ]: EditorRange, lines: Combined): EditorRange {
-  let first: number = 0, last: number = 0;
+function selectedLineIndexes([from, to]: EditorRange, lines: Combined): EditorRange {
+  let first: number = 0,
+    last: number = 0;
   for (let i = 0, pos = 0; i < lines.length; i++) {
     const entry = lines[i];
     const length = Array.isArray(entry) ? entry.reduce((length, line) => length + line.length, 0) : entry.length;
@@ -350,5 +348,5 @@ function selectedLineIndexes([ from, to ]: EditorRange, lines: Combined): Editor
     }
     pos += length;
   }
-  return [ first, last ];
+  return [first, last];
 }

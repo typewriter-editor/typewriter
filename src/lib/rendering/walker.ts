@@ -13,6 +13,6 @@ export function createTreeWalker(root: Node, filter?: (node: Node) => boolean | 
       } else {
         return NodeFilter.FILTER_ACCEPT;
       }
-    }
+    },
   });
 }

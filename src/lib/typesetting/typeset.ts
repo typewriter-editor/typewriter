@@ -1,6 +1,6 @@
 import { AttributeMap, Line } from '@typewriter/document';
-import Editor, { Shortcuts } from '../Editor';
-import { VChild, VNode } from '../rendering/vdom.js';
+import { Editor, type Shortcuts } from '../Editor';
+import type { VChild, VNode } from '../rendering/vdom';
 const EMPTY_ARR: any[] = [];
 
 const lineTypes: Record<string, LineType> = {};

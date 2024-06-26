@@ -1,11 +1,11 @@
-import Editor from '../Editor';
+import { TextDocument, normalizeRange, type EditorRange } from '@typewriter/document';
+import { Editor } from '../Editor';
 import { docToHTML, inlineToHTML } from '../rendering/html';
-import { TextDocument, normalizeRange, EditorRange } from '@typewriter/document';
 
 const defaultOptions: CopyOptions = {
   copyPlainText: true,
-  copyHTML: true
-}
+  copyHTML: true,
+};
 
 export interface CopyOptions {
   copyPlainText?: boolean;
@@ -21,16 +21,13 @@ export interface CopyData {
 const empty = { text: '', html: '' };
 
 export function copy(editor: Editor, options: CopyOptions = defaultOptions) {
-
   function getCopy(selection?: EditorRange) {
     const { doc } = editor;
-    const range = normalizeRange(selection || doc.selection as EditorRange);
+    const range = normalizeRange(selection || (doc.selection as EditorRange));
     if (!range) return empty;
     const slice = doc.slice(range[0], range[1]);
     if (!slice.ops.length) return empty;
-    const text = slice
-      .map(op => typeof op.insert === 'string' ? op.insert : ' ')
-      .join('');
+    const text = slice.map(op => (typeof op.insert === 'string' ? op.insert : ' ')).join('');
     let html: string;
     if (text.includes('\n')) {
       slice.push({ insert: '\n', attributes: doc.getLineFormat(range[1]) });
@@ -71,6 +68,6 @@ export function copy(editor: Editor, options: CopyOptions = defaultOptions) {
     destroy() {
       editor.root.removeEventListener('copy', onCopy);
       editor.root.removeEventListener('cut', onCut);
-    }
-  }
+    },
+  };
 }

@@ -1,8 +1,6 @@
-
-import { EditorRange } from '@typewriter/document';
-import Editor from '../Editor';
+import type { EditorRange } from '@typewriter/document';
+import { Editor } from '../Editor';
 import { getIndexFromNodeAndOffset, getNodesForRange } from './position';
-
 
 /**
  * Get the selection range from the current browser selection
@@ -14,18 +12,34 @@ export function getSelection(editor: Editor): EditorRange | null {
   const selection = root.ownerDocument.getSelection();
   const { lines } = editor.typeset;
 
-  if (selection == null || selection.anchorNode == null || selection.focusNode == null || !root.contains(selection.anchorNode)) {
+  if (
+    selection == null ||
+    selection.anchorNode == null ||
+    selection.focusNode == null ||
+    !root.contains(selection.anchorNode)
+  ) {
     return null;
   } else {
-    const anchorIndex = getIndexFromNodeAndOffset(editor, selection.anchorNode, selection.anchorOffset, current && current[0]);
-    const isCollapsed = selection.anchorNode === selection.focusNode && selection.anchorOffset === selection.focusOffset;
+    const anchorIndex = getIndexFromNodeAndOffset(
+      editor,
+      selection.anchorNode,
+      selection.anchorOffset,
+      current && current[0]
+    );
+    const isCollapsed =
+      selection.anchorNode === selection.focusNode && selection.anchorOffset === selection.focusOffset;
     const isFrozen = lines.findByAttributes(editor.doc.getLineAt(anchorIndex)?.attributes, true).frozen;
     // selection.isCollapsed causes a re-layout on Chrome, manual detection does not.
     let focusIndex = isCollapsed
       ? anchorIndex
-      : getIndexFromNodeAndOffset(editor, selection.focusNode, selection.focusOffset, !isFrozen && current ? current[1] : null);
+      : getIndexFromNodeAndOffset(
+          editor,
+          selection.focusNode,
+          selection.focusOffset,
+          !isFrozen && current ? current[1] : null
+        );
 
-    return [ anchorIndex, focusIndex ];
+    return [anchorIndex, focusIndex];
   }
 }
 
@@ -37,7 +51,8 @@ export function setSelection(editor: Editor, range: EditorRange | null) {
   if (!root.ownerDocument) return;
   const selection = root.ownerDocument.getSelection();
   if (!selection) return;
-  const hasFocus = selection.anchorNode && root.contains(selection.anchorNode) && document.activeElement !== document.body;
+  const hasFocus =
+    selection.anchorNode && root.contains(selection.anchorNode) && document.activeElement !== document.body;
 
   if (range == null) {
     if (hasFocus) {
@@ -45,12 +60,16 @@ export function setSelection(editor: Editor, range: EditorRange | null) {
       if (root.classList.contains('focus')) root.classList.remove('focus');
     }
   } else {
-    const [ anchorNode, anchorOffset, focusNode, focusOffset ] = getNodesForRange(editor, range);
+    const [anchorNode, anchorOffset, focusNode, focusOffset] = getNodesForRange(editor, range);
     const type = range[0] === range[1] ? 'Caret' : 'Range';
     if (anchorNode && focusNode) {
-      if (selection.anchorNode !== anchorNode || selection.anchorOffset !== anchorOffset ||
-          selection.focusNode !== focusNode || selection.focusOffset !== focusOffset || selection.type !== type)
-      {
+      if (
+        selection.anchorNode !== anchorNode ||
+        selection.anchorOffset !== anchorOffset ||
+        selection.focusNode !== focusNode ||
+        selection.focusOffset !== focusOffset ||
+        selection.type !== type
+      ) {
         selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
       }
     }

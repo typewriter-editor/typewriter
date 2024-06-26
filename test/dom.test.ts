@@ -3,7 +3,7 @@
  */
 import { Delta, TextDocument } from '@typewriter/document';
 import { describe, expect, it } from 'vitest';
-import Editor from '../src/lib/Editor';
+import { Editor } from '../src/lib/Editor';
 import { deltaFromDom, deltaFromHTML, docToHTML } from '../src/lib/rendering/html';
 import { renderDoc } from '../src/lib/rendering/rendering';
 

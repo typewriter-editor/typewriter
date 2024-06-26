@@ -1,9 +1,9 @@
-import Editor from './Editor';
-import { docFromDom } from './rendering/html.js';
+import type { Editor } from './Editor';
+import { docFromDom } from './rendering/html';
 
 // A svelte action to set the root for your Editor to an element. E.g.
 // <div class="my-editor" use:asRoot={myEditor}></div>
-export default function asRoot(root: HTMLElement, editor: Editor) {
+export function asRoot(root: HTMLElement, editor: Editor) {
   function update(newEditor: Editor) {
     if (editor === newEditor) return;
     destroy();

@@ -1,11 +1,10 @@
 import { AttributeMap, isEqual } from '@typewriter/document';
-import Editor from '../Editor';
-import { DecorateEvent, DecorationsModule, Decorations } from './decorations';
+import { Editor } from '../Editor';
+import { DecorateEvent, type Decorations, type DecorationsModule } from './decorations';
 
 interface PlaceholderOptions {
   keepAttribute?: boolean;
 }
-
 
 /**
  * Set placeholder text in the editable area when there is no content. Then add the css:
@@ -24,9 +23,7 @@ interface PlaceholderOptions {
  * ```
  */
 export function placeholder(placeholder: string | Function, options?: PlaceholderOptions) {
-
   return (editor: Editor) => {
-
     function onDecorate({ doc }: DecorateEvent) {
       const decorator = (editor.modules.decorations as DecorationsModule).getDecorator('placeholder');
       const text = (typeof placeholder === 'function' ? placeholder() : placeholder) || '';
@@ -59,7 +56,7 @@ export function placeholder(placeholder: string | Function, options?: Placeholde
     return {
       destroy() {
         editor.removeEventListener('decorate', onDecorate);
-      }
-    }
-  }
+      },
+    };
+  };
 }

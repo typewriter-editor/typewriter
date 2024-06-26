@@ -1,10 +1,10 @@
-import { Delta, Line, normalizeRange, isEqual, EditorRange } from '@typewriter/document';
-import Editor from '../Editor';
-import { deltaFromHTML } from '../rendering/html';
+import { Delta, Line, isEqual, normalizeRange, type EditorRange } from '@typewriter/document';
+import { Editor } from '../Editor';
 import { Source } from '../Source';
+import { deltaFromHTML } from '../rendering/html';
 
 const dontFixNewline = { dontFixNewline: true };
-const ignoreId = { excludeProps: new Set([ 'id' ]) };
+const ignoreId = { excludeProps: new Set(['id']) };
 
 export interface PasteEventInit extends EventInit {
   delta: Delta;
@@ -36,13 +36,12 @@ export interface PasteOptions {
 }
 
 export function paste(editor: Editor, options?: PasteOptions) {
-
   function paste({ selection, text, html }: PasteOptions) {
     const { doc } = editor;
     selection = selection || doc.selection;
     selection = selection && normalizeRange(selection);
     if (!selection) return;
-    const [ at, to ] = selection;
+    const [at, to] = selection;
     let delta: Delta;
     if (!html) {
       if (!text) return;
@@ -90,7 +89,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
       if (endsInNewline && to !== doc.getLineRange(endLine)[1] && isEqual(endAttrs, pastedEndAttrs, ignoreId)) {
         // Remove the trailing newline to merge with the last line
         delta = delta.slice(0, --length);
-      // If a multi-line paste is inserted at the end of a line, delete the line's newline and let the inserted one take
+        // If a multi-line paste is inserted at the end of a line, delete the line's newline and let the inserted one take
       } else if (endsInNewline && to === doc.getLineRange(endLine)[1] - 1) {
         delta.delete(1);
         length--;
@@ -107,7 +106,7 @@ export function paste(editor: Editor, options?: PasteOptions) {
         change.insertContent(at, delta).select(at + length);
         editor.update(change, Source.paste);
       } else if (at !== to) {
-        editor.delete([ at, to ]);
+        editor.delete([at, to]);
       }
     }
   }
@@ -132,8 +131,8 @@ export function paste(editor: Editor, options?: PasteOptions) {
     },
     destroy() {
       editor.root.removeEventListener('paste', onPaste);
-    }
-  }
+    },
+  };
 }
 
 function getAttributes(line: Line) {

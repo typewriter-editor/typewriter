@@ -1,21 +1,22 @@
 import {
   AttributeMap,
   Delta,
-  EditorRange,
   Line,
   TextChange,
   TextDocument,
   hasFormat,
   isEqual,
   normalizeRange,
+  type EditorRange,
 } from '@typewriter/document';
-import { Source, SourceString } from './Source';
-import { defaultModules } from './modules/defaults.js';
-import { docFromHTML, docToHTML } from './rendering/html.js';
-import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position.js';
+import { Source, type SourceString } from './Source';
+import type { DecorateEvent } from './modules';
+import { defaultModules } from './modules/defaults';
+import { docFromHTML, docToHTML } from './rendering/html';
+import { getBoudingBrowserRange, getIndexFromPoint } from './rendering/position';
 import { defaultTypes } from './typesetting/defaults';
-import { Commands, Types, Typeset, TypesetTypes } from './typesetting/typeset';
-import EventDispatcher from './util/EventDispatcher';
+import { Types, Typeset, type Commands, type TypesetTypes } from './typesetting/typeset';
+import { EventDispatcher } from './util/EventDispatcher';
 
 const EMPTY_OBJ = {};
 const EMPTY_ARR: any[] = [];
@@ -122,6 +123,8 @@ export interface EditorEventMap {
   mousedown: MouseEvent;
   mouseup: MouseEvent;
   click: MouseEvent;
+  decorate: DecorateEvent;
+  [name: string]: Event;
 }
 
 export class EditorFormatEvent extends Event {
@@ -137,7 +140,7 @@ export interface EditorTextChange extends TextChange {
   apply(source?: SourceString): Editor;
 }
 
-export default class Editor extends EventDispatcher<EditorEventMap> {
+export class Editor extends EventDispatcher<EditorEventMap> {
   identifier: any;
   typeset: Typeset;
   doc: TextDocument;

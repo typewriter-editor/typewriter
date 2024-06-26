@@ -1,17 +1,31 @@
-import { AttributeMap, Delta, EditorRange, Line, TextDocument } from '@typewriter/document';
-import Editor from '../Editor';
-import { HTMLLineElement, renderInline } from '../rendering/rendering';
+import { AttributeMap, Delta, Line, TextDocument, type EditorRange } from '@typewriter/document';
+import { Editor } from '../Editor';
+import { renderInline, type HTMLLineElement } from '../rendering/rendering';
 import { renderDoc } from './rendering';
-import { VNode, patch } from './vdom';
+import { patch, type VNode } from './vdom';
 import { createTreeWalker } from './walker';
 
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
-export const BLOCK_ELEMENTS = 'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
-const BAD_CHARS = /[\0-\x09\x0B\x1F\x7F-\x9F\xAD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB\uE000-\uF8FF]/g;
-const SKIP_ELEMENTS = { STYLE: true, SCRIPT: true, LINK: true, META: true, TITLE: true, };
+export const BLOCK_ELEMENTS =
+  'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
+const BAD_CHARS =
+  /[\0-\x09\x0B\x1F\x7F-\x9F\xAD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB\uE000-\uF8FF]/g;
+const SKIP_ELEMENTS = { STYLE: true, SCRIPT: true, LINK: true, META: true, TITLE: true };
 const VOID_ELEMENTS = {
-  area: true, base: true, br: true, col: true, embed: true, hr: true, img: true, input: true,
-  link: true, meta: true, param: true, source: true, track: true, wbr: true
+  area: true,
+  base: true,
+  br: true,
+  col: true,
+  embed: true,
+  hr: true,
+  img: true,
+  input: true,
+  link: true,
+  meta: true,
+  param: true,
+  source: true,
+  track: true,
+  wbr: true,
 };
 const whitespaceExp = /[ \t\n\r]+/g;
 const textsNode = document.createElement('div');
@@ -32,7 +46,6 @@ export interface FromDomOptions {
   collapseWhitespace?: boolean;
 }
 
-
 // Determines if a <br> in the editable area is part of the document or a doorstop at the end of a line.
 export function isBRPlaceholder(editor: Editor, node: Node) {
   if (node.nodeName !== 'BR') return false;
@@ -46,37 +59,34 @@ function isLastNode(editor: Editor, node: Node) {
   const walker = createTreeWalker(containingLine);
   walker.currentNode = node;
   const next = walker.nextNode();
-  return !next || next instanceof HTMLElement && next.matches(BLOCK_ELEMENTS);
+  return !next || (next instanceof HTMLElement && next.matches(BLOCK_ELEMENTS));
 }
-
 
 export function docToHTML(editor: Editor, doc: TextDocument) {
   return (patch(document.createElement('div'), renderDoc(editor, doc, true)) as HTMLElement).innerHTML;
 }
 
-
 export function inlineToHTML(editor: Editor, delta: Delta) {
-  return (patch(document.createElement('div'), renderInline(editor, Line.create(delta), true) as VNode[]) as HTMLElement).innerHTML;
+  return (
+    patch(document.createElement('div'), renderInline(editor, Line.create(delta), true) as VNode[]) as HTMLElement
+  ).innerHTML;
 }
-
 
 export function docFromHTML(editor: Editor, html: string, selection?: EditorRange | null) {
   return new TextDocument(deltaFromHTML(editor, html), selection);
 }
 
-
 export function deltaFromHTML(editor: Editor, html: string, options?: DeltaFromHTMLOptions) {
   const parser = new window.DOMParser();
-  const doc = parser.parseFromString(html, 'text/html' );
+  const doc = parser.parseFromString(html, 'text/html');
   const delta = deltaFromDom(editor, {
     root: doc.body,
     possiblePartial: options?.possiblePartial,
-    collapseWhitespace: options?.collapseWhitespace
+    collapseWhitespace: options?.collapseWhitespace,
   });
   cleanText(delta);
   return delta;
 }
-
 
 export function docFromDom(editor: Editor, root: HTMLElement) {
   return new TextDocument(deltaFromDom(editor, { root }));
@@ -91,7 +101,6 @@ export function fromNode(editor: Editor, dom: HTMLElement) {
   return lines[0];
 }
 
-
 export function cleanText(delta: Delta) {
   delta.ops = delta.filter(op => {
     if (typeof op.insert === 'string') {
@@ -101,16 +110,19 @@ export function cleanText(delta: Delta) {
   });
 }
 
-
 export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOptions): Delta {
   const { lines, embeds } = editor.typeset;
   const root = options.root || editor.root;
 
-  const collapseWhitespace = options.collapseWhitespace != undefined ? options.collapseWhitespace : true
+  const collapseWhitespace = options.collapseWhitespace != undefined ? options.collapseWhitespace : true;
 
   var walker = createTreeWalker(root, node => !SKIP_ELEMENTS[node.nodeName as keyof typeof SKIP_ELEMENTS]);
   const delta = new Delta();
-  let currentLine: any, firstLineSeen = false, unknownLine = false, empty = true, node: Node | null;
+  let currentLine: any,
+    firstLineSeen = false,
+    unknownLine = false,
+    empty = true,
+    node: Node | null;
   let currentChildLine: any;
 
   if (options.startNode) {
@@ -134,16 +146,18 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
 
       // If blank text between lines, ignore
       if (!node.nodeValue.replace(/\s+/g, '')) {
-        if (node.parentNode === root
-          || (node.previousSibling && lines.matches(node.previousSibling))
-          || (node.nextSibling && lines.matches(node.nextSibling))) {
-            continue;
-          }
+        if (
+          node.parentNode === root ||
+          (node.previousSibling && lines.matches(node.previousSibling)) ||
+          (node.nextSibling && lines.matches(node.nextSibling))
+        ) {
+          continue;
+        }
       }
 
-      const nodeText = node.nodeValue
+      const nodeText = node.nodeValue;
       // optionally collapse whitespace (the default)
-      const filteredWhitespace = collapseWhitespace ? nodeText.replace(whitespaceExp, ' ') : nodeText
+      const filteredWhitespace = collapseWhitespace ? nodeText.replace(whitespaceExp, ' ') : nodeText;
       // non-breaking spaces (&nbsp;) are spaces
       const text = filteredWhitespace.replace(/\xA0/g, ' ');
 
@@ -160,10 +174,13 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
       if (embed) {
         const attributes = gatherFormats(node.parentNode as Element, root, editor);
         if (embed.fromDom !== false) {
-          delta.insert(embed.fromDom ? embed.fromDom(node) : { [embed.name]: true }, attributes);
+          delta.insert(embed.fromDom ? embed.fromDom(node as HTMLElement) : { [embed.name]: true }, attributes);
         }
       }
-    } else if (lines.matches(node) || (node.nodeType === Node.ELEMENT_NODE && (node as Element).matches(BLOCK_ELEMENTS))) {
+    } else if (
+      lines.matches(node) ||
+      (node.nodeType === Node.ELEMENT_NODE && (node as Element).matches(BLOCK_ELEMENTS))
+    ) {
       unknownLine = !lines.matches(node);
 
       if (unknownLine) {
@@ -209,7 +226,7 @@ export function deltaFromDom(editor: Editor, options: FromDomOptions = defaultOp
       if (unknownLine) {
         currentLine = { unknownLine };
       } else if (line && line !== lines.default) {
-        const attrs = line.fromDom ? line.fromDom(node) : { [line.name]: true };
+        const attrs = line.fromDom ? line.fromDom(node as HTMLElement) : { [line.name]: true };
         if (line.child) {
           currentChildLine = attrs;
         } else {
@@ -243,12 +260,12 @@ function gatherFormats(parent: Element, root: Element, editor: Editor) {
     if (formats.matches(parent)) {
       const format = formats.findByNode(parent);
       if (format && format.fromDom !== false) {
-        attributes[format.name] = format.fromDom ? format.fromDom(parent) : true;
+        attributes[format.name] = format.fromDom ? format.fromDom(parent as HTMLElement) : true;
       }
     } else if (parent.hasAttribute('style')) {
       formats.list.forEach(format => {
         if (format.styleSelector && parent.matches(format.styleSelector)) {
-          attributes[format.name] = format.fromDom ? format.fromDom(parent) : true;
+          attributes[format.name] = format.fromDom ? format.fromDom(parent as HTMLElement) : true;
         }
       });
     }

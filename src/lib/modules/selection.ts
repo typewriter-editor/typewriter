@@ -1,9 +1,8 @@
 import { isEqual } from '@typewriter/document';
-import Editor, { EditorChangeEvent } from '../Editor';
+import { Editor, EditorChangeEvent } from '../Editor';
 import { getLineNodeStart } from '../rendering/rendering';
 import { getSelection, setSelection } from '../rendering/selection';
-import { DecorationsModule } from './decorations';
-
+import type { DecorationsModule } from './decorations';
 
 export function selection(editor: Editor) {
   let rootDocument: Document;
@@ -22,7 +21,13 @@ export function selection(editor: Editor) {
       }
       let line = editor.doc.getLineAt(selection[0]);
       let type = editor.typeset.lines.findByAttributes(line.attributes, true);
-      if (selection && selection[0] === selection[1] && editor.doc.selection && editor.doc.selection[0] === selection[0] && editor.doc.selection[1] === selection[0] + 1) {
+      if (
+        selection &&
+        selection[0] === selection[1] &&
+        editor.doc.selection &&
+        editor.doc.selection[0] === selection[0] &&
+        editor.doc.selection[1] === selection[0] + 1
+      ) {
         // Allow a frozen line (e.g. hr) to move the cursor left with a left arrow key
         if (type.frozen) {
           selection[0]--;
@@ -52,7 +57,10 @@ export function selection(editor: Editor) {
   }
 
   function onDecorate() {
-    const { doc, typeset: { lines }} = editor;
+    const {
+      doc,
+      typeset: { lines },
+    } = editor;
     const decorator = (editor.modules.decorations as DecorationsModule).getDecorator('selection');
     decorator.clear();
     const selection = doc.selection;
@@ -76,7 +84,7 @@ export function selection(editor: Editor) {
     const type = line && editor.typeset.lines.findByAttributes(line.attributes);
     if (start != null && line && type && type.frozen) {
       event.preventDefault();
-      editor.select([ start, start + line.length ]);
+      editor.select([start, start + line.length]);
     }
   }
 
@@ -93,7 +101,7 @@ export function selection(editor: Editor) {
     paused = true;
     const { selection } = editor.doc;
     rootDocument.getSelection()?.empty();
-    const { decorations } = editor.modules as {decorations: DecorationsModule}
+    const { decorations } = editor.modules as { decorations: DecorationsModule };
     if (selection && selection[0] !== selection[1] && decorations) {
       const decorator = decorations.getDecorator('pausedSelection');
       decorator.decorateText(selection, { class: 'selected' }).apply();
@@ -102,7 +110,7 @@ export function selection(editor: Editor) {
 
   function resume() {
     paused = false;
-    const { decorations } = editor.modules as {decorations: DecorationsModule}
+    const { decorations } = editor.modules as { decorations: DecorationsModule };
     if (decorations) {
       decorations.removeDecorations('pausedSelection');
     }
@@ -134,6 +142,6 @@ export function selection(editor: Editor) {
       paused = false;
       rootDocument = null as any;
       rootWindow = null as any;
-    }
-  }
-};
+    },
+  };
+}

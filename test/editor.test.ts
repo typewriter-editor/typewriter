@@ -3,7 +3,7 @@
  */
 import { Delta } from '@typewriter/document';
 import { beforeEach, describe, expect, it } from 'vitest';
-import Editor, { EditorChangeEvent } from '../src/lib/Editor';
+import { Editor, EditorChangeEvent } from '../src/lib/Editor';
 
 describe('======== Editor ========', () => {
   let editor: Editor;

@@ -1,6 +1,5 @@
 import { AttributeMap, Delta } from '@typewriter/document';
-import Editor, { EditorChangeEvent } from '../Editor';
-
+import { Editor, EditorChangeEvent } from '../Editor';
 
 export type Replacement = [RegExp, (captured: string, attr: AttributeMap) => AttributeMap];
 export type TextReplacement = [RegExp, (captured: string) => string];
@@ -15,16 +14,40 @@ export type Handler = (editor?: Editor, index?: number, prefix?: string, wholeTe
  * function. The function's argument will be the captured text from the regular expression.
  */
 export const lineReplacements: Replacement[] = [
-  [ /^(#{1,6}) $/, capture => ({ header: capture.length }) ],
-  [ /^\* $/, (_, { indent }) => ({ list: 'bullet', indent }) ],
-  [ /^- $/, (_, { indent }) => ({ list: 'bullet', type: 'dash', indent }) ], // set the type to dash to allow for styling in-app (e.g. `list-style-type: "- ";`)
-  [ /^1\. $/, (_, { indent }) => ({ list: 'ordered', indent }) ],
-  [ /^([AaIi])\. $/, (type, { indent }) => ({ list: 'ordered', type, indent }) ],
-  [ /^(-?\d+)\. $/, (start, { indent }) => ({ list: 'ordered', start, indent }) ], // Use /^(-?\d+)\. $/ to support lists starting at something other than 1.
-  [ /^([A-Z])\. $/, (char, { indent }) => ({ list: 'ordered', type: 'A', indent, start: char === 'A' ? undefined : char.charCodeAt(0) - 'A'.charCodeAt(0) + 1 }) ],
-  [ /^([a-z])\. $/, (char, { indent }) => ({ list: 'ordered', type: 'a', indent, start: char === 'a' ? undefined :  char.charCodeAt(0) - 'a'.charCodeAt(0) + 1 }) ],
-  [ /^([IVXLCDM]+)\. $/i, (chars, { indent }) => ({ list: 'ordered', type: chars[0].toUpperCase() === chars[0] ? 'I' : 'i', indent, start: chars.toUpperCase() === 'I' ? undefined : fromRomanNumeral(chars) }) ],
-  [ /^> $/, () => ({ blockquote: true }) ],
+  [/^(#{1,6}) $/, capture => ({ header: capture.length })],
+  [/^\* $/, (_, { indent }) => ({ list: 'bullet', indent })],
+  [/^- $/, (_, { indent }) => ({ list: 'bullet', type: 'dash', indent })], // set the type to dash to allow for styling in-app (e.g. `list-style-type: "- ";`)
+  [/^1\. $/, (_, { indent }) => ({ list: 'ordered', indent })],
+  [/^([AaIi])\. $/, (type, { indent }) => ({ list: 'ordered', type, indent })],
+  [/^(-?\d+)\. $/, (start, { indent }) => ({ list: 'ordered', start, indent })], // Use /^(-?\d+)\. $/ to support lists starting at something other than 1.
+  [
+    /^([A-Z])\. $/,
+    (char, { indent }) => ({
+      list: 'ordered',
+      type: 'A',
+      indent,
+      start: char === 'A' ? undefined : char.charCodeAt(0) - 'A'.charCodeAt(0) + 1,
+    }),
+  ],
+  [
+    /^([a-z])\. $/,
+    (char, { indent }) => ({
+      list: 'ordered',
+      type: 'a',
+      indent,
+      start: char === 'a' ? undefined : char.charCodeAt(0) - 'a'.charCodeAt(0) + 1,
+    }),
+  ],
+  [
+    /^([IVXLCDM]+)\. $/i,
+    (chars, { indent }) => ({
+      list: 'ordered',
+      type: chars[0].toUpperCase() === chars[0] ? 'I' : 'i',
+      indent,
+      start: chars.toUpperCase() === 'I' ? undefined : fromRomanNumeral(chars),
+    }),
+  ],
+  [/^> $/, () => ({ blockquote: true })],
 ];
 
 /**
@@ -32,15 +55,15 @@ export const lineReplacements: Replacement[] = [
  * function. The function's argument will be the captured text from the regular expression.
  */
 export const markReplacements: Replacement[] = [
-  [ /(\*|_){3}(\b(?:(?!\1).)+\b)\1{3}((?:(?!\1).))$/s, () => ({ bold: true, italic: true })],
-  [ /(\*|_){2}(\b(?:(?!\1).)+\b)\1{2}((?:(?!\1).))$/s, () => ({ bold: true })],
-  [ /(\*|_){1}(\b(?:(?!\1).)+\b)\1{1}((?:(?!\1).))$/s, () => ({ italic: true })],
+  [/(\*|_){3}(\b(?:(?!\1).)+\b)\1{3}((?:(?!\1).))$/s, () => ({ bold: true, italic: true })],
+  [/(\*|_){2}(\b(?:(?!\1).)+\b)\1{2}((?:(?!\1).))$/s, () => ({ bold: true })],
+  [/(\*|_){1}(\b(?:(?!\1).)+\b)\1{1}((?:(?!\1).))$/s, () => ({ italic: true })],
 ];
 
 export const linkReplacements: Replacement[] = [
-  [ httpExpr, capture => ({ link: capture }) ],
-  [ wwwExpr, capture => ({ link: 'https://' + capture }) ],
-  [ nakedExpr, capture => ({ link: 'https://' + capture }) ],
+  [httpExpr, capture => ({ link: capture })],
+  [wwwExpr, capture => ({ link: 'https://' + capture })],
+  [nakedExpr, capture => ({ link: 'https://' + capture })],
 ];
 
 /**
@@ -48,16 +71,16 @@ export const linkReplacements: Replacement[] = [
  * The function's argument will be the captured text from the regular expression.
  */
 export const textReplacements: TextReplacement[] = [
-  [ /--$/, () => '—' ],
-  [ /(\S - \S)$/, (_) => _.replace('-', '–') ],
-  [ /\.\.\.$/, () => '…' ],
+  [/--$/, () => '—'],
+  [/(\S - \S)$/, _ => _.replace('-', '–')],
+  [/\.\.\.$/, () => '…'],
 ];
 
 /**
  * Allow text representations to format a line
  */
 export function lineReplace(editor: Editor, index: number, prefix: string) {
-  return lineReplacements.some(([ regexp, getAttributes ]) => {
+  return lineReplacements.some(([regexp, getAttributes]) => {
     const match = prefix.match(regexp);
     if (match) {
       const attributes = getAttributes(match[1], editor.doc.getLineFormat(index));
@@ -65,10 +88,7 @@ export function lineReplace(editor: Editor, index: number, prefix: string) {
         return false;
       }
       const start = index - prefix.length;
-      const change = editor.change
-        .delete([ start, index ])
-        .formatLine(index, attributes)
-        .select([ start, start ]);
+      const change = editor.change.delete([start, index]).formatLine(index, attributes).select([start, start]);
       editor.update(change);
       return true;
     } else {
@@ -78,7 +98,7 @@ export function lineReplace(editor: Editor, index: number, prefix: string) {
 }
 
 export function linkReplace(editor: Editor, index: number, prefix: string) {
-  return linkReplacements.some(([ regexp, getAttributes ]) => {
+  return linkReplacements.some(([regexp, getAttributes]) => {
     const match = prefix.match(regexp);
     if (match) {
       let text = match[0].slice(0, -1);
@@ -88,7 +108,7 @@ export function linkReplace(editor: Editor, index: number, prefix: string) {
       if (!editor.typeset.formats.findByAttributes(attributes)) {
         return false;
       }
-      editor.formatText(attributes, [ end - text.length, end ]);
+      editor.formatText(attributes, [end - text.length, end]);
       return true;
     } else {
       return false;
@@ -97,10 +117,10 @@ export function linkReplace(editor: Editor, index: number, prefix: string) {
 }
 
 export function markReplace(editor: Editor, index: number, prefix: string, wholeText: string) {
-  return markReplacements.some(([ regexp, getAttributes ]) => {
+  return markReplacements.some(([regexp, getAttributes]) => {
     const match = prefix.match(regexp);
     if (match) {
-      let [ text, _, matched, last ] = match;
+      let [text, _, matched, last] = match;
       const attributes = getAttributes(matched, editor.doc.getTextFormat(index));
       if (!editor.typeset.formats.findByAttributes(attributes)) {
         return false;
@@ -108,7 +128,7 @@ export function markReplace(editor: Editor, index: number, prefix: string, whole
       let selection = index - (text.length - matched.length) + last.length;
       if (last === ' ' && wholeText[index] === ' ') last = '';
       const end = index - last.length;
-      editor.insert(matched, attributes, [ end - text.length + last.length, end ]);
+      editor.insert(matched, attributes, [end - text.length + last.length, end]);
       return true;
     } else {
       return false;
@@ -117,10 +137,10 @@ export function markReplace(editor: Editor, index: number, prefix: string, whole
 }
 
 export function textReplace(editor: Editor, index: number, prefix: string) {
-  return textReplacements.some(([ regexp, replaceWith ]) => {
+  return textReplacements.some(([regexp, replaceWith]) => {
     const match = prefix.match(regexp);
     if (match) {
-      editor.insert(replaceWith(match[1]), undefined, [ index - match[0].length, index ]);
+      editor.insert(replaceWith(match[1]), undefined, [index - match[0].length, index]);
       return true;
     } else {
       return false;
@@ -128,11 +148,9 @@ export function textReplace(editor: Editor, index: number, prefix: string) {
   });
 }
 
-export const defaultHandlers = [ lineReplace, textReplace, linkReplace ];
-
+export const defaultHandlers = [lineReplace, textReplace, linkReplace];
 
 export function smartEntry(handlers: Handler[] = defaultHandlers) {
-
   return (editor: Editor) => {
     let ignore = false;
 
@@ -153,19 +171,17 @@ export function smartEntry(handlers: Handler[] = defaultHandlers) {
     return {
       destroy() {
         editor.off('changed', onTextChange);
-      }
-    }
+      },
+    };
   };
 }
 
-
 function isTextEntry(change: Delta) {
   return (
-    change.ops.length === 1 ||
-    (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)
-  ) &&
-    change.ops[change.ops.length - 1].insert// &&
-    // change.ops[change.ops.length - 1].insert !== '\n';
+    (change.ops.length === 1 || (change.ops.length === 2 && change.ops[0].retain && !change.ops[0].attributes)) &&
+    change.ops[change.ops.length - 1].insert
+  ); // &&
+  // change.ops[change.ops.length - 1].insert !== '\n';
 }
 
 const DIGIT_VALUES = {
@@ -175,7 +191,7 @@ const DIGIT_VALUES = {
   L: 50,
   C: 100,
   D: 500,
-  M: 1000
+  M: 1000,
 };
 
 type RomanNumeral = keyof typeof DIGIT_VALUES;
@@ -193,7 +209,7 @@ function fromRomanNumeral(romanNumeral: string): number | undefined {
     } else {
       result += currentLetter;
     }
-  };
+  }
 
   return result;
 }

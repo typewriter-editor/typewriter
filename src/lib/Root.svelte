@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Editor from './Editor.js';
-  import { docFromDom } from './rendering/html.js';
+  import type { Editor } from './Editor';
+  import { docFromDom } from './rendering/html';
 
   export let editor;
   let className = '';
