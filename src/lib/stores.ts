@@ -1,12 +1,6 @@
-import { AttributeMap, EditorRange, TextDocument, isEqual } from '@typewriter/document';
-import { Readable, derived, get, readable, writable } from 'svelte/store';
+import { AttributeMap, TextDocument, isEqual, type EditorRange } from '@typewriter/document';
+import { readable, writable, type Readable } from 'easy-signal';
 import { Editor } from './Editor';
-
-const EMPTY_NOPTIFIER = () => {};
-const EMPTY_ACTIVE = readable({} as AttributeMap, EMPTY_NOPTIFIER);
-const EMPTY_DOC = readable(new TextDocument(), EMPTY_NOPTIFIER);
-const EMPTY_SELECTION = readable(null, EMPTY_NOPTIFIER);
-const EMPTY_ROOT = readable(undefined, EMPTY_NOPTIFIER);
 
 export interface EditorStores {
   active: Readable<AttributeMap>;
@@ -18,19 +12,16 @@ export interface EditorStores {
 }
 
 export function editorStores(editor: Editor): EditorStores {
-  const active = proxy(activeStore(editor));
-  const doc = proxy(docStore(editor));
-  const selection = proxy(selectionStore(editor));
-  const root = proxy(rootStore(editor));
-  const focus = focusStore(selection);
+  const editorStore = writable(editor);
+  const active = activeStore(editorStore);
+  const doc = docStore(editorStore);
+  const selection = selectionStore(editorStore);
+  const root = rootStore(editorStore);
+  const focus = focusStore(editorStore);
 
   function updateEditor(value: Editor) {
     if (value === editor) return;
-    editor = value;
-    active.set(activeStore(editor));
-    doc.set(docStore(editor));
-    selection.set(selectionStore(editor));
-    root.set(rootStore(editor));
+    editorStore.set(value);
   }
 
   return {
@@ -43,76 +34,63 @@ export function editorStores(editor: Editor): EditorStores {
   };
 }
 
-export function activeStore(editor?: Editor) {
-  if (!editor) return EMPTY_ACTIVE;
-  let active = editor.getActive();
+export function derivedEditorStore<T>(
+  editorStore: Readable<Editor>,
+  defaultValue: T,
+  changeEvents: string[],
+  update: (editor: Editor) => T,
+  checkEquality?: boolean
+): Readable<T> {
+  let value = defaultValue;
 
-  return readable<AttributeMap>(active, set => {
-    const update = () => {
-      const newActive = editor.getActive();
-      if (!isEqual(active, newActive)) set((active = newActive));
+  return readable(value, set => {
+    let editor: Editor | undefined;
+    const callUpdate = () => {
+      value = editor ? update(editor) : defaultValue;
+      if (checkEquality && isEqual(value, set)) return;
+      set(value);
     };
-    editor.on('changed', update);
-    editor.on('format', update);
+    const on = () => editor && changeEvents.forEach(event => editor!.on(event, callUpdate));
+    const off = () => editor && changeEvents.forEach(event => editor!.off(event, callUpdate));
+
+    const unsub = editorStore.subscribe(currentEditor => {
+      off();
+
+      editor = currentEditor;
+
+      if (editor) {
+        callUpdate();
+        on();
+      } else {
+        set((value = defaultValue));
+      }
+    });
+
     return () => {
-      editor.off('changed', update);
-      editor.off('format', update);
+      off();
+      unsub();
+      editor = undefined;
+      callUpdate();
     };
   });
 }
 
-export function docStore(editor: Editor) {
-  if (!editor) return EMPTY_DOC;
-  return readable<TextDocument>(editor.doc, set => {
-    const update = () => set(editor.doc);
-    update();
-    editor.on('changed', update);
-    return () => editor.off('changed', update);
-  });
+export function activeStore(editorStore: Readable<Editor>) {
+  return derivedEditorStore(editorStore, {}, ['changed', 'format'], editor => editor.getActive(), true);
 }
 
-export function selectionStore(editor: Editor) {
-  if (!editor) return EMPTY_SELECTION;
-  return readable<EditorRange | null>(editor.doc.selection, set => {
-    const update = () => set(editor.doc.selection);
-    update();
-    editor.on('changed', update);
-    return () => editor.off('changed', update);
-  });
+export function docStore(editorStore: Readable<Editor>) {
+  return derivedEditorStore(editorStore, new TextDocument(), ['changed'], editor => editor.doc);
 }
 
-export function focusStore(selection: Readable<EditorRange | null>) {
-  return derived(selection, selection => !!selection);
+export function selectionStore(editorStore: Readable<Editor>) {
+  return derivedEditorStore(editorStore, null, ['changed'], editor => editor.doc.selection);
 }
 
-export function rootStore(editor: Editor) {
-  if (!editor) return EMPTY_ROOT;
-  return readable<HTMLElement | undefined>(editor._root, set => {
-    const update = () => set(editor._root);
-    update();
-    editor.on('root', update);
-    return () => editor.off('root', update);
-  });
+export function focusStore(editorStore: Readable<Editor>) {
+  return derivedEditorStore(editorStore, false, ['changed'], editor => !!editor.doc.selection);
 }
 
-// Can be create in a component on init and set to another store async, allowing for $mystore use
-export function proxy<T>(defaultValueOrStore: T | Readable<T>) {
-  const isReadable = typeof (defaultValueOrStore as Readable<T>).subscribe === 'function';
-  const defaultValue = isReadable ? get(defaultValueOrStore as Readable<T>) : (defaultValueOrStore as T);
-  const { set: write, subscribe } = writable<T>(defaultValue);
-  let unsub: Function;
-
-  if (isReadable) {
-    set(defaultValueOrStore as Readable<T>);
-  }
-
-  function set(store: Readable<T>) {
-    if (unsub) unsub();
-    if (store) unsub = store.subscribe(value => write(value));
-  }
-
-  return {
-    set,
-    subscribe,
-  };
+export function rootStore(editorStore: Readable<Editor>) {
+  return derivedEditorStore(editorStore, undefined, ['root'], editor => editor._root);
 }

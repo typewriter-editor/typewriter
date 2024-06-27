@@ -291,7 +291,7 @@ export class Editor extends EventDispatcher<EditorEventMap> {
     return selection;
   }
 
-  getActive() {
+  getActive(): AttributeMap {
     const { selection } = this.doc;
     let active = selection
       ? selection[0] === selection[1]
