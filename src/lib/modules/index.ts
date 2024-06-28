@@ -1,15 +1,15 @@
-export { copy } from './copy';
-export { DecorateEvent, Decorator, decorations, type DecorationsModule } from './decorations';
-export { history, undoStack, type HistoryModule } from './history';
-export { input } from './input';
-export { keyboard } from './keyboard';
-export { PasteEvent, paste } from './paste';
-export { placeholder } from './placeholder';
-export { rendering } from './rendering';
-export { selection } from './selection';
+export * from './copy';
+export * from './decorations';
+export * from './history';
+export * from './input';
+export * from './keyboard';
+export * from './paste';
+export * from './placeholder';
+export * from './rendering';
+export * from './selection';
 export * from './shortcutFromEvent';
-export { smartEntry } from './smartEntry';
-export { smartQuotes } from './smartQuotes';
+export * from './smartEntry';
+export * from './smartQuotes';
 export * from './virtualRendering';
 
-export { defaultModules } from './defaults';
+export * from './defaults';

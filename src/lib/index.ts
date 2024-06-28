@@ -1,7 +1,7 @@
 export * from '@typewriter/document';
 export * from './util/EventDispatcher';
 
-export * from './modules/index';
+export * from './modules';
 export * from './rendering/html';
 export * from './rendering/position';
 export * from './rendering/rendering';
