@@ -8,8 +8,7 @@ export * from './rendering/rendering';
 export * from './rendering/selection';
 export * from './rendering/vdom';
 export * from './stores';
-export * from './typesetting/defaults';
-export * from './typesetting/typeset';
+export * from './typesetting';
 
 export * from './Editor';
 export * from './Source';
