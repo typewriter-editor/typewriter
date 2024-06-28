@@ -2,6 +2,7 @@
   import { createPopper, type Placement, type Instance as Popper } from '@popperjs/core';
   import type { EditorRange, TextDocument } from '@typewriter/document';
   import { onDestroy } from 'svelte';
+  import type { Editor } from './Editor';
   import { OFFSCREEN_RECT } from './popper';
   import { editorStores } from './stores';
 

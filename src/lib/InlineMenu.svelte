@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createPopper, type Instance as Popper } from '@popperjs/core';
   import type { EditorRange, Line } from '@typewriter/document';
+  import type { Editor } from './Editor';
   import { OFFSCREEN_RECT } from './popper';
   import { getLineElementAt } from './rendering/position';
   import type { HTMLLineElement } from './rendering/rendering';
