@@ -8,27 +8,12 @@ import { createTreeWalker } from './walker';
 // A list of bad characters that we don't want coming in from pasted content (e.g. "\f" aka line feed)
 export const BLOCK_ELEMENTS =
   'address, article, aside, blockquote, editor, dd, div, dl, dt, fieldset, figcaption, figure, footer, form, h1, h2, h3, h4, h5, h6, header, hr, li, main, nav, noscript, ol, output, p, pre, section, table, tfoot, ul, video';
+
+// Matches control characters, formatting characters, unpaired surrogates, and other invisible or potentially problematic Unicode characters
 const BAD_CHARS =
-  /[\0-\x09\x0B\x1F\x7F-\x9F\xAD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB\uE000-\uF8FF]/g;
+  /[\0-\x09\x0B\x0C\x0E-\x1F\x7F-\x9F\xAD\u0600-\u0605\u061C\u06DD\u070F\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF\uFFF9-\uFFFB\uE000-\uF8FF]|\uD800[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/g;
 const SKIP_ELEMENTS = { STYLE: true, SCRIPT: true, LINK: true, META: true, TITLE: true };
-const VOID_ELEMENTS = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true,
-};
 const whitespaceExp = /[ \t\n\r]+/g;
-const textsNode = document.createElement('div');
 const defaultOptions = {};
 
 export interface DeltaFromHTMLOptions {
@@ -101,10 +86,11 @@ export function fromNode(editor: Editor, dom: HTMLElement) {
   return lines[0];
 }
 
+// Removes invalid characters and normalizes line endings
 export function cleanText(delta: Delta) {
   delta.ops = delta.filter(op => {
     if (typeof op.insert === 'string') {
-      op.insert = op.insert.replace(BAD_CHARS, '');
+      op.insert = op.insert.replace(BAD_CHARS, '').replace(/\r\n?/g, '\n');
     }
     return !!op.insert || !!op.retain || !!op.delete;
   });
