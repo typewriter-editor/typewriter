@@ -174,7 +174,6 @@ export function input(editor: Editor) {
 
   // Function to detect if Gboard is sending new lines with composed input
   function onBeforeInput(event: InputEvent) {
-    console.log('onBeforeInput', event.inputType, JSON.stringify(event.data), event.isComposing);
     if (event.data && event.data?.includes('\n')) {
       gboardEnter = true;
     }
@@ -194,9 +193,9 @@ export function input(editor: Editor) {
       editor.root.addEventListener('input', onInput);
       editor.on('rendering', onRendering);
       editor.on('render', onRender);
-      // if (isAndroid) {
-      editor.root.addEventListener('beforeinput', onBeforeInput); // needed for Gboard fix
-      // }
+      if (isAndroid) {
+        editor.root.addEventListener('beforeinput', onBeforeInput); // needed for Gboard fix
+      }
     },
     destroy() {
       observer.disconnect();
@@ -205,9 +204,9 @@ export function input(editor: Editor) {
       editor.root.removeEventListener('compositionend', onCompositionEnd);
       editor.off('rendering', onRendering);
       editor.off('render', onRender);
-      // if (isAndroid) {
-      editor.root.removeEventListener('beforeinput', onBeforeInput); // gboard fix
-      // }
+      if (isAndroid) {
+        editor.root.removeEventListener('beforeinput', onBeforeInput); // gboard fix
+      }
     },
   };
 }

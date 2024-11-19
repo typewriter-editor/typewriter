@@ -201,23 +201,23 @@ export function keyboard(editor: Editor) {
     }
 
     switch (event.modShortcut) {
-      case 'Enter':
-        return onEnter(event);
-      case 'Shift+Enter':
-        return onShiftEnter(event);
+      // case 'Enter':
+      //   return onEnter(event);
+      // case 'Shift+Enter':
+      //   return onShiftEnter(event);
       case 'Tab':
       case 'Shift+Tab':
         return onTab(event);
     }
 
-    switch (event.modShortcut?.split('+').pop()) {
-      case 'Backspace':
-        return onBackspace(event);
-      case 'Delete':
-        return onDelete(event);
-      default:
-        return;
-    }
+    // switch (event.modShortcut?.split('+').pop()) {
+    //   case 'Backspace':
+    //     return onBackspace(event);
+    //   case 'Delete':
+    //     return onDelete(event);
+    //   default:
+    //     return;
+    // }
   }
 
   function isEmpty(line: Line) {
