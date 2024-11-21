@@ -1,6 +1,6 @@
 import { AttributeMap, isEqual } from '@typewriter/document';
 import Editor from '../Editor';
-import { DecorateEvent, DecorationsModule, Decorations } from './decorations';
+import { DecorateEvent, Decorations, DecorationsModule } from './decorations';
 
 interface PlaceholderOptions {
   keepAttribute?: boolean;
@@ -26,9 +26,14 @@ interface PlaceholderOptions {
 export function placeholder(placeholder: string | Function, options?: PlaceholderOptions) {
 
   return (editor: Editor) => {
+    let startedComposing = false;
 
     function onDecorate({ doc }: DecorateEvent) {
       const decorator = (editor.modules.decorations as DecorationsModule).getDecorator('placeholder');
+      if (startedComposing) {
+        decorator.remove();
+        return;
+      }
       const text = (typeof placeholder === 'function' ? placeholder() : placeholder) || '';
       let lastDecorations: AttributeMap | undefined;
 
@@ -54,11 +59,23 @@ export function placeholder(placeholder: string | Function, options?: Placeholde
       }
     }
 
-    editor.addEventListener('decorate', onDecorate);
+    function onCompositionStart() {
+      startedComposing = true;
+    }
+    function onCompositionEnd() {
+      startedComposing = false;
+    }
 
     return {
+      init() {
+        editor.addEventListener('decorate', onDecorate);
+        editor.root.addEventListener('compositionstart', onCompositionStart, { capture: true });
+        editor.root.addEventListener('compositionend', onCompositionEnd);
+      },
       destroy() {
         editor.removeEventListener('decorate', onDecorate);
+        editor.root.removeEventListener('compositionstart', onCompositionStart, { capture: true });
+        editor.root.removeEventListener('compositionend', onCompositionEnd);
       }
     }
   }

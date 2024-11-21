@@ -34,7 +34,8 @@ export function getSelection(editor: Editor): EditorRange | null {
  */
 export function setSelection(editor: Editor, range: EditorRange | null) {
   const { root } = editor;
-  if (!root.ownerDocument) return;
+  // Don't update selection when actively composing
+  if (!root.ownerDocument || editor.modules.input?.isComposing) return;
   const selection = root.ownerDocument.getSelection();
   if (!selection) return;
   const hasFocus = selection.anchorNode && root.contains(selection.anchorNode) && document.activeElement !== document.body;
