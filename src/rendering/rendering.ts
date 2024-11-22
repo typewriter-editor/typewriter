@@ -68,6 +68,8 @@ export function setLineNodesRanges(editor: Editor) {
 
 
 export function render(editor: Editor, doc: TextDocument) {
+  // Don't render when actively composing
+  if (editor.modules.input?.isComposing) return;
   const { root } = editor;
   editor.dispatchEvent(new Event('rendering'));
   patch(root, renderDoc(editor, doc)) as HTMLElement;
@@ -78,6 +80,8 @@ export function render(editor: Editor, doc: TextDocument) {
 
 
 export function renderChanges(editor: Editor, oldDoc: TextDocument, newDoc: TextDocument) {
+  // Don't render when actively composing
+  if (editor.modules.input?.isComposing) return;
   const { root } = editor;
   // Ranges of line indexes, not document indexes
   const oldCombined = combineLines(editor, oldDoc.lines).combined;

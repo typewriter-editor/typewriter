@@ -1,10 +1,9 @@
+import { Delta, diff, normalizeRange, TextChange } from '@typewriter/document';
 import Editor from '../Editor';
-import { Delta, TextChange, normalizeRange, diff } from '@typewriter/document';
-import { deltaFromDom } from '../rendering/html';
+import { cleanText, deltaFromDom } from '../rendering/html';
+import { getIndexFromNode } from '../rendering/position';
 import { getLineNodeEnd, getLineNodeStart, HTMLLineElement } from '../rendering/rendering';
 import { getSelection } from '../rendering/selection';
-import { getIndexFromNode } from '../rendering/position';
-import { cleanText } from '../rendering/html';
 import { Source } from '../Source';
 
 const isIPad = navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform);
@@ -26,25 +25,21 @@ export function input(editor: Editor) {
 
   // Composition systems want to take full control over browser content while they operate.
   // Let them, deferring handling all mutation events until after the composition is complete.
-  let isComposing = false
-  let cachedMutations: MutationRecord[] = []
+  let isComposing = false;
 
-  function onCompositionStart(event: CompositionEvent) {
-    isComposing = true
+  function onCompositionStart() {
+    editor.render();
+    isComposing = true;
   }
 
-  function onCompositionEnd(event: CompositionEvent) {
-    isComposing = false
-    if (cachedMutations.length) {
-      onMutate(cachedMutations)
-      cachedMutations = []
-    }
+  function onCompositionEnd() {
+    isComposing = false;
+    editor.render();
   }
 
   // Browsers have had issues in the past with mutation observers firing consistently, so use the observer with the input
   // event as fallback
   function onInput() {
-    if (isComposing) return
     const mutations = observer.takeRecords();
     if (mutations.length) onMutate(mutations);
   }
@@ -64,10 +59,6 @@ export function input(editor: Editor) {
 
   // Final fallback. Handles composition text etc. Detects text changes from e.g. spell-check or Opt+E to produce
   function onMutate(list: MutationRecord[]) {
-    if (isComposing) {
-      cachedMutations.push(...list)
-      return
-    }
     if (!editor.enabled) {
       return editor.render();
     }
@@ -175,17 +166,13 @@ export function input(editor: Editor) {
   }
 
   return {
-    allowComposition(value = true) {
-      if (value) {
-        editor.root.addEventListener('compositionstart', onCompositionStart);
-        editor.root.addEventListener('compositionend', onCompositionEnd);
-      } else {
-        editor.root.removeEventListener('compositionstart', onCompositionStart);
-        editor.root.removeEventListener('compositionend', onCompositionEnd);
-      }
+    get isComposing() {
+      return isComposing;
     },
     init() {
       editor.root.addEventListener('input', onInput);
+      editor.root.addEventListener('compositionstart', onCompositionStart);
+      editor.root.addEventListener('compositionend', onCompositionEnd);
       editor.on('rendering', onRendering);
       editor.on('render', onRender);
       if (isAndroid) {
