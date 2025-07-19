@@ -2,7 +2,7 @@ import { Delta, TextChange, diff, normalizeRange } from '@typewriter/document';
 import { Editor } from '../Editor';
 import { Source } from '../Source';
 import { cleanText, deltaFromDom } from '../rendering/html';
-import { getIndexFromNode } from '../rendering/position';
+import { getIndexFromNode, getNodeLength } from '../rendering/position';
 import { getLineNodeEnd, getLineNodeStart, type HTMLLineElement } from '../rendering/rendering';
 import { getSelection } from '../rendering/selection';
 
@@ -106,17 +106,16 @@ export function input(editor: Editor) {
   }
 
   function getTextChange(list: MutationRecord[]): Delta | null {
-    const mutation = getTextChangeMutation(list);
-    if (!mutation || mutation.oldValue == null || mutation.target.nodeValue == null) return null;
+    const mutation = getTextChangeMutation(editor, list);
+    if (!mutation || mutation.index < 0 || mutation.oldValue == null || mutation.target.nodeValue == null) return null;
 
     const change = new Delta();
-    const index = getIndexFromNode(editor, mutation.target);
-    change.retain(index);
+    change.retain(mutation.index);
 
     let relativeEditLocation: undefined | number = undefined;
     if (editor.doc.selection) {
       const selection = normalizeRange(editor.doc.selection);
-      relativeEditLocation = selection[0] - index;
+      relativeEditLocation = selection[0] - mutation.index;
 
       if (relativeEditLocation < 0) {
         relativeEditLocation = 0;
@@ -211,7 +210,13 @@ export function input(editor: Editor) {
   };
 }
 
-function getTextChangeMutation(list: MutationRecord[]) {
+type TextChangeMutation = MutationRecord & {
+  /** 
+   * The index in the document where this text mutation occurs
+   */
+  index: number
+}
+function getTextChangeMutation(editor: Editor, list: MutationRecord[]): TextChangeMutation | null {
   // Shrink the list down to one entry per text node
   const textNodes = new Set();
   list = list.filter(record => {
@@ -223,18 +228,42 @@ function getTextChangeMutation(list: MutationRecord[]) {
 
   if (list.length > 3) return null;
 
-  const text = list.find(record => record.type === 'characterData');
+  const text = list.find(record => record.type === 'characterData') as TextChangeMutation;
   if (!text) return null;
-  const textAdd = list.find(record => record.addedNodes.length === 1 && record.addedNodes[0].nodeName === '#text');
+  text.index = -1
+  const textAddRemove = list.find(record => {
+    return (
+      (record.addedNodes.length === 1 && record.addedNodes[0].nodeName === '#text') ||
+      (record.removedNodes.length === 1 && record.removedNodes[0].nodeName === '#text')
+    );
+  });
   const brAddRemove = list.find(record => {
     return (
       (record.addedNodes.length === 1 && record.addedNodes[0].nodeName === 'BR') ||
       (record.removedNodes.length === 1 && record.removedNodes[0].nodeName === 'BR')
     );
   });
-  const count = 1 + (textAdd ? 1 : 0) + (brAddRemove ? 1 : 0);
+  const count = 1 + (textAddRemove ? 1 : 0) + (brAddRemove ? 1 : 0);
   if (count < list.length) return null;
-  if (textAdd && textAdd.addedNodes[0] !== text.target) return null;
+  if (textAddRemove) {
+    if (textAddRemove.addedNodes.length) {
+      if (textAddRemove.addedNodes[0] !== text.target) return null
+    }
+    else if (textAddRemove.removedNodes.length) {
+      if (textAddRemove.removedNodes[0] !== text.target) return null
+      // Text was removed. The index of that removal can be determined by add/remove context
+      if (brAddRemove?.addedNodes.length === 1) {
+        // A <br> was placed to preserve an empty line
+        text.index = getIndexFromNode(editor, brAddRemove.addedNodes[0])
+      }
+      else if (textAddRemove.previousSibling) {
+        // A text node was removed amongst a set of siblings
+        text.index = getIndexFromNode(editor, textAddRemove.previousSibling) + getNodeLength(editor, textAddRemove.previousSibling)
+      }
+    }
+  }
+
+  if (text.index < 0) text.index = getIndexFromNode(editor, text.target)
   return text;
 }
 
